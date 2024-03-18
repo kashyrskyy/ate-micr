@@ -1,0 +1,29 @@
+import React from 'react';
+import Logout from '../Logout';
+import { Typography, Button, Box, Chip } from '@mui/material';
+
+const Header = ({ setIsAdding, user }) => {
+  return (
+    <Box sx={{ mt: 3, mb: 2 }}>
+      <Typography variant="h4" component="h1" gutterBottom textAlign="left" sx={{ fontWeight: 'bold'}}>
+        My Laboratory Notebook
+      </Typography>
+      {/* User information on the right */}
+      {user && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}> 
+          <Chip label={`${user.displayName}`} variant="outlined" sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#e0f2f1', color: '#00695c', mr: 1 }} />
+          <Chip label={`${user.email}`} variant="outlined" sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#e1bee7', color: '#6a1b9a' }} />
+        </Box>
+      )}
+      {/* Action buttons below */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Button variant="contained" color="primary" onClick={() => setIsAdding(true)} sx={{ fontSize: '1.2rem', textTransform: 'none' }}>
+          + Create New
+        </Button>
+        <Logout />
+      </Box>
+    </Box>
+  );
+};
+
+export default Header;
