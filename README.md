@@ -1,55 +1,45 @@
-# CRUD App with React and Firestore
+# ATE MICR Laboratory Notebook
 
-This project is a CRUD (Create, Read, Update, Delete) application built with React and integrated with Firestore for real-time database interactions. It features user authentication, allowing users to sign in with Google, and supports image uploads to Firestore Storage.
+This is a CRUD (Create, Read, Update, Delete) web application for managing laboratory notebooks, designed for the MICR course. It features user authentication with Google Sign-In, and allows users to create, edit, and view their design projects in real-time, integrated with Firestore.
 
 ## Features
 
-- User authentication with Google Sign-In.
-- Create, read, update, and delete operations for designs.
-- Image uploads associated with specific designs.
-- Real-time updates from Firestore.
+- User authentication with Google Sign-In
+- Create, read, update, and delete operations for designs
+- Image uploads associated with specific designs
+- Real-time updates from Firestore
 
-## Getting Started
+## Local Development
 
-To run this project locally, follow these steps:
-
-### Prerequisites
-
-- Node.js and npm installed.
-- A Firebase project set up with Firestore and Storage.
-
-### Installation
+To run this project locally:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/kashyrskyy/ate-test-app.git
-2. Install NPM packages:
-    cd ate-test-app
+   git clone https://github.com/kashyrskyy/ate-micr.git
+2. Navigate to the project directory:
+    ```bash
+    cd ate-micr
+3. Install dependencies:
     npm install
-3. Set up your Firebase configuration:
-    Rename .env.example to .env.
-    Fill in your Firebase project credentials in .env.
+4. Start the development server:
+    npm run dev
+The app should now be running on http://localhost:3000.
 
-### Running the App
-1. Start the development server:
-    npm start
-2. Open http://localhost:3000 to view the app in the browser.
+## Deployment
 
-### Deployment
-The app is deployed using GitHub Pages:
+The application is deployed on GitHub Pages and can be accessed at https://kashyrskyy.github.io/ate-micr/.
 
-- Deployment URL: https://kashyrskyy.github.io/ate-test-app/
+## Built With
 
-To deploy your own version, run:
-    npm run deploy
+React - The web framework used
+Vite - Frontend Tooling
+Firestore - Database used for real-time updates
+Firebase Storage - For image uploads
+SweetAlert2 - For beautiful alert messages
 
-### Contributing
-Contributions are welcome! If you have a feature request or bug report, please open an issue on GitHub.
+## Authors
 
-### License
-This project is open source and available under the [License].
+Andriy Kashyrskyy
 
-### Acknowledgments
-- Firebase for authentication and real-time database services.
-- React community for the powerful library and resources.
-- SweetAlert2 for beautiful alert messages.
+## License
+This project is licensed under the MIT License - see the LICENSE.md file for details.
