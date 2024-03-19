@@ -60,7 +60,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, user }) => {
       Swal.fire({
         icon: 'success',
         title: 'Added!',
-        text: `Your design ${description} has been Added.`,
+        text: `${title} has been Added.`,
         showConfirmButton: false,
         timer: 1500,
       });
