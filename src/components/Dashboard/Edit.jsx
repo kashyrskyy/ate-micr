@@ -1,6 +1,6 @@
 // Edit.js
 import React, { useState, useEffect, useRef } from 'react';
-import Swal from 'sweetalert2';
+import useManageUserDocument from '../../hooks/useManageUserDocument';
 
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc } from "firebase/firestore";
 import { db } from '../../config/firestore';
@@ -9,7 +9,11 @@ import AddBuild from './AddBuild';
 import AddTest from './AddTest';
 import ImageUpload from './ImageUpload';
 
-const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, user }) => {
+import Swal from 'sweetalert2';
+
+const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
+  const { userDetails } = useManageUserDocument();
+
   const id = selectedDesign.id;
   const [description, setDesignDescription] = useState(selectedDesign.description);
   const [date, setDate] = useState(selectedDesign.dateDue || '');
@@ -36,7 +40,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, u
   const addBuildFormRef = useRef(null);
   const addTestFormRef = useRef(null);
 
-  console.log('Edit user:', user);
+  console.log('Editing Design by user:', userDetails);
 
   const handleBuildDescriptionChange = (buildId, value) => {
     setEditableBuildDescriptions(prev => ({ ...prev, [buildId]: value }));
@@ -181,13 +185,13 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, u
   // This function now focuses on refreshing builds only, with detailed console logging
   const refreshBuilds = async () => {
     try {
-      console.log("Refreshing builds for user UID:", user?.uid);
+      console.log("Refreshing builds for user UID:", userDetails?.uid);
       console.log("Selected design ID for query:", selectedDesign?.id);
       
       const buildsQuery = query(
         collection(db, "builds"),
         where("design_ID", "==", id),
-        where("userId", "==", user.uid), // Ensure this line is present and correct
+        where("userId", "==", userDetails.uid), // Ensure this line is present and correct
         orderBy("dateCreated")
       );      
       console.log("Builds query details:", JSON.stringify(buildsQuery, null, 2)); // Detailed query logging
@@ -218,7 +222,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, u
     const testsQuery = query(
       collection(db, "tests"),
       where("build_ID", "==", buildId),
-      where("userId", "==", user.uid), // Ensure the user can only access their tests
+      where("userId", "==", userDetails.uid), // Ensure the user can only access their tests
       orderBy("dateCreated")
     );
     const testsSnapshot = await getDocs(testsQuery);
@@ -254,7 +258,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, u
         imageUrl,
         imageStoragePath,
         imageTitle,
-        userID: user.uid
+        userID: userDetails.uid
     };
 
     try {
@@ -551,7 +555,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, u
                   buildId={build.id}
                   refreshTests={() => refreshTestsForBuild(build.id)}
                   setAddingTestIdForBuild={setAddingTestIdForBuild}
-                  user={user}
                 />
               </div>
             )}
@@ -565,7 +568,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, u
                 designId={selectedDesign.id}
                 setIsAddingBuild={setIsAddingBuild}
                 refreshBuilds={refreshBuilds}
-                user={user}
               />
             </div>
           )}

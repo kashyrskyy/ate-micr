@@ -1,12 +1,17 @@
+// Add.jsx
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
+
+import useManageUserDocument from '../../hooks/useManageUserDocument';
 
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore'
 
 import ImageUpload from './ImageUpload'; 
 
-const Add = ({ designs, setDesigns, setIsAdding, getDesigns, user }) => {
+const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
+  const { userDetails } = useManageUserDocument();
+
   const [description, setDesignDescription] = useState('');
   const [date, setDate] = useState('');
   const [title, setTitle] = useState('');
@@ -14,13 +19,13 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, user }) => {
   const [imageStoragePath, setImageStoragePath] = useState('');
   const [imageTitle, setImageTitle] = useState('');
 
-  console.log('Add user:', user);
+  console.log('Adding New Design from user:', userDetails);
   
   const handleAdd = async (e) => {
     e.preventDefault();
 
     // Check if the user object is defined and has a uid property
-    if (!user || !user.uid) {
+    if (!userDetails || !userDetails.uid) {
       console.error("User object is undefined or missing UID.");
       // Inform the user that authentication is needed
       Swal.fire({
@@ -49,7 +54,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, user }) => {
       imageUrl: imageUrl, // Include the image URL in the design document
       imageStoragePath: imageStoragePath, // Make sure this is being saved
       imageTitle: imageTitle, // Include the image title/description
-      userId: user.uid, // Use the user's ID to associate the design with the user
+      userId: userDetails.uid, // Use the user's ID to associate the design with the user
     };     
   
     try {
@@ -146,3 +151,4 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, user }) => {
 };
 
 export default Add;
+

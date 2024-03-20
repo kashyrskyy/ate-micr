@@ -1,19 +1,25 @@
+//AddBuild.jsx
 import React, { useState } from 'react';
-import Swal from 'sweetalert2';
+
+import useManageUserDocument from '../../hooks/useManageUserDocument'; // Adjust the import path as necessary
+
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore';
 
-const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds, user }) => {
-  const [buildDescription, setBuildDescription] = useState('');
+import Swal from 'sweetalert2';
 
-  console.log('AddBuild user:', user);
+const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
+  const [buildDescription, setBuildDescription] = useState('');
+  const { userDetails } = useManageUserDocument();
+
+  console.log('Adding New Build by user:', userDetails);
 
   const handleAddBuild = async (e) => {
     e.preventDefault();
 
     // Check if the user object is defined and has a uid property
-    if (!user || !user.uid) {
-      console.error("User object is undefined or missing UID.");
+    if (!userDetails || !userDetails.uid) {
+      console.error("UserDetails object is undefined or missing UID.");
       // Inform the user that authentication is needed
       Swal.fire({
         icon: 'error',
@@ -39,11 +45,11 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds, user }) => {
         description: buildDescription,
         design_ID: designId,
         dateCreated: serverTimestamp(), 
-        userId: user.uid, // Assuming you have access to the current user's UID
+        userId: userDetails.uid, // Assuming you have access to the current user's UID
       });
 
       console.log("Build added with ID: ", docRef.id);
-      console.log('AddBuild user:', user);
+      console.log('Added New Build by user:', userDetails);
 
       // Assuming refreshBuilds is correctly passed as a prop, call it here
       await refreshBuilds();  

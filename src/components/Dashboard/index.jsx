@@ -1,5 +1,7 @@
-// index.js
+// index.jsx
 import React, { useState, useEffect, useCallback } from 'react';
+import useManageUserDocument from '../../hooks/useManageUserDocument'; // Adjust path as necessary
+
 import Swal from 'sweetalert2';
 
 import { collection, query, where, getDocs, doc, deleteDoc, orderBy } from "firebase/firestore";
@@ -10,7 +12,8 @@ import NotebookTable from './NotebookTable';
 import Add from './Add';
 import Edit from './Edit';
 
-const Dashboard = ({ user }) => {
+const Dashboard = () => {
+  const { userDetails, loading } = useManageUserDocument();
   const [designs, setDesigns] = useState([]);
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -24,22 +27,22 @@ const Dashboard = ({ user }) => {
 
   const getDesigns = useCallback(async () => {
     let designsQuery;
-    if (user && user.isAdmin) {
+    if (userDetails && userDetails.isAdmin) {
       designsQuery = query(collection(db, "designs"), orderBy("dateCreated", "desc"));
-    } else if (user) {
-      designsQuery = query(collection(db, "designs"), where("userId", "==", user.uid), orderBy("dateCreated", "desc"));
+    } else if (userDetails) {
+      designsQuery = query(collection(db, "designs"), where("userId", "==", userDetails.uid), orderBy("dateCreated", "desc"));
     }
 
     const querySnapshot = await getDocs(designsQuery);
     const designs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     setDesigns(designs);
-  }, [user]); // Include `user` if it's the only dependency
+  }, [userDetails]); 
 
   useEffect(() => {
-    if (user) {
+    if (!loading && userDetails) {
       getDesigns();
     }
-  }, [user, getDesigns]); // Now include `getDesigns` here 
+  }, [userDetails, loading, getDesigns]);  
 
   const handleEdit = id => {
     const [design] = designs.filter(design => design.id === id);
@@ -101,7 +104,6 @@ const Dashboard = ({ user }) => {
         <>
           <Header
             setIsAdding={setIsAdding}
-            user={user}
           />
           <NotebookTable
             designs={designs}
@@ -116,7 +118,6 @@ const Dashboard = ({ user }) => {
           setDesigns={setDesigns}
           setIsAdding={setIsAdding}
           getDesigns={getDesigns}
-          user={user} // Pass the user prop to Add
         />
       )}
       {isEditing && (
@@ -126,8 +127,7 @@ const Dashboard = ({ user }) => {
           setDesigns={setDesigns}
           setIsEditing={setIsEditing}
           getDesigns={getDesigns}
-          user={user} // Pass the user prop to Edit
-          onReturnToDashboard={handleReturnToDashboard} // Pass the function as a prop
+          onReturnToDashboard={handleReturnToDashboard}
         />
       )}
     </div>
@@ -135,3 +135,4 @@ const Dashboard = ({ user }) => {
 };
 
 export default Dashboard;
+

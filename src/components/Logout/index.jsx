@@ -1,36 +1,78 @@
-import React from 'react';
-import Swal from 'sweetalert2';
+import React, { useState } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
 
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 const Logout = () => {
-  const handleLogout = () => {
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const handleClickOpen = () => {
+    setOpenDialog(true);
+  };
+
+  const handleDisagree = () => {
+    setOpenDialog(false);
+  };
+  
+  const handleAgree = () => {
     const auth = getAuth();
     
-    Swal.fire({
-      icon: 'question',
-      title: 'Logging Out',
-      text: 'Are you sure you want to log out?',
-      showCancelButton: true,
-      confirmButtonText: 'Yes',
-    }).then(result => {
-      if (result.isConfirmed) {
-        signOut(auth).then(() => {
-          // After successfully signing out, Firebase's onAuthStateChanged 
-          // listener (set up in your main App component) will automatically 
-          // handle the change in authentication state.
-          Swal.fire('Logged out!', '', 'success');
-        }).catch((error) => {
-          // Handle errors here
-          console.error('Sign out error', error);
-        });
-      }
+    signOut(auth).then(() => {
+      setOpenDialog(false);
+      setOpenSnackbar(true);
+      setSnackbarMessage('Logged out successfully');
+    }).catch((error) => {
+      setOpenDialog(false);
+      setOpenSnackbar(true);
+      setSnackbarMessage('Logout failed: ' + error.message);
     });
   };
 
   return (
-    <button style={{ marginLeft: '12px' }} className="muted-button" onClick={handleLogout}>
-      Logout
-    </button>
+    <>
+      <Button variant="outlined" onClick={handleClickOpen}>
+        Logout
+      </Button>
+      <Dialog
+        open={openDialog}
+        onClose={handleDisagree}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Logging Out"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAgree} autoFocus>
+            Yes
+          </Button>
+          <Button onClick={handleDisagree}>No</Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)}>
+        <Alert onClose={() => setOpenSnackbar(false)} severity="info" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
+
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore';
+
+import useManageUserDocument from '../../hooks/useManageUserDocument'; // Adjust the import path as necessary
+
 import Swal from 'sweetalert2';
 
-const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, user }) => { 
+const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) => { 
   const [testDescription, setTestDescription] = useState('');
   const [testResults, setTestResults] = useState('');
   const [testConclusions, setTestConclusions] = useState('');
+  const { userDetails } = useManageUserDocument();
 
   const handleAddTest = async () => {
     if (!testDescription) {
@@ -19,15 +24,14 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, use
     }
 
     try {
-      // Inside the handleAddTest function or equivalent
       await addDoc(collection(db, "tests"), {
         build_ID: buildId,
         design_ID: designId,
-        dateCreated: serverTimestamp(), // Add this line
+        dateCreated: serverTimestamp(), 
         description: testDescription,
         results: testResults,
         conclusions: testConclusions,
-        userId: user.uid, // Assuming you have access to the current user's UID
+        userId: userDetails.uid,
       });
 
       refreshTests(buildId); // Call to refresh the list of tests in the UI

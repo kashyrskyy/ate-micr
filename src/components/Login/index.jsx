@@ -1,29 +1,26 @@
 import React from 'react';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import Swal from 'sweetalert2';
-import { Button, Typography, Container, Box } from '@mui/material';
+import { Button, Typography, Container, Box, Snackbar, Alert } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 
 const Login = () => {
   const auth = getAuth();
 
+  const [openSnackbar, setOpenSnackbar] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
+
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      Swal.fire({
-        icon: 'success',
-        title: 'Successfully logged in with Google!',
-        showConfirmButton: false,
-        timer: 1500,
-      });
+      setSnackbarMessage('Successfully logged in with Google!');
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true);
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: error.message,
-        showConfirmButton: true,
-      });
+      setSnackbarMessage(`Login Failed: ${error.message}`);
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
     }
   };
 
@@ -41,6 +38,11 @@ const Login = () => {
       <Button variant="contained" startIcon={<GoogleIcon />} onClick={handleGoogleSignIn} sx={{ textTransform: 'none', fontSize: '1rem', backgroundColor: '#4285F4', '&:hover': { backgroundColor: '#357ae8' } }}>
         Sign In with Google
       </Button>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)}>
+        <Alert onClose={() => setOpenSnackbar(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
