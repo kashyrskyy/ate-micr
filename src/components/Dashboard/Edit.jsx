@@ -184,6 +184,11 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
   // This function now focuses on refreshing builds only, with detailed console logging
   const refreshBuilds = async () => {
+    if (!userDetails) {
+      console.log("User details not loaded yet");
+      return;
+    }
+
     try {
       console.log("Refreshing builds for user UID:", userDetails?.uid);
       console.log("Selected design ID for query:", selectedDesign?.id);
@@ -219,6 +224,11 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   }; 
 
   const refreshTestsForBuild = async (buildId) => {
+    if (!userDetails) {
+      console.log("User details not loaded yet");
+      return;
+    }
+  
     const testsQuery = query(
       collection(db, "tests"),
       where("build_ID", "==", buildId),
@@ -258,7 +268,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         imageUrl,
         imageStoragePath,
         imageTitle,
-        userID: userDetails.uid
+        userId: userDetails.uid
     };
 
     try {

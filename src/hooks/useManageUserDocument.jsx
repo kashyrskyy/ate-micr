@@ -10,62 +10,60 @@ const useManageUserDocument = () => {
 
   useEffect(() => {
     if (!user) {
-      console.log('No user is signed in.');
-      setLoading(false);
-      setUserDetails(null);
-      return;
+        console.log('No user is signed in.');
+        setLoading(false);
+        setUserDetails(null);
+        return;
     }
 
     console.log('User is signed in with UID:', user.uid);
 
     const manageUserDocument = async () => {
-      const db = getFirestore();
-      const userRef = doc(db, "users", user.uid);
-      const userTemplate = {
-        displayName: '',
-        email: '',
-        isAdmin: false,
-      };
+        const db = getFirestore();
+        const userRef = doc(db, "users", user.uid);
 
-      try {
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          console.log("User document exists.");
-          const userData = userDoc.data();
-          const updates = {};
-          let updateRequired = false;
+        try {
+            const userDoc = await getDoc(userRef);
+            if (userDoc.exists()) {
+                console.log("User document exists.");
 
-          for (const key in userTemplate) {
-            if (userData[key] === undefined) {
-              updates[key] = userTemplate[key];
-              updateRequired = true;
-              console.log(`Field '${key}' is missing. Adding to updates.`);
+                // Always update lastLogin when the user logs in
+                await updateDoc(userRef, { lastLogin: serverTimestamp() });
+
+                // Combine existing user data with any new updates
+                const userData = userDoc.data();
+                setUserDetails({ ...user, ...userData });
+            } else {
+                console.error("User document does not exist. Creating a new one...");
+
+                // Create a new user document with initial fields including lastLogin
+                await setDoc(userRef, {
+                    displayName: user.displayName || user.email,
+                    email: user.email,
+                    isAdmin: false, // default to false for new users
+                    lastLogin: serverTimestamp()
+                });
+                
+                // Set userDetails with the new user document data
+                setUserDetails({
+                    ...user,
+                    displayName: user.displayName || user.email,
+                    email: user.email,
+                    isAdmin: false,
+                    lastLogin: new Date() // Approximation until serverTimestamp is resolved
+                });
             }
-          }
-
-          if (updateRequired) {
-            updates['lastLogin'] = serverTimestamp();
-            console.log("Updating user document with missing fields.");
-            await updateDoc(userRef, updates);
-          }
-
-          setUserDetails({ ...user, ...userData, ...updates });
-        } else {
-          console.error("User document does not exist. Creating a new one...");
-          await setDoc(userRef, { ...userTemplate, displayName: user.displayName || user.email, email: user.email, lastLogin: serverTimestamp() });
-          setUserDetails({ ...user, ...userTemplate, lastLogin: new Date() });
+        } catch (error) {
+            console.error("Error fetching, creating, or updating user details:", error);
+            setUserDetails(user); // Use basic user info as fallback
+        } finally {
+            setLoading(false);
         }
-      } catch (error) {
-        console.error("Error fetching, creating, or updating user details:", error);
-        setUserDetails(user); // Use basic user info as fallback
-      } finally {
-        setLoading(false);
-      }
     };
 
     manageUserDocument();
   }, [user]);
-
+  
   return { userDetails, loading };
 };
 

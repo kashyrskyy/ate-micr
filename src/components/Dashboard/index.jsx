@@ -109,7 +109,8 @@ const Dashboard = () => {
             designs={designs}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
-          />
+            isAdmin={userDetails?.isAdmin ?? false} // Use optional chaining and provide a default value
+            />
         </>
       )}
       {isAdding && (

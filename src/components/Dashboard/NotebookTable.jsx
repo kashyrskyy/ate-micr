@@ -14,7 +14,7 @@ import {
   IconButton,
 } from '@mui/material';
 
-const NotebookTable = ({ designs, handleEdit, handleDelete }) => {
+const NotebookTable = ({ designs, handleEdit, handleDelete, isAdmin }) => {
   // Function to format Firestore timestamp to a readable format
   const formatDate = (timestamp) => {
     // Check if timestamp is undefined or null
@@ -70,6 +70,7 @@ const NotebookTable = ({ designs, handleEdit, handleDelete }) => {
         <TableHead>
           <TableRow sx={{ height: '60px' }}> 
             <TableCell sx={{ fontWeight: 'bold', width: '40%' }}>Title</TableCell>
+            {isAdmin && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>} {/* Conditional User ID Header */}
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Created</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Due</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>Edit</TableCell>
@@ -83,6 +84,7 @@ const NotebookTable = ({ designs, handleEdit, handleDelete }) => {
                 <TableCell>
                   <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
                 </TableCell>
+                {isAdmin && <TableCell>{design.userId}</TableCell>} {/* Correctly place the userId TableCell */}
                 <TableCell>{design.dateCreated ? formatDate(design.dateCreated) : 'N/A'}</TableCell>
                 <TableCell>{design.dateDue ? formatInputDate(design.dateDue) : 'N/A'}</TableCell>
                 <TableCell>
@@ -103,7 +105,7 @@ const NotebookTable = ({ designs, handleEdit, handleDelete }) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} >No Designs</TableCell>
+              <TableCell colSpan={isAdmin ? 6 : 5}>No Designs Found</TableCell> {/* Adjust colspan based on isAdmin */}
             </TableRow>
           )}
         </TableBody>

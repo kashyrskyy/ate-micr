@@ -14,9 +14,17 @@ const Header = ({ setIsAdding }) => {
       <Typography variant="h4" component="h1" gutterBottom textAlign="left" sx={{ fontWeight: 'bold'}}>
         My Laboratory Notebook
       </Typography>
-      {/* User information on the right */}
+      {/* User information and Admin Mode indicator on the right */}
       {userDetails && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}> 
+          {/* Display Admin Mode indicator if the user is an admin */}
+          {userDetails.isAdmin && (
+            <Chip 
+              label="Admin" 
+              variant="outlined" 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+            />
+          )}
           <Chip 
             label={userDetails.displayName || 'No Name'} 
             variant="outlined" 
