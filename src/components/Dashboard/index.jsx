@@ -1,8 +1,8 @@
 // index.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import useManageUserDocument from '../../hooks/useManageUserDocument'; // Adjust path as necessary
+import useManageUserDocument from '../../hooks/useManageUserDocument'; 
 
-import Swal from 'sweetalert2';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
 import { collection, query, where, getDocs, doc, deleteDoc, orderBy } from "firebase/firestore";
 import { db } from '../../config/firestore';
@@ -18,6 +18,15 @@ const Dashboard = () => {
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // State for Dialog and Snackbar
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState('');
+  const [dialogAction, setDialogAction] = useState(() => () => {});
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // Can be 'success', 'info', 'warning', 'error'
 
   const handleReturnToDashboard = () => {
     setIsEditing(false);
@@ -52,65 +61,67 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (designId) => {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'No, cancel!',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          // Query for builds associated with the design
-          const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", designId));
-          const buildsSnapshot = await getDocs(buildsQuery);
+    // Setup confirmation dialog
+    const confirmDelete = async () => {
+      setDialogOpen(false); // Close confirmation dialog
+      try {
+        // Query for builds associated with the design
+        const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", designId), where("userId", "==", userDetails.uid));
+        const buildsSnapshot = await getDocs(buildsQuery);
   
-          for (const buildDoc of buildsSnapshot.docs) {
-            const buildId = buildDoc.id;
+        for (const buildDoc of buildsSnapshot.docs) {
+          const buildId = buildDoc.id;
   
-            // Query for tests associated with each build
-            const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId));
-            const testsSnapshot = await getDocs(testsQuery);
+          // Query for tests associated with each build
+          const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid));
+          const testsSnapshot = await getDocs(testsQuery);
   
-            // Delete each test
-            for (const testDoc of testsSnapshot.docs) {
-              await deleteDoc(doc(db, "tests", testDoc.id));
-            }
-  
-            // After deleting tests, delete the build
-            await deleteDoc(doc(db, "builds", buildId));
+          // Delete each test
+          for (const testDoc of testsSnapshot.docs) {
+            await deleteDoc(doc(db, "tests", testDoc.id));
           }
   
-          // After deleting builds and their tests, delete the design
-          await deleteDoc(doc(db, "designs", designId));
-  
-          // Update UI
-          const updatedDesigns = designs.filter(design => design.id !== designId);
-          setDesigns(updatedDesigns);
-  
-          Swal.fire('Deleted!', 'Your design and its associated builds and tests have been deleted.', 'success');
-        } catch (error) {
-          console.error("Error deleting design, builds, and tests: ", error);
-          Swal.fire('Failed!', 'There was an issue deleting your design and its associated builds and tests.', 'error');
+          // After deleting tests, delete the build
+          await deleteDoc(doc(db, "builds", buildId));
         }
+  
+        // After deleting builds and their tests, delete the design
+        await deleteDoc(doc(db, "designs", designId));
+  
+        // Update UI
+        const updatedDesigns = designs.filter(design => design.id !== designId);
+        setDesigns(updatedDesigns);
+  
+        // Show success message
+        setSnackbarMessage('Your design and its associated builds and tests have been deleted.');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Error deleting design, builds, and tests: ", error);
+        // Show error message
+        setSnackbarMessage('There was an issue deleting your design and its associated builds and tests.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       }
-    });
-  };  
+    };
+  
+    // Open confirmation dialog
+    setDialogContent('Are you sure? You won\'t be able to revert this!');
+    setDialogAction(() => confirmDelete); // Assuming you have a mechanism to handle dialog actions
+    setDialogOpen(true);
+  };   
 
   return (
     <div className="container">
       {!isAdding && !isEditing && (
         <>
-          <Header
-            setIsAdding={setIsAdding}
-          />
+          <Header setIsAdding={setIsAdding} />
           <NotebookTable
             designs={designs}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
             isAdmin={userDetails?.isAdmin ?? false} // Use optional chaining and provide a default value
-            />
+          />
         </>
       )}
       {isAdding && (
@@ -131,8 +142,25 @@ const Dashboard = () => {
           onReturnToDashboard={handleReturnToDashboard}
         />
       )}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>{"Confirm Deletion"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{dialogContent}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>No, cancel</Button>
+          <Button onClick={() => {dialogAction(); setDialogOpen(false);}} color="primary" autoFocus>
+            Yes, delete it
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
-  );
+  );  
 };
 
 export default Dashboard;

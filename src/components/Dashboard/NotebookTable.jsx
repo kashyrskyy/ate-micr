@@ -70,7 +70,7 @@ const NotebookTable = ({ designs, handleEdit, handleDelete, isAdmin }) => {
         <TableHead>
           <TableRow sx={{ height: '60px' }}> 
             <TableCell sx={{ fontWeight: 'bold', width: '40%' }}>Title</TableCell>
-            {isAdmin && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>} {/* Conditional User ID Header */}
+            {isAdmin && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>}
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Created</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Due</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>Edit</TableCell>
@@ -84,7 +84,7 @@ const NotebookTable = ({ designs, handleEdit, handleDelete, isAdmin }) => {
                 <TableCell>
                   <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
                 </TableCell>
-                {isAdmin && <TableCell>{design.userId}</TableCell>} {/* Correctly place the userId TableCell */}
+                {isAdmin && <TableCell>{design.userId}</TableCell>}
                 <TableCell>{design.dateCreated ? formatDate(design.dateCreated) : 'N/A'}</TableCell>
                 <TableCell>{design.dateDue ? formatInputDate(design.dateDue) : 'N/A'}</TableCell>
                 <TableCell>
@@ -105,7 +105,7 @@ const NotebookTable = ({ designs, handleEdit, handleDelete, isAdmin }) => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={isAdmin ? 6 : 5}>No Designs Found</TableCell> {/* Adjust colspan based on isAdmin */}
+              <TableCell colSpan={isAdmin ? 6 : 5}>No Designs Found</TableCell>
             </TableRow>
           )}
         </TableBody>

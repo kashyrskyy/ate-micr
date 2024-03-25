@@ -9,10 +9,10 @@ import AddBuild from './AddBuild';
 import AddTest from './AddTest';
 import ImageUpload from './ImageUpload';
 
-import Swal from 'sweetalert2';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
 const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
-  const { userDetails } = useManageUserDocument();
+  const { userDetails, loading } = useManageUserDocument();
 
   const id = selectedDesign.id;
   const [description, setDesignDescription] = useState(selectedDesign.description);
@@ -39,6 +39,16 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
   const addBuildFormRef = useRef(null);
   const addTestFormRef = useRef(null);
+
+  // State for handling Dialog
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState('');
+  const [dialogConfirmAction, setDialogConfirmAction] = useState(() => {});
+
+  // State for Snackbar notifications
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // 'success', 'error', etc.
 
   console.log('Editing Design by user:', userDetails);
 
@@ -130,7 +140,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   // UseEffect to fetch tests for all builds initially and whenever builds are refreshed
   useEffect(() => {
     const fetchBuildsAndTests = async () => {
-      const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", id), orderBy("dateCreated"));
+      if (!userDetails) return;
+
+      const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", id), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
       const querySnapshot = await getDocs(buildsQuery);
       const fetchedBuilds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -149,7 +161,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           imageTitle: build.imageTitle || ''
         };
         
-        const testsQuery = query(collection(db, "tests"), where("build_ID", "==", build.id), orderBy("dateCreated"));
+        const testsQuery = query(collection(db, "tests"), where("build_ID", "==", build.id), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
         const testsSnapshot = await getDocs(testsQuery);
         const fetchedTests = testsSnapshot.docs.map(doc => {
           const testData = doc.data();
@@ -179,8 +191,11 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       setTestImages(tempTestImages); // Set the state for test images
     };    
     
-    fetchBuildsAndTests();
-  }, [selectedDesign.id, id]); // 'id' is included in the dependency array    
+    if (!loading && userDetails) {
+      fetchBuildsAndTests();
+    }
+
+  }, [loading, userDetails, selectedDesign.id, id]); // 'id' is included in the dependency array    
 
   // This function now focuses on refreshing builds only, with detailed console logging
   const refreshBuilds = async () => {
@@ -252,12 +267,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     e.preventDefault();
 
     if (!description || !date) {
-        return Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'All fields are required.',
-            showConfirmButton: true,
-        });
+      setDialogContent('All fields are required.');
+      setDialogOpen(true);
+      return;
     }
 
     // Construct the update object dynamically
@@ -272,24 +284,22 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     };
 
     try {
-        await setDoc(doc(db, "designs", id), updateObject, { merge: true });
-        setIsEditing(false);
+      await setDoc(doc(db, "designs", id), updateObject, { merge: true });
+      setSnackbarMessage('Your design has been updated.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+
+      // Delay further actions to allow snackbar to appear
+      setTimeout(() => {
+        setIsEditing(false); // Or navigate away
         getDesigns(); // Fetch the updated list of designs
-        Swal.fire({
-            icon: 'success',
-            title: 'Updated!',
-            text: 'Your design has been updated.',
-            showConfirmButton: false,
-            timer: 1500,
-        });
+      }, 1000); // Adjust time as needed
     } catch (error) {
-        console.error("Error updating design:", error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Failed to update!',
-            text: 'There was an issue updating your design.',
-            showConfirmButton: true,
-        });
+      console.error("Error updating design:", error);
+
+      setSnackbarMessage('There was an issue updating your design.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
@@ -305,6 +315,27 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       await setDoc(buildRef, updateData, { merge: true });
     }
   };  
+
+  const handleDesignImageDeleted = async () => {
+    try {
+      // Update the design document in Firestore to remove image references
+      const designRef = doc(db, "designs", id);
+      await setDoc(designRef, {
+        imageUrl: '',
+        imageStoragePath: '',
+        imageTitle: ''
+      }, { merge: true });
+
+      // Update local state to reflect the deletion
+      setImageUrl('');
+      setImageStoragePath('');
+      setImageTitle('');
+
+      console.log("Design image references removed from Firestore.");
+    } catch (error) {
+      console.error("Failed to update design document in Firestore:", error);
+    }
+  };
 
   const handleDeleteBuildImage = async (buildId) => {
     const buildRef = doc(db, "builds", buildId);
@@ -452,6 +483,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           setImageStoragePath={setImageStoragePath}
           imageTitle={imageTitle}
           setImageTitle={setImageTitle}
+          onDelete={handleDesignImageDeleted}
         />
         <label htmlFor="dateDue" style={{ textDecoration: 'underline' }}>Due Date</label>
         <input
@@ -583,6 +615,29 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           )}
         </div>
       </div>
+      {/* Confirmation Dialog */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>{"Confirmation Needed"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{dialogContent}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => {
+            dialogConfirmAction();
+            setDialogOpen(false);
+          }} autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );  
 };

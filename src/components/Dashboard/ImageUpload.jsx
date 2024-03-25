@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getStorage, ref as firebaseRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import imageCompression from 'browser-image-compression';
-import Swal from 'sweetalert2';
 
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -13,6 +12,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import CloseIcon from '@mui/icons-material/Close';
 
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+
 const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageStoragePath, imageTitle, setImageTitle, onDelete }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -23,6 +25,11 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
   const imgRef = useRef(null);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Add states for Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // 'success', 'error', etc.
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -38,16 +45,10 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
       let compressedFile = file;
       if (file.size > 1024 * 1024) {
         compressedFile = await imageCompression(file, options);
-        Swal.fire({
-          title: 'Image Compressed!',
-          text: 'Your image was compressed before uploading due to file size larger than 1 MB.',
-          icon: 'info',
-          timer: 5000,
-          timerProgressBar: true,
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-        });
+
+        setSnackbarMessage('Your image was compressed before uploading due to file size larger than 1 MB.');
+        setSnackbarSeverity('info');
+        setSnackbarOpen(true);
       }
 
       setUploading(true);
@@ -101,25 +102,20 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
         console.log("Image deleted successfully");
         setImageUrl(''); // Clear the image URL state
         setImageStoragePath(''); // Clear the image storage path state
-
+        setImageTitle('');
+        
         onDelete(); // Call the passed deletion callback
         
-        // Show a success message upon successful deletion
-        Swal.fire({
-            icon: 'success',
-            title: 'Deleted!',
-            text: 'The image has been deleted.',
-            showConfirmButton: true,
-        });
+        // Use Snackbar for success message
+        setSnackbarMessage('The image has been deleted.');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
     } catch (error) {
         console.error("Error removing file: ", error);
-        // Show an error message to the user if the deletion fails
-        Swal.fire({
-            icon: 'error',
-            title: 'Deletion failed',
-            text: 'There was an issue deleting your image.',
-            showConfirmButton: true,
-        });
+        // Use Snackbar for error message
+        setSnackbarMessage('There was an issue deleting your image.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
     }
   };
   
@@ -140,6 +136,14 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
         document.removeEventListener('fullscreenchange', handleFullScreenChange);
     };
   }, []);
+
+  // Snackbar component for displaying messages
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
   return (
     <div>
@@ -222,6 +226,11 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
           </div>
         </DialogContent>
       </Dialog>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );  
 };

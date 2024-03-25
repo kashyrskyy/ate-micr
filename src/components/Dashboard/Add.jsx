@@ -1,6 +1,6 @@
 // Add.jsx
 import React, { useState } from 'react';
-import Swal from 'sweetalert2';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
 import useManageUserDocument from '../../hooks/useManageUserDocument';
 
@@ -19,7 +19,27 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
   const [imageStoragePath, setImageStoragePath] = useState('');
   const [imageTitle, setImageTitle] = useState('');
 
+  // Newly added state variables for Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+
+  // State for handling Dialog
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState('');
+
   console.log('Adding New Design from user:', userDetails);
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
   
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -27,23 +47,15 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
     // Check if the user object is defined and has a uid property
     if (!userDetails || !userDetails.uid) {
       console.error("User object is undefined or missing UID.");
-      // Inform the user that authentication is needed
-      Swal.fire({
-        icon: 'error',
-        title: 'Authentication Required',
-        text: 'You must be signed in to add a design.',
-        showConfirmButton: true,
-      });
-      return; // Stop the function from proceeding further
+      setDialogContent('You must be signed in to add a design.');
+      setDialogOpen(true);
+      return;
     }
   
     if (!description || !date) {
-      return Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: 'All fields are required.',
-        showConfirmButton: true,
-      });
+      setDialogContent('All fields are required.');
+      setDialogOpen(true);
+      return;
     }
   
     const newDesign = {
@@ -60,16 +72,16 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
     try {
       await addDoc(collection(db, "designs"), newDesign);
       setDesigns([...designs, newDesign]); // Update state correctly
-      setIsAdding(false);
-      getDesigns();
-      Swal.fire({
-        icon: 'success',
-        title: 'Added!',
-        text: `${title} has been Added.`,
-        showConfirmButton: false,
-        timer: 1500,
-      });
+      // Assuming Snackbar state is set here
+      setTimeout(() => {
+        setIsAdding(false); // Or any other operation that might hide the Snackbar
+        getDesigns();
+      }, 1000); // Adjust delay as needed, but ensure it's at least as long as the Snackbar's autoHideDuration
 
+      setSnackbarMessage(`${title} has been Added.`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      
       // Resetting form states here
       setDesignDescription('');
       setTitle('');
@@ -80,12 +92,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
   
     } catch (error) {
       console.log(error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to add!',
-        text: 'There was an issue adding your design.',
-        showConfirmButton: true,
-      });
+      setDialogContent('There was an issue adding your design.');
+      setDialogOpen(true);
     }
   };
   
@@ -126,6 +134,12 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
           setImageStoragePath={setImageStoragePath}
           imageTitle={imageTitle}
           setImageTitle={setImageTitle}
+          onDelete={() => {
+            // Since there's no design document yet, just reset the related state.
+            setImageUrl('');
+            setImageStoragePath('');
+            setImageTitle('');
+          }}
         />
         <label htmlFor="dateDue" style={{ textDecoration: 'underline' }}>Due Date</label>
         <input
@@ -146,9 +160,31 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
           />
         </div>
       </form>
+      <Dialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Notification"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {dialogContent}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} autoFocus>
+            Ok
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar open={snackbarOpen} autoHideDuration={1000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
 
 export default Add;
-

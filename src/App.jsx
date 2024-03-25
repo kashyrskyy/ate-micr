@@ -14,14 +14,13 @@ const App = () => {
   }
 
   return (
-    <Router basename="/ate-micr"> {/* Add the basename prop here */}
+    <Router basename="/ate-micr">
       <Routes>
         {userDetails ? (
           <Route path="/" element={<Dashboard />} />
         ) : (
           <Route path="/" element={<Login />} />
         )}
-        {/* Define other routes as needed */}
       </Routes>
     </Router>
   );
