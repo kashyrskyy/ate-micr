@@ -1,4 +1,4 @@
-// NotebookTable.js
+// NotebookTable.jsx
 import React from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';

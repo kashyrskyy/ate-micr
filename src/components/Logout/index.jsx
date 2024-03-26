@@ -1,3 +1,4 @@
+// Logout/index.jsx
 import React, { useState } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
 

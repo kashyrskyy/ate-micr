@@ -1,3 +1,4 @@
+// ImageUpload.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { getStorage, ref as firebaseRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import imageCompression from 'browser-image-compression';
