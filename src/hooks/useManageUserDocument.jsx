@@ -32,30 +32,26 @@ const useManageUserDocument = () => {
 
                 // Combine existing user data with any new updates
                 const userData = userDoc.data();
-                setUserDetails({ ...user, ...userData });
+                setUserDetails({ uid: user.uid, ...userData });
             } else {
                 console.error("User document does not exist. Creating a new one...");
 
                 // Create a new user document with initial fields including lastLogin
                 await setDoc(userRef, {
-                    displayName: user.displayName || user.email,
-                    email: user.email,
                     isAdmin: false, // default to false for new users
                     lastLogin: serverTimestamp()
                 });
                 
                 // Set userDetails with the new user document data
                 setUserDetails({
-                    ...user,
-                    displayName: user.displayName || user.email,
-                    email: user.email,
+                    uid: user.uid,
                     isAdmin: false,
                     lastLogin: new Date() // Approximation until serverTimestamp is resolved
                 });
             }
         } catch (error) {
             console.error("Error fetching, creating, or updating user details:", error);
-            setUserDetails(user); // Use basic user info as fallback
+            setUserDetails({ uid: user.uid }); // Use basic user info as fallback
         } finally {
             setLoading(false);
         }
