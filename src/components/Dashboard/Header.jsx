@@ -1,14 +1,33 @@
 // Header.jsx
-import React from 'react';
+import React,{ useState } from 'react';
 
 import useManageUserDocument from '../../hooks/useManageUserDocument';
 
 import Logout from '../Logout';
 
-import { Typography, Button, Box, Chip } from '@mui/material';
+import { Typography, Button, Box, Chip, Snackbar, Alert, Tooltip } from '@mui/material';
 
 const Header = ({ setIsAdding }) => {
   const { userDetails } = useManageUserDocument();
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const handleCopyUserId = () => {
+    navigator.clipboard.writeText(userDetails.uid).then(() => {
+      // Open the snackbar on successful copy
+      setOpenSnackbar(true);
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+    });
+  };
+
+  // Close snackbar
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   return (
     <Box sx={{ mt: 3, mb: 2 }}>
@@ -24,16 +43,14 @@ const Header = ({ setIsAdding }) => {
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
             />
           )}
-          <Chip 
-            label={userDetails.displayName || 'No Name'} 
-            variant="outlined" 
-            sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#e0f2f1', color: '#00695c', mr: 1 }} 
-          />
-          <Chip 
-            label={userDetails.email || 'No Email'} 
-            variant="outlined" 
-            sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#e1bee7', color: '#6a1b9a' }} 
-          />
+          <Tooltip title="Click to Copy" enterDelay={300} leaveDelay={200}>
+            <Chip
+              label={`User ID: ${userDetails.uid}`}
+              variant="outlined"
+              onClick={handleCopyUserId}
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#e0f2f1', color: '#00695c', mr: 1, cursor: 'pointer' }}
+            />
+          </Tooltip>
         </Box>
       )}
       {/* Action buttons below */}
@@ -43,6 +60,11 @@ const Header = ({ setIsAdding }) => {
         </Button>
         <Logout />
       </Box>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          User ID copied to clipboard!
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

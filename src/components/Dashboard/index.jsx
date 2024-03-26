@@ -23,9 +23,9 @@ const Dashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState('');
 
-  // New states for email confirmation logic
-  const [emailForConfirmation, setEmailForConfirmation] = useState('');
-  const [emailConfirmationDialogOpen, setEmailConfirmationDialogOpen] = useState(false);
+  // New states for user ID confirmation logic
+  const [userIdForConfirmation, setUserIdForConfirmation] = useState('');
+  const [userIdConfirmationDialogOpen, setUserIdConfirmationDialogOpen] = useState(false);
   const [pendingDeleteDesignId, setPendingDeleteDesignId] = useState(null);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -74,13 +74,13 @@ const Dashboard = () => {
     // Ensure there's a designId to delete
     if (!pendingDeleteDesignId) return;
 
-    if (emailForConfirmation !== userDetails.email) {
-        // Email doesn't match, show error message and abort deletion
-        setSnackbarMessage('Email confirmation failed. Enter a correct email.');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+    if (userIdForConfirmation !== userDetails.uid) {
+      // User ID doesn't match, show error message and abort deletion
+      setSnackbarMessage('User ID confirmation failed. Enter the correct User ID.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     } else {
-        // Email matches, proceed with deletion
+        // User ID matches, proceed with deletion
         try {
             // Query for builds associated with the design
             const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", pendingDeleteDesignId), where("userId", "==", userDetails.uid));
@@ -121,8 +121,8 @@ const Dashboard = () => {
             setSnackbarOpen(true);
         } finally {
             // Reset states
-            setEmailForConfirmation('');
-            setEmailConfirmationDialogOpen(false);
+            setUserIdForConfirmation('');
+            setUserIdConfirmationDialogOpen(false);
             setPendingDeleteDesignId(null); // Clear the pending design ID
         }
       }
@@ -176,37 +176,37 @@ const Dashboard = () => {
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>No, cancel</Button>
           <Button onClick={() => {
-            setEmailConfirmationDialogOpen(true);
-            setDialogOpen(false); // This should close the initial dialog and open the email confirmation dialog without delay.
+            setUserIdConfirmationDialogOpen(true);
+            setDialogOpen(false); // This should close the initial dialog and open the user ID confirmation dialog without delay.
           }} color="primary">
             Yes, delete it
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Email Confirmation Dialog */}
+      {/* User ID Confirmation Dialog */}
       <Dialog 
-        open={emailConfirmationDialogOpen} 
-        onClose={() => setEmailConfirmationDialogOpen(false)}
+        open={userIdConfirmationDialogOpen} 
+        onClose={() => setUserIdConfirmationDialogOpen(false)}
         PaperProps={{
           style: { minWidth: 500 }, // Ensure this matches the first Dialog
         }}
       >
-        <DialogTitle>Confirm Your Email</DialogTitle>
+        <DialogTitle>Confirm Your User ID</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            id="email-confirm"
-            label="Email Address"
-            type="email"
+            id="userId-confirm"
+            label="User ID"
+            type="text"
             fullWidth
             variant="outlined"
-            value={emailForConfirmation}
-            onChange={(e) => setEmailForConfirmation(e.target.value)}
+            value={userIdForConfirmation}
+            onChange={(e) => setUserIdForConfirmation(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEmailConfirmationDialogOpen(false)}>No, cancel</Button>
+          <Button onClick={() => setUserIdConfirmationDialogOpen(false)}>No, cancel</Button>
           <Button onClick={confirmDelete} color="primary">
             Confirm
           </Button>
