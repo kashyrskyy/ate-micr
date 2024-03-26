@@ -41,7 +41,7 @@ The application is deployed on GitHub Pages and can be accessed at [https://kash
 - [Vite](https://vitejs.dev/) - Frontend build tool that significantly improves the frontend development experience.
 - [Firestore](https://firebase.google.com/docs/firestore) - Cloud-hosted NoSQL database for storing and syncing data in real-time.
 - [Firebase Storage](https://firebase.google.com/docs/storage) - Object storage for storing and serving user-generated content.
-- [SweetAlert2](https://sweetalert2.github.io/) - A beautiful, responsive, customizable and accessible replacement for JavaScript's popup boxes.
+- [MUI ](https://mui.com/material-ui/) - A comprehensive library of components that features implementation of Google's Material Design system.
 
 ## Authors
 
