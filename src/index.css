@@ -183,6 +183,7 @@ input,
 optgroup,
 select,
 textarea {
+  color: #404040;
   font-family: inherit;
   /* 1 */
   font-size: 100%;
