@@ -33,7 +33,8 @@ const Dashboard = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // Can be 'success', 'info', 'warning', 'error'
 
   const handleReturnToDashboard = () => {
-    setIsEditing(false);
+    setIsEditing(false); // Resets editing state
+    setIsAdding(false); // Resets adding state
     setSelectedDesign(null); // Optionally reset selected design
     getDesigns(); // Refresh designs if needed
   };
@@ -147,6 +148,7 @@ const Dashboard = () => {
           setDesigns={setDesigns}
           setIsAdding={setIsAdding}
           getDesigns={getDesigns}
+          onReturnToDashboard={handleReturnToDashboard}
         />
       )}
       {isEditing && (

@@ -9,10 +9,11 @@ import { db } from '../../config/firestore'
 
 import ImageUpload from './ImageUpload'; 
 
-const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
+const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
   const { userDetails } = useManageUserDocument();
 
   const [description, setDesignDescription] = useState('');
+  
   const [date, setDate] = useState('');
   const [title, setTitle] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -83,8 +84,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
       setSnackbarOpen(true);
       
       // Resetting form states here
-      setDesignDescription('');
       setTitle('');
+      setDesignDescription('');
       setDate('');
       setImageUrl('');
       setImageStoragePath('');
@@ -99,6 +100,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns }) => {
   
   return (
     <div className="small-container">
+      <button onClick={onReturnToDashboard} className="muted-button margin-top-20">← All Designs</button>
       <form onSubmit={handleAdd}>
         <h1>Create Design</h1>
         <label htmlFor="title" style={{ textDecoration: 'underline' }}>Title</label>
