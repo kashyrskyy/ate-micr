@@ -1128,6 +1128,16 @@ table {
   justify-content: space-between;
 }
 
+.design-record {
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  background-color: #ffffff; /* Or another light color that fits your design */
+  border: 1px solid #e0e0e0; /* Light border for definition */
+  transition: box-shadow 0.3s ease, background-color 0.3s ease; /* Smooth transitions for interactions */
+}
+
 /* Separation line, rounded borders, and alternating background colors for build records */
 .build-record {
   padding: 20px; /* Padding inside the box, including above the Build # title */
@@ -1151,6 +1161,14 @@ table {
   margin-top: 20px;
   border-radius: 10px; /* Rounded borders */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds subtle shadow for depth */
+}
+
+.test-record {
+  border: 3px dashed #e0e0e0; /* Dashed light grey border */
+  border-radius: 8px; /* Rounded corners for aesthetics */
+  padding: 10px; /* Increased space inside the border */
+  margin-bottom: 10px; /* Space between each test record */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Optional: adds subtle shadow for depth */
 }
 
 thead th {

@@ -11,6 +11,9 @@ import ImageUpload from './ImageUpload';
 
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+
 const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
   const { userDetails, loading } = useManageUserDocument();
 
@@ -50,20 +53,33 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // 'success', 'error', etc.
 
+  // State for tracking unsaved changes
+  const [unsavedChanges, setUnsavedChanges] = useState({
+    design: false, // You can add more sections as needed
+    builds: false,
+    tests: false,
+  });
+
+  const [visibleBuildDetails, setVisibleBuildDetails] = useState({});
+  const [visibleTestDetails, setVisibleTestDetails] = useState({});
+
   console.log('Editing Design by user:', userDetails);
 
   const handleBuildDescriptionChange = (buildId, value) => {
     setEditableBuildDescriptions(prev => ({ ...prev, [buildId]: value }));
+    setUnsavedChanges(prev => ({ ...prev, builds: true }));
   };
   
   const handleTestDescriptionChange = (testId, value) => {
     setEditableTestDescriptions(prev => ({ ...prev, [testId]: value }));
+    setUnsavedChanges(prev => ({ ...prev, tests: true }));
   };  
   
   const updateBuildDescription = async (buildId) => {
     const buildRef = doc(db, "builds", buildId);
     await setDoc(buildRef, { description: editableBuildDescriptions[buildId] }, { merge: true });
     refreshBuilds(); // Ensure this method updates local state to reflect changes
+    setUnsavedChanges(prev => ({ ...prev, builds: false }));
   }; 
   
   const updateTestDescription = async (testId, buildId) => { // Note: buildId is now a parameter
@@ -90,14 +106,17 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         console.error(`Error updating test ID: ${testId}:`, error);
       }
     }
+    setUnsavedChanges(prev => ({ ...prev, tests: false }));
   };  
 
   const handleTestResultsChange = (testId, value) => {
     setEditableTestResults(prev => ({ ...prev, [testId]: value }));
+    setUnsavedChanges(prev => ({ ...prev, tests: true }));
   };
   
   const handleTestConclusionsChange = (testId, value) => {
     setEditableTestConclusions(prev => ({ ...prev, [testId]: value }));
+    setUnsavedChanges(prev => ({ ...prev, tests: true }));
   };
 
   // useEffect hook for initializing form fields
@@ -288,12 +307,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       setSnackbarMessage('Your design has been updated.');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-
-      // Delay further actions to allow snackbar to appear
-      setTimeout(() => {
-        setIsEditing(false); // Or navigate away
-        getDesigns(); // Fetch the updated list of designs
-      }, 1000); // Adjust time as needed
     } catch (error) {
       console.error("Error updating design:", error);
 
@@ -301,6 +314,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
+
+    // After successful update:
+    setUnsavedChanges(prev => ({ ...prev, design: false }));
   };
 
   const updateBuildImageDetailsInFirestore = async (buildId, imageUrl, imageStoragePath, imageTitle) => {
@@ -386,6 +402,46 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     const testRef = doc(db, "tests", testId);
     await setDoc(testRef, { imageUrl: '', imageStoragePath: '', imageTitle: '' }, { merge: true });
   };
+
+  const promptBeforeLeaving = () => {
+    const unsavedSections = Object.entries(unsavedChanges)
+      .filter(([_, hasUnsaved]) => hasUnsaved)
+      .map(([section]) => section)
+      .join(", ");
+  
+    if (!unsavedSections.length) {
+      onReturnToDashboard();
+      return;
+    }
+  
+    const message = `You have unsaved changes in the following sections: ${unsavedSections}. Are you sure you want to leave?`;
+    setDialogContent(message);
+    setDialogConfirmAction(() => () => {
+      setUnsavedChanges({
+        design: false, 
+        builds: false,
+        tests: false,
+      });
+      onReturnToDashboard();
+    });
+  
+    setDialogOpen(true);
+  };   
+  
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Check if any unsaved changes exist
+      const hasUnsavedChanges = Object.values(unsavedChanges).some(value => value);
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [unsavedChanges]); // Depend on unsavedChanges now instead of isDirty   
   
   const renderTestImageUpload = (test) => {
     // Local function to handle the update to Firestore
@@ -444,67 +500,86 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
   return (
     <div className="small-container">
-      <button onClick={onReturnToDashboard} className="muted-button margin-top-20">← All Designs</button>
-      <form onSubmit={handleUpdate}>
-        <h1>Design Document</h1>
-        <div style={{ marginBottom: '20px' }}>
-        </div>
-        <label htmlFor="title" style={{ textDecoration: 'underline' }}>Title</label>
-        <input
-          id="title"
-          type="text"
-          name="title"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-        <label htmlFor="description" style={{ textDecoration: 'underline' }}>Description</label>
-        <ul>
-            <li>Objective: What is the goal for this design?</li>
-            <li>Rationale: Why is this new design being done?</li>
-            <li>Selected Target: What is the target for the design being made?</li>
-            <li>Functional Modification: What is being done to this target?</li>
-            <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
-        </ul>
-        <textarea
-          id="description"
-          name="description"
-          value={description}
-          onChange={e => setDesignDescription(e.target.value)}
-          rows="10" // Adjust the number of rows to increase the size
-          style={{ width: '100%' }} // Make the textarea full width
-        ></textarea>
-        {/* Example for adding an image to a Design */}
-        <label htmlFor="file" style={{ textDecoration: 'underline' }}>Image</label>
-        <ImageUpload 
-          path={`designs/${id}`} 
-          imageUrl={imageUrl}
-          setImageUrl={setImageUrl}
-          imageStoragePath={imageStoragePath}
-          setImageStoragePath={setImageStoragePath}
-          imageTitle={imageTitle}
-          setImageTitle={setImageTitle}
-          onDelete={handleDesignImageDeleted}
-        />
-        <label htmlFor="dateDue" style={{ textDecoration: 'underline' }}>Due Date</label>
-        <input
-          id="dateDue"
-          type="date"
-          name="dateDue"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-        />
-        <div style={{ marginTop: '30px' }}>
-          <input type="submit" value="Update" />
-          <button
-            style={{ marginLeft: '12px' }}
-            className="muted-button"
-            type="button"
-            onClick={() => setIsEditing(false)}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+      <button onClick={() => {
+        // Check if any unsaved changes exist
+        const hasUnsavedChanges = Object.values(unsavedChanges).some(value => value);
+        if (hasUnsavedChanges) {
+          promptBeforeLeaving(); // Show confirmation dialog if unsaved changes exist
+        } else {
+          onReturnToDashboard(); // Directly proceed if no unsaved changes
+        }
+      }} className="muted-button margin-top-20">← All Designs</button>
+      <div className="design-record">
+        <form onSubmit={handleUpdate}>
+          <h1>Design Document</h1>
+          <div style={{ marginBottom: '20px' }}>
+          </div>
+          <label htmlFor="title" style={{ textDecoration: 'underline' }}>Title</label>
+          <input
+            id="title"
+            type="text"
+            name="title"
+            value={title}
+            onChange={e => {
+              setTitle(e.target.value);
+              setUnsavedChanges(prev => ({ ...prev, design: true }));
+            }}          
+          />
+          <label htmlFor="description" style={{ textDecoration: 'underline' }}>Description</label>
+          <ul>
+              <li>Objective: What is the goal for this design?</li>
+              <li>Rationale: Why is this new design being done?</li>
+              <li>Selected Target: What is the target for the design being made?</li>
+              <li>Functional Modification: What is being done to this target?</li>
+              <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
+          </ul>
+          <textarea
+            id="description"
+            name="description"
+            value={description}
+            onChange={e => {
+              setDesignDescription(e.target.value);
+              setUnsavedChanges(prev => ({ ...prev, design: true }));
+            }}
+            rows="10" // Adjust the number of rows to increase the size
+            style={{ width: '100%' }} // Make the textarea full width
+          ></textarea>
+          {/* Example for adding an image to a Design */}
+          <label htmlFor="file" style={{ textDecoration: 'underline' }}>Image</label>
+          <ImageUpload 
+            path={`designs/${id}`} 
+            imageUrl={imageUrl}
+            setImageUrl={setImageUrl}
+            imageStoragePath={imageStoragePath}
+            setImageStoragePath={setImageStoragePath}
+            imageTitle={imageTitle}
+            setImageTitle={setImageTitle}
+            onDelete={handleDesignImageDeleted}
+          />
+          <label htmlFor="dateDue" style={{ textDecoration: 'underline' }}>Due Date</label>
+          <input
+            id="dateDue"
+            type="date"
+            name="dateDue"
+            value={date}
+            onChange={e => {
+              setDate(e.target.value);
+              setUnsavedChanges(prev => ({ ...prev, design: true }));
+            }}
+          />
+          <div style={{ marginTop: '30px' }}>
+            <input type="submit" value="Update" />
+            <button
+              style={{ marginLeft: '12px' }}
+              className="muted-button"
+              type="button"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
       <div>
         <div className="flex-space-between">
           <h2>Builds</h2>
@@ -526,68 +601,102 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           <div key={build.id} className="build-record">
             <div className="flex-space-between">
               <h3>Build {index + 1}</h3>
-              <button 
-                className="button muted-button"
-                onClick={() => {
-                  setAddingTestIdForBuild(build.id);
-                  // Use a setTimeout to ensure the DOM has been updated
-                  setTimeout(() => {
-                    if (addTestFormRef.current) {
-                      addTestFormRef.current.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }, 100);
-                }}>
-                  <span role="img" aria-label="Add Test">➕</span> Test
-              </button>
-            </div>
-            <textarea
-              value={editableBuildDescriptions[build.id] || build.description}
-              onChange={(e) => handleBuildDescriptionChange(build.id, e.target.value)}
-              rows="4"
-              style={{ width: '100%' }}
-            />
-            <button onClick={() => updateBuildDescription(build.id)}>Save</button>
-            <div>
-              {renderBuildImageUpload(build)}            
-            </div>
-            {testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
-              <div key={test.id}>
-                <h4>Test {testIndex + 1}</h4>
-                <div>
-                  <strong>Description</strong>
-                  <textarea
-                    value={editableTestDescriptions[test.id] || test.description}
-                    onChange={(e) => handleTestDescriptionChange(test.id, e.target.value)}
-                    rows="4"
-                    style={{ width: '100%' }}
-                  />
-                </div>
+              {/* Toggle Button for Build Details */}
                 <div> 
-                  {renderTestImageUpload(test, build.id)}
+                  <button 
+                    onClick={() => setVisibleBuildDetails(prev => ({
+                      ...prev,
+                      [build.id]: !prev[build.id] // Toggle the visibility state
+                    }))}
+                    className="button muted-button"
+                    style={{ border: 'none', background: 'none' }}
+                  >
+                    {visibleBuildDetails[build.id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </button>
+                  <button 
+                    className="button muted-button"
+                    onClick={() => {
+                      setAddingTestIdForBuild(build.id);
+                      // Use a setTimeout to ensure the DOM has been updated
+                      setTimeout(() => {
+                        if (addTestFormRef.current) {
+                          addTestFormRef.current.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }, 100);
+                    }}>
+                      <span role="img" aria-label="Add Test">➕</span> Test
+                  </button>
                 </div>
+            </div>
+            {visibleBuildDetails[build.id] && (
+              <>
+                <textarea
+                  value={editableBuildDescriptions[build.id] || build.description}
+                  onChange={(e) => handleBuildDescriptionChange(build.id, e.target.value)}
+                  rows="4"
+                  style={{ width: '100%' }}
+                />
+                <button onClick={() => updateBuildDescription(build.id)}>Update</button>
                 <div>
-                  <strong>Results</strong>
-                  <textarea
-                    value={editableTestResults[test.id] || test.results}
-                    onChange={(e) => handleTestResultsChange(test.id, e.target.value)}
-                    rows="4"
-                    style={{ width: '100%', marginTop: '10px' }}
-                    placeholder="Results"
-                  />
+                  {renderBuildImageUpload(build)}            
                 </div>
-                <div>
-                  <strong>Conclusions</strong>
-                  <textarea
-                    value={editableTestConclusions[test.id] || test.conclusions}
-                    onChange={(e) => handleTestConclusionsChange(test.id, e.target.value)}
-                    rows="4"
-                    style={{ width: '100%', marginTop: '10px' }}
-                    placeholder="Conclusions"
-                  />
-                </div>
-                <button onClick={() => updateTestDescription(test.id, build.id)}>Save</button>
-              </div>
-            ))}
+                {testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
+                  <div key={test.id} className="test-record">
+                    <div className="flex-space-between">
+                      <h4>Test {testIndex + 1}</h4>
+                      {/* Toggle Button for Test Details */}
+                      <button 
+                        onClick={() => setVisibleTestDetails(prev => ({
+                          ...prev,
+                          [test.id]: !prev[test.id] // Toggle the visibility state for this test
+                        }))}
+                        className="button muted-button"
+                        style={{ border: 'none', background: 'none' }}
+                      >
+                        {visibleTestDetails[test.id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </button>
+                    </div>
+                    {visibleTestDetails[test.id] && (
+                      <>
+                        <div>
+                          <strong>Description</strong>
+                          <textarea
+                            value={editableTestDescriptions[test.id] || test.description}
+                            onChange={(e) => handleTestDescriptionChange(test.id, e.target.value)}
+                            rows="4"
+                            style={{ width: '100%' }}
+                          />
+                        </div>
+                        <div> 
+                          {renderTestImageUpload(test, build.id)}
+                        </div>
+                        <div>
+                          <strong>Results</strong>
+                          <textarea
+                            value={editableTestResults[test.id] || test.results}
+                            onChange={(e) => handleTestResultsChange(test.id, e.target.value)}
+                            rows="4"
+                            style={{ width: '100%', marginTop: '10px' }}
+                            placeholder="Results"
+                          />
+                        </div>
+                        <div>
+                          <strong>Conclusions</strong>
+                          <textarea
+                            value={editableTestConclusions[test.id] || test.conclusions}
+                            onChange={(e) => handleTestConclusionsChange(test.id, e.target.value)}
+                            rows="4"
+                            style={{ width: '100%', marginTop: '10px' }}
+                            placeholder="Conclusions"
+                          />
+                        </div>
+                        <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
 
             {addingTestIdForBuild === build.id && (
               <div className="new-build-record" ref={addTestFormRef}>
@@ -617,7 +726,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       </div>
       {/* Confirmation Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>{"Confirmation Needed"}</DialogTitle>
+        <DialogTitle>{"Unsaved Changes"}</DialogTitle>
         <DialogContent>
           <DialogContentText>{dialogContent}</DialogContentText>
         </DialogContent>
