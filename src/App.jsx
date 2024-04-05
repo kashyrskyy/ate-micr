@@ -1,32 +1,41 @@
 // App.jsx
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import useManageUserDocument from './hooks/useManageUserDocument'; // Adjust the path as necessary
+import { useUser } from './contexts/UserContext';
 
-import Login from './components/Login/index.jsx';
-import Dashboard from './components/Dashboard/index.jsx';
+// Lazy loading components
+const Login = lazy(() => import('./components/Login/index.jsx'));
+const Dashboard = lazy(() => import('./components/Dashboard/index.jsx'));
+
+import CircularProgress from '@mui/material/CircularProgress';
 
 const App = () => {
-  const { userDetails, loading } = useManageUserDocument();
+  const { userDetails, loading } = useUser();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        {/* Using Material-UI CircularProgress component */}
+        <CircularProgress />
+      </div>
+    );
   }
+
+  console.log("App loaded")
 
   return (
     <Router basename="/ate-micr">
-      <Routes>
-        {userDetails ? (
-          <Route path="/" element={<Dashboard />} />
-        ) : (
-          <Route path="/" element={<Login />} />
-        )}
-      </Routes>
+      <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></div>}>
+        <Routes>
+          {userDetails ? (
+            <Route path="/" element={<Dashboard />} />
+          ) : (
+            <Route path="/" element={<Login />} />
+          )}
+        </Routes>
+      </Suspense>
     </Router>
   );
 };
 
 export default App;
-
-
-

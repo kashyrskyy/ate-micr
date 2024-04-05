@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore';
 
-import useManageUserDocument from '../../hooks/useManageUserDocument'; // Adjust the import path as necessary
+import { useUser } from '../../contexts/UserContext';
 
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
@@ -12,7 +12,9 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
   const [testDescription, setTestDescription] = useState('');
   const [testResults, setTestResults] = useState('');
   const [testConclusions, setTestConclusions] = useState('');
-  const { userDetails } = useManageUserDocument();
+  const { userDetails } = useUser();
+
+  console.log("AddTest loaded");
 
   // States for Dialog and Snackbar
   const [dialogOpen, setDialogOpen] = useState(false);

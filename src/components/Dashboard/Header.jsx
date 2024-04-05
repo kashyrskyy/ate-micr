@@ -1,14 +1,15 @@
 // Header.jsx
-import React,{ useState } from 'react';
+import React, { useState, memo } from 'react';
 
-import useManageUserDocument from '../../hooks/useManageUserDocument';
+import { useUser } from '../../contexts/UserContext';
 
 import Logout from '../Logout';
 
 import { Typography, Button, Box, Chip, Snackbar, Alert, Tooltip } from '@mui/material';
 
-const Header = ({ setIsAdding }) => {
-  const { userDetails } = useManageUserDocument();
+const Header = memo(({ setIsAdding }) => {
+  const { userDetails } = useUser();
+  console.log("Header loaded");
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
@@ -67,6 +68,6 @@ const Header = ({ setIsAdding }) => {
       </Snackbar>
     </Box>
   );
-};
+});
 
 export default Header;

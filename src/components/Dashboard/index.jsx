@@ -1,6 +1,6 @@
 // Dashboard/index.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import useManageUserDocument from '../../hooks/useManageUserDocument'; 
+import { useUser } from '../../contexts/UserContext';
 
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert, TextField } from '@mui/material';
 
@@ -13,7 +13,10 @@ import Add from './Add';
 import Edit from './Edit';
 
 const Dashboard = () => {
-  const { userDetails, loading } = useManageUserDocument();
+  const { userDetails, loading } = useUser();
+
+  console.log("Dashboard loaded");
+
   const [designs, setDesigns] = useState([]);
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -224,5 +227,4 @@ const Dashboard = () => {
   );  
 };
 
-export default Dashboard;
-
+export default React.memo(Dashboard);

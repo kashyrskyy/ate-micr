@@ -7,6 +7,8 @@ import GoogleIcon from '@mui/icons-material/Google';
 const Login = () => {
   const auth = getAuth();
 
+  console.log("Login loaded")
+
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');

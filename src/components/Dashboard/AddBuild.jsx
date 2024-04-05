@@ -1,7 +1,7 @@
 // AddBuild.jsx
 import React, { useState } from 'react';
 
-import useManageUserDocument from '../../hooks/useManageUserDocument'; // Adjust the import path as necessary
+import { useUser } from '../../contexts/UserContext';
 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore';
@@ -10,7 +10,9 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, B
 
 const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
   const [buildDescription, setBuildDescription] = useState('');
-  const { userDetails } = useManageUserDocument();
+  const { userDetails } = useUser();
+
+  console.log("AddBuild loaded");
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState('');

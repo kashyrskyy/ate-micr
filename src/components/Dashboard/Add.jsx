@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
-import useManageUserDocument from '../../hooks/useManageUserDocument';
+import { useUser } from '../../contexts/UserContext';
 
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore'
@@ -10,7 +10,9 @@ import { db } from '../../config/firestore'
 import ImageUpload from './ImageUpload'; 
 
 const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
-  const { userDetails } = useManageUserDocument();
+  const { userDetails } = useUser();
+
+  console.log("Add Design loaded");
 
   const [description, setDesignDescription] = useState('');
   

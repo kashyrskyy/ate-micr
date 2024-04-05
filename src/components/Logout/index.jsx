@@ -20,6 +20,8 @@ const Logout = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  console.log("Logout loaded")
+
   const handleClickOpen = () => {
     setOpenDialog(true);
   };

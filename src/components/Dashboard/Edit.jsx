@@ -1,6 +1,6 @@
 // Edit.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import useManageUserDocument from '../../hooks/useManageUserDocument';
+import { useUser } from '../../contexts/UserContext';
 
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc, deleteDoc } from "firebase/firestore";
 import { db } from '../../config/firestore';
@@ -16,7 +16,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
-  const { userDetails, loading } = useManageUserDocument();
+  const { userDetails, loading } = useUser();
+  console.log("Edit page loaded");
 
   const id = selectedDesign.id;
   const [description, setDesignDescription] = useState(selectedDesign.description);
@@ -458,7 +459,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
     // Refresh the UI accordingly
     await refreshBuilds();
-    setSnackbarMessage('Build and associated tests deleted successfully.');
+    setSnackbarMessage('Build and its tests (if any) deleted successfully.');
     setSnackbarSeverity('success');
     setSnackbarOpen(true);
 };
