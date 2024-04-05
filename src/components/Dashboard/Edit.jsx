@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useManageUserDocument from '../../hooks/useManageUserDocument';
 
-import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc, deleteDoc } from "firebase/firestore";
 import { db } from '../../config/firestore';
 
 import AddBuild from './AddBuild';
@@ -13,6 +13,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
   const { userDetails, loading } = useManageUserDocument();
@@ -442,6 +443,49 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [unsavedChanges]); // Depend on unsavedChanges now instead of isDirty   
+
+  const deleteBuildAndTests = async (buildId) => {
+    const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid));
+    const testsSnapshot = await getDocs(testsQuery);
+
+    for (const testDoc of testsSnapshot.docs) {
+        // Correctly reference the document to delete
+        await deleteDoc(doc(db, "tests", testDoc.id));
+    }
+
+    // Correctly reference the build document to delete
+    await deleteDoc(doc(db, "builds", buildId));
+
+    // Refresh the UI accordingly
+    await refreshBuilds();
+    setSnackbarMessage('Build and associated tests deleted successfully.');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+};
+
+  const deleteTest = async (testId, buildId) => {
+    // Delete the test, assuming we've already ensured it belongs to this user elsewhere
+    await deleteDoc(doc(db, "tests", testId));
+  
+    // Refresh tests for the build to reflect this change in the UI
+    await refreshTestsForBuild(buildId);
+  
+    setSnackbarMessage('Test deleted successfully.');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };   
+  
+  const confirmDeleteBuild = (buildId) => {
+    setDialogContent('Are you sure you want to delete this build and all associated tests? This action cannot be undone.');
+    setDialogConfirmAction(() => () => deleteBuildAndTests(buildId));
+    setDialogOpen(true);
+  };
+  
+  const confirmDeleteTest = (testId, buildId) => {
+    setDialogContent('Are you sure you want to delete this test? This action cannot be undone.');
+    setDialogConfirmAction(() => () => deleteTest(testId, buildId));
+    setDialogOpen(true);
+  }; 
   
   const renderTestImageUpload = (test) => {
     // Local function to handle the update to Firestore
@@ -463,7 +507,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       } catch (error) {
         console.error("Error updating Firestore for testId:", testId, error);
       }
-    };
+    };   
   
     return (
       <ImageUpload
@@ -615,6 +659,13 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                   </button>
                   <button 
                     className="button muted-button"
+                    style={{ border: 'none', background: 'none' }}
+                    onClick={() => confirmDeleteBuild(build.id)}
+                  >
+                    <DeleteIcon />
+                  </button>
+                  <button 
+                    className="button muted-button"
                     onClick={() => {
                       setAddingTestIdForBuild(build.id);
                       // Use a setTimeout to ensure the DOM has been updated
@@ -644,17 +695,26 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                   <div key={test.id} className="test-record">
                     <div className="flex-space-between">
                       <h4>Test {testIndex + 1}</h4>
-                      {/* Toggle Button for Test Details */}
-                      <button 
-                        onClick={() => setVisibleTestDetails(prev => ({
-                          ...prev,
-                          [test.id]: !prev[test.id] // Toggle the visibility state for this test
-                        }))}
-                        className="button muted-button"
-                        style={{ border: 'none', background: 'none' }}
-                      >
-                        {visibleTestDetails[test.id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </button>
+                      <div>
+                        {/* Toggle Button for Test Details */}
+                        <button 
+                          onClick={() => setVisibleTestDetails(prev => ({
+                            ...prev,
+                            [test.id]: !prev[test.id] // Toggle the visibility state for this test
+                          }))}
+                          className="button muted-button"
+                          style={{ border: 'none', background: 'none' }}
+                        >
+                          {visibleTestDetails[test.id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </button>
+                        <button 
+                          className="button muted-button"
+                          style={{ border: 'none', background: 'none' }}
+                          onClick={() => confirmDeleteTest(test.id, build.id)}
+                        >
+                          <DeleteIcon />
+                        </button>
+                      </div>
                     </div>
                     {visibleTestDetails[test.id] && (
                       <>
@@ -726,7 +786,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       </div>
       {/* Confirmation Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>{"Unsaved Changes"}</DialogTitle>
+        <DialogTitle>{"Confirmation Required"}</DialogTitle>
         <DialogContent>
           <DialogContentText>{dialogContent}</DialogContentText>
         </DialogContent>
