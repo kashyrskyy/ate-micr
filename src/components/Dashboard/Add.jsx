@@ -8,6 +8,7 @@ import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firesto
 import { db } from '../../config/firestore'
 
 import ImageUpload from './ImageUpload'; 
+// import TextEditor from './TextEditor'; 
 
 const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
   const { userDetails } = useUser();
@@ -30,6 +31,9 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   // State for handling Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState('');
+
+  // State for using Text Editor
+  // const [editorContent, setEditorContent] = useState('');
 
   console.log('Adding New Design from user:', userDetails);
 
@@ -64,6 +68,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
     const newDesign = {
       title: title,
       description: description,
+      editorContent: editorContent,
       dateDue: Timestamp.fromDate(new Date(date)),
       dateCreated: serverTimestamp(),
       imageUrl: imageUrl, // Include the image URL in the design document
@@ -128,7 +133,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
           onChange={e => setDesignDescription(e.target.value)}
           rows="10" // Adjust the number of rows to increase the size
           style={{ width: '100%' }} // Make the textarea full width
-        ></textarea>
+        ></textarea> 
+        {/* Code for adding a TextEditor <TextEditor handleEditorChange={(content) => setEditorContent(content)} /> */}
         <label htmlFor="file" style={{ textDecoration: 'underline' }}>Image</label>
         <ImageUpload 
           path="designs" 

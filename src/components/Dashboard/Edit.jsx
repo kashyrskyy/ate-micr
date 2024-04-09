@@ -80,6 +80,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const updateBuildDescription = async (buildId) => {
     const buildRef = doc(db, "builds", buildId);
     await setDoc(buildRef, { description: editableBuildDescriptions[buildId] }, { merge: true });
+    setSnackbarMessage('Your build has been updated.');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
     refreshBuilds(); // Ensure this method updates local state to reflect changes
     setUnsavedChanges(prev => ({ ...prev, builds: false }));
   }; 
@@ -103,9 +106,15 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       try {
         await setDoc(testRef, updateData, { merge: true });
         console.log(`Successfully updated test ID: ${testId}`);
+        setSnackbarMessage('Your test has been updated.');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
         await refreshTestsForBuild(buildId); // Now refreshes only tests for the specific build
       } catch (error) {
         console.error(`Error updating test ID: ${testId}:`, error);
+        setSnackbarMessage('There was an issue updating your test.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       }
     }
     setUnsavedChanges(prev => ({ ...prev, tests: false }));
