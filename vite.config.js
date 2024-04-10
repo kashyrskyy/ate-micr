@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Provides a default value for local development
+const deployEnv = process.env.VITE_DEPLOY_ENV ?? 'local';
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/',
+  base: deployEnv === 'github' ? '/ate-micr/' : '/',
   plugins: [react()],
 })

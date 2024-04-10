@@ -30,7 +30,7 @@ jobs:
           VITE_MESSAGING_SENDER_ID: ${{ secrets.VITE_MESSAGING_SENDER_ID }}
           VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
           VITE_VALID_PASSCODE: ${{ secrets.VITE_VALID_PASSCODE }}
-          VITE_DEPLOY_ENV: ${{ secrets.VITE_DEPLOY_ENV }}
+          VITE_DEPLOY_ENV: 'github'
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.5
