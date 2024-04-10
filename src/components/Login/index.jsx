@@ -48,7 +48,7 @@ const Login = () => {
   return (
     <Container maxWidth="xs" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
       <Box sx={{ textAlign: 'center', mb: 2 }}> {/* Adjust the bottom margin as needed */}
-        <img src="/ate-micr/ate-logo.png" alt="ATE Logo" style={{ width: 150, marginBottom: 20 }}/>
+        <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}ate-logo.png`} alt="ATE Logo" style={{ width: 150, marginBottom: 20 }}/>
         <Typography variant="h4" component="h1" gutterBottom>
           ATE 2.0: MICR 230
         </Typography>
