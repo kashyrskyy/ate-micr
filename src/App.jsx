@@ -24,7 +24,7 @@ const App = () => {
   console.log("App loaded")
 
   return (
-    <Router basename="/ate-micr">
+    <Router basename={import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr' : '/'}>
       <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></div>}>
         <Routes>
           {userDetails ? (
