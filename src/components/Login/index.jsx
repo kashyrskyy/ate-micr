@@ -71,7 +71,7 @@ const Login = () => {
         {isPasscodeValid && (
           <>
             <Typography variant="h6" component="h2" gutterBottom>
-              Welcome! Please sign in to get started.
+              [Test] Welcome! Please sign in to get started.
             </Typography>
             <Button variant="contained" startIcon={<GoogleIcon />} onClick={handleGoogleSignIn} sx={{ textTransform: 'none', fontSize: '1rem', backgroundColor: '#4285F4', '&:hover': { backgroundColor: '#357ae8' } }}>
               Sign In with Google
