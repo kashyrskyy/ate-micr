@@ -9,6 +9,7 @@ import { db } from '../../config/firestore';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
 const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
+  const [buildTitle, setBuildTitle] = useState('');
   const [buildDescription, setBuildDescription] = useState('');
   const { userDetails } = useUser();
 
@@ -54,6 +55,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
     try {
       // Inside the handleAddBuild function or equivalent
       const docRef = await addDoc(collection(db, "builds"), {
+        title: buildTitle,
         description: buildDescription,
         design_ID: designId,
         dateCreated: serverTimestamp(), 
@@ -70,6 +72,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
     
       // Delay hiding the AddBuild component to ensure the Snackbar is visible
       setTimeout(() => {
+        setBuildTitle(''); // Reset the title input field
         setBuildDescription(''); // Reset the input field
         setIsAddingBuild(false); // Hide the AddBuild component
         refreshBuilds();  // Refresh builds
@@ -96,6 +99,14 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
   return (
     <div className="small-container">
       <form onSubmit={handleAddBuild}>
+        <label htmlFor="buildTitle">Title</label>
+        <input
+          id="buildTitle"
+          type="text"
+          value={buildTitle}
+          onChange={e => setBuildTitle(e.target.value)}
+          style={{ width: '100%', marginBottom: '20px' }}
+        />
         <label htmlFor="buildDescription">Description</label>
         <textarea
           id="buildDescription"

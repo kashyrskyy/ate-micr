@@ -1171,6 +1171,17 @@ table {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Optional: adds subtle shadow for depth */
 }
 
+.editableTitle {
+  cursor: pointer;
+  color: #404040; /* Bootstrap's gray color */
+  font-weight: bold; /* Makes the text bold */
+}
+
+.editableTitle:hover {
+  text-decoration: underline;
+  background-color: #f8f9fa; /* A very light gray as an example */
+}
+
 thead th {
   border-bottom: 2px solid #dedede;
 }

@@ -9,6 +9,7 @@ import { useUser } from '../../contexts/UserContext';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
 const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) => { 
+  const [testTitle, setTestTitle] = useState('');
   const [testDescription, setTestDescription] = useState('');
   const [testResults, setTestResults] = useState('');
   const [testConclusions, setTestConclusions] = useState('');
@@ -32,6 +33,7 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
 
     try {
       await addDoc(collection(db, "tests"), {
+        title: testTitle,
         build_ID: buildId,
         design_ID: designId,
         dateCreated: serverTimestamp(), 
@@ -44,9 +46,10 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
       // Delay the rest of the operations to ensure the Snackbar is visible
       setTimeout(() => {
         refreshTests(buildId); // Refresh the list of tests
-        setTestDescription('');
-        setTestResults('');
-        setTestConclusions('');
+        setTestTitle(''); // Reset the title input field
+        setTestDescription(''); // Reset the title description field
+        setTestResults(''); // Reset the title results field
+        setTestConclusions(''); // Reset the title conclusions field
         setAddingTestIdForBuild(null); // Hide the input form if needed
 
         // Consider even redirecting or triggering other UI changes here
@@ -68,6 +71,12 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
 
   return (
     <div>
+      <textarea
+        placeholder="Test Title"
+        value={testTitle}
+        onChange={(e) => setTestTitle(e.target.value)}
+        style={{ width: '100%', margin: '10px 0' }}
+      />
       <textarea
         placeholder="Describe the test"
         value={testDescription}
