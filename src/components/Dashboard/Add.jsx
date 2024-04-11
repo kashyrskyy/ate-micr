@@ -8,7 +8,6 @@ import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firesto
 import { db } from '../../config/firestore'
 
 import ImageUpload from './ImageUpload'; 
-// import TextEditor from './TextEditor'; 
 
 const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
   const { userDetails } = useUser();
@@ -31,9 +30,6 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   // State for handling Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState('');
-
-  // State for using Text Editor
-  // const [editorContent, setEditorContent] = useState('');
 
   console.log('Adding New Design from user:', userDetails);
 
@@ -68,7 +64,6 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
     const newDesign = {
       title: title,
       description: description,
-      editorContent: editorContent,
       dateDue: Timestamp.fromDate(new Date(date)),
       dateCreated: serverTimestamp(),
       imageUrl: imageUrl, // Include the image URL in the design document
@@ -110,7 +105,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       <button onClick={onReturnToDashboard} className="muted-button margin-top-20">← All Designs</button>
       <form onSubmit={handleAdd}>
         <h1>Create Design</h1>
-        <label htmlFor="title" style={{ textDecoration: 'underline' }}>Title</label>
+        <label htmlFor="title">Title</label>
         <input
           id="title"
           type="text"
@@ -118,7 +113,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
           value={title}
           onChange={e => setTitle(e.target.value)}
         />
-        <label htmlFor="description" style={{ textDecoration: 'underline' }}>Description</label>
+        <label htmlFor="description">Description</label>
         <ul>
             <li>Objective: What is the goal for this design?</li>
             <li>Rationale: Why is this new design being done?</li>
@@ -134,8 +129,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
           rows="10" // Adjust the number of rows to increase the size
           style={{ width: '100%' }} // Make the textarea full width
         ></textarea> 
-        {/* Code for adding a TextEditor <TextEditor handleEditorChange={(content) => setEditorContent(content)} /> */}
-        <label htmlFor="file" style={{ textDecoration: 'underline' }}>Image</label>
+        <label htmlFor="file">Image</label>
         <ImageUpload 
           path="designs" 
           imageUrl={imageUrl}
@@ -151,7 +145,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
             setImageTitle('');
           }}
         />
-        <label htmlFor="dateDue" style={{ textDecoration: 'underline' }}>Due Date</label>
+        <label htmlFor="dateDue">Due Date</label>
         <input
           id="date"
           type="date" // Make sure this is set to 'date'

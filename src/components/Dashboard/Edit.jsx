@@ -15,6 +15,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import SaveIcon from '@mui/icons-material/Save';
+
 const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
   const { userDetails, loading } = useUser();
   console.log("Edit page loaded");
@@ -65,7 +69,53 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [visibleBuildDetails, setVisibleBuildDetails] = useState({});
   const [visibleTestDetails, setVisibleTestDetails] = useState({});
 
+  // States for editing titles of Builds and Tests
+  const [editableBuildTitles, setEditableBuildTitles] = useState({});
+  const [editableTestTitles, setEditableTestTitles] = useState({});
+
   console.log('Editing Design by user:', userDetails);
+
+  const handleBuildTitleChange = (buildId, newTitle) => {
+    setEditableBuildTitles(prev => ({ ...prev, [buildId]: newTitle }));
+  };
+  
+  const handleTestTitleChange = (testId, newTitle) => {
+    setEditableTestTitles(prev => ({ ...prev, [testId]: newTitle }));
+  };
+  
+  const saveBuildTitle = async (buildId) => {
+    const newTitle = editableBuildTitles[buildId];
+    try {
+      // Update Firestore
+      const buildRef = doc(db, "builds", buildId);
+      await setDoc(buildRef, { title: newTitle }, { merge: true });
+      // Update local state if necessary and reset editable state
+      setEditableBuildTitles(prev => {
+        const updated = { ...prev };
+        delete updated[buildId]; // Remove the entry as it's no longer being edited
+        return updated;
+      });
+      refreshBuilds(); // Refresh your builds to reflect the change
+      // Optionally, show a success message
+    } catch (error) {
+      console.error("Failed to save build title:", error);
+      // Show an error message to the user
+    }
+  };  
+  
+  const saveTestTitle = async (testId, buildId) => {
+    const newTitle = editableTestTitles[testId];
+    // Update Firestore
+    const testRef = doc(db, "tests", testId);
+    await setDoc(testRef, { title: newTitle }, { merge: true });
+    // Optionally update local state and reset editable state
+    setEditableTestTitles(prev => {
+      const updated = { ...prev };
+      delete updated[testId]; // Remove the entry as it's no longer being edited
+      return updated;
+    });
+    refreshTestsForBuild(buildId)// Refresh tests for the build that this test belongs to
+  };  
 
   const handleBuildDescriptionChange = (buildId, value) => {
     setEditableBuildDescriptions(prev => ({ ...prev, [buildId]: value }));
@@ -653,9 +703,36 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         </div>
         {builds.map((build, index) => (
           <div key={build.id} className="build-record">
-            <div className="flex-space-between">
-              <h3>Build {index + 1}</h3>
-              {/* Toggle Button for Build Details */}
+            <div className="flex-space-between align-items-center">
+                <div>
+                  {editableBuildTitles[build.id] !== undefined ? (
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      fullWidth
+                      value={editableBuildTitles[build.id]}
+                      onChange={(e) => handleBuildTitleChange(build.id, e.target.value)}
+                      onBlur={() => saveBuildTitle(build.id)}
+                      autoFocus
+                      InputProps={{
+                        endAdornment: (
+                          <IconButton onClick={() => saveBuildTitle(build.id)} size="small">
+                            <SaveIcon />
+                          </IconButton>
+                        ),
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="editableTitle"
+                      onClick={() => setEditableBuildTitles(prev => ({ ...prev, [build.id]: build.title || `Build ${index + 1}` }))} 
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {build.title || `Build ${index + 1}`}
+                    </div>
+                  )}
+                </div>
+                {/* Toggle Button for Build Details */}
                 <div> 
                   <button 
                     onClick={() => setVisibleBuildDetails(prev => ({
@@ -703,8 +780,34 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                 </div>
                 {testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
                   <div key={test.id} className="test-record">
-                    <div className="flex-space-between">
-                      <h4>Test {testIndex + 1}</h4>
+                    <div className="flex-space-between align-items-center">
+                      <div>
+                        {editableTestTitles[test.id] !== undefined ? (
+                          <TextField
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                            value={editableTestTitles[test.id]}
+                            onChange={(e) => handleTestTitleChange(test.id, e.target.value)}
+                            onBlur={() => saveTestTitle(test.id, build.id)}
+                            autoFocus
+                            InputProps={{
+                              endAdornment: (
+                                <IconButton onClick={() => saveTestTitle(test.id, build.id)} size="small">
+                                  <SaveIcon />
+                                </IconButton>
+                              ),
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="editableTitle"
+                            onClick={() => setEditableTestTitles(prev => ({ ...prev, [test.id]: test.title || `Test ${testIndex + 1}` }))} style={{ cursor: 'pointer' }}
+                          >
+                            {test.title || `Test ${testIndex + 1}`}
+                          </div>
+                        )}
+                      </div>
                       <div>
                         {/* Toggle Button for Test Details */}
                         <button 
@@ -770,7 +873,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
             {addingTestIdForBuild === build.id && (
               <div className="new-build-record" ref={addTestFormRef}>
-                <h3>Test {(testsByBuildId[build.id] ? testsByBuildId[build.id].length : 0) + 1}</h3>
+                <h3>Add New Test</h3>
                 <AddTest
                   designId={selectedDesign.id}
                   buildId={build.id}
@@ -784,7 +887,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         <div>
           {isAddingBuild && (
             <div className="new-build-record" ref={addBuildFormRef}>
-              <h3>Build {builds.length + 1}</h3>
+              <h3>Add New Build</h3>
               <AddBuild
                 designId={selectedDesign.id}
                 setIsAddingBuild={setIsAddingBuild}
