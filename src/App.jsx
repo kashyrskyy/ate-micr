@@ -2,6 +2,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useUser } from './contexts/UserContext';
+import Footer from './components/Dashboard/Footer'; // Import the Footer component
 
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index.jsx'));
@@ -25,15 +26,18 @@ const App = () => {
 
   return (
     <Router basename={import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr' : '/'}>
-      <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></div>}>
-        <Routes>
-          {userDetails ? (
-            <Route path="/" element={<Dashboard />} />
-          ) : (
-            <Route path="/" element={<Login />} />
-          )}
-        </Routes>
-      </Suspense>
+      <div className="content">
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></div>}>
+          <Routes>
+            {userDetails ? (
+              <Route path="/" element={<Dashboard />} />
+            ) : (
+              <Route path="/" element={<Login />} />
+            )}
+          </Routes>
+        </Suspense>
+      </div>
+      <Footer />
     </Router>
   );
 };

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { getAuth, signInWithPopup, GoogleAuthProvider, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { Button, Typography, Container, Box, Snackbar, Alert, TextField, Checkbox, FormControlLabel, Tooltip } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
+import Divider from '@mui/material/Divider';
 
 const Login = () => {
   const auth = getAuth();
@@ -68,23 +69,25 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-      <Box sx={{ textAlign: 'center', mb: 2 }}> {/* Adjust the bottom margin as needed */}
-        <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}ate-logo.png`} alt="ATE Logo" style={{ width: 150, marginBottom: 20 }}/>
+    <Container maxWidth="lg" sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}> {/* Left Side */}
+        <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}ate-logo.png`} alt="ATE Logo" style={{ width: 150, marginBottom: 5, marginTop: 40 }}/>
         <Typography variant="h4" component="h1" gutterBottom>
           ATE 2.0: MICR 230
         </Typography>
+      </Box>
+
+      <Divider orientation="vertical" flexItem />
+      
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}> {/* Right Side */}
         {!isPasscodeValid && (
           <form onSubmit={(e) => {
             e.preventDefault(); // Prevent the default form submission
             validatePasscode(passcode);
           }}>
-            <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-              Enter Passcode
-            </Typography>
             <TextField 
               fullWidth 
-              label="Passcode" 
+              label="Enter Passcode" 
               variant="outlined" 
               value={passcode} 
               onChange={(e) => setPasscode(e.target.value)} 
@@ -148,17 +151,13 @@ const Login = () => {
               sx={{ 
                 textTransform: 'none', 
                 fontSize: '1rem', 
-                backgroundColor: '#4285F4', 
-                '&:hover': { 
-                  backgroundColor: '#357ae8', 
-                  // Apply a box-shadow instead of changing the border or size
-                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', 
-                },
                 // Prevent layout shift by applying a transparent border
                 border: '1px solid transparent',
                 // Use transform for visual feedback without layout shift
-                transition: 'transform 0.3s ease-in-out',
+                transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
                 '&:hover': {
+                  backgroundColor: '#357ae8',
+                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
                   transform: 'scale(1.05)',
                 },
                 // Fix the width or min-width as necessary
