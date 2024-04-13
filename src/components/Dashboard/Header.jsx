@@ -56,7 +56,29 @@ const Header = memo(({ setIsAdding }) => {
       )}
       {/* Action buttons below */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Button variant="contained" color="primary" onClick={() => setIsAdding(true)} sx={{ fontSize: '1.2rem', textTransform: 'none' }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => setIsAdding(true)} 
+          sx={{ 
+            fontSize: '1.2rem',
+            mt: 2, 
+            textTransform: 'none',
+            // Define a minimum width or width if necessary
+            minWidth: '150px', // Adjust the width as needed to fit your design
+            // Apply a box-shadow for hover effect instead of changing border or size
+            boxShadow: 'none', // No box-shadow initially
+            '&:hover': {
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
+              // Use transform for visual feedback without layout shift
+              transform: 'scale(1.05)',
+            },
+            // Transition for the transform property for smooth effect
+            transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+            // Prevent layout shift by applying a transparent border
+            border: '1px solid transparent',
+          }}
+        >
           + Create New
         </Button>
         <Logout />

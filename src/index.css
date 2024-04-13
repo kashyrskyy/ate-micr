@@ -51,6 +51,22 @@ body {
   margin: 0;
 }
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1; /* This will make the content expand to fill the available space */
+}
+
 /**
  * Render the `main` element consistently in IE.
  */
@@ -1110,6 +1126,20 @@ table {
 
 .title-column {
   width: 40%; /* Adjust this value based on your preference */
+}
+
+.buttonBase {
+  margin-top: 16px;
+  text-transform: none;
+  width: 250px;
+  box-shadow: none;
+  border: 1px solid transparent;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.buttonBase:hover {
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
 }
 
 .hyperlink-style {
