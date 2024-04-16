@@ -8,6 +8,7 @@ import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firesto
 import { db } from '../../config/firestore'
 
 import ImageUpload from './ImageUpload'; 
+import TextEditor from './TextEditor'; // Import TextEditor
 
 const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
   const { userDetails } = useUser();
@@ -121,14 +122,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
             <li>Functional Modification: What is being done to this target?</li>
             <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
         </ul>
-        <textarea
-          id="description"
-          name="description"
-          value={description}
-          onChange={e => setDesignDescription(e.target.value)}
-          rows="10" // Adjust the number of rows to increase the size
-          style={{ width: '100%' }} // Make the textarea full width
-        ></textarea> 
+        <TextEditor onChange={setDesignDescription} /> {/* Use TextEditor for description */}
         <label htmlFor="file">Image</label>
         <ImageUpload 
           path="designs" 

@@ -7,7 +7,9 @@ import { db } from '../../config/firestore';
 
 import AddBuild from './AddBuild';
 import AddTest from './AddTest';
+
 import ImageUpload from './ImageUpload';
+import TextEditor from './TextEditor'; 
 
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
@@ -618,7 +620,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           <h1>Design Document</h1>
           <div style={{ marginBottom: '20px' }}>
           </div>
-          <label htmlFor="title" style={{ textDecoration: 'underline' }}>Title</label>
+          <label htmlFor="title">Title</label>
           <input
             id="title"
             type="text"
@@ -629,7 +631,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
               setUnsavedChanges(prev => ({ ...prev, design: true }));
             }}          
           />
-          <label htmlFor="description" style={{ textDecoration: 'underline' }}>Description</label>
+          <label htmlFor="description">Description</label>
           <ul>
               <li>Objective: What is the goal for this design?</li>
               <li>Rationale: Why is this new design being done?</li>
@@ -637,19 +639,15 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
               <li>Functional Modification: What is being done to this target?</li>
               <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
           </ul>
-          <textarea
-            id="description"
-            name="description"
-            value={description}
-            onChange={e => {
-              setDesignDescription(e.target.value);
+          <TextEditor
+            initialValue={description}
+            onChange={(newDescription) => {
+              setDesignDescription(newDescription);
               setUnsavedChanges(prev => ({ ...prev, design: true }));
             }}
-            rows="10" // Adjust the number of rows to increase the size
-            style={{ width: '100%' }} // Make the textarea full width
-          ></textarea>
+          />
           {/* Example for adding an image to a Design */}
-          <label htmlFor="file" style={{ textDecoration: 'underline' }}>Image</label>
+          <label htmlFor="file">Image</label>
           <ImageUpload 
             path={`designs/${id}`} 
             imageUrl={imageUrl}
@@ -660,7 +658,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
             setImageTitle={setImageTitle}
             onDelete={handleDesignImageDeleted}
           />
-          <label htmlFor="dateDue" style={{ textDecoration: 'underline' }}>Due Date</label>
+          <label htmlFor="dateDue">Due Date</label>
           <input
             id="dateDue"
             type="date"
@@ -768,16 +766,16 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
             </div>
             {visibleBuildDetails[build.id] && (
               <>
-                <textarea
-                  value={editableBuildDescriptions[build.id] || build.description}
-                  onChange={(e) => handleBuildDescriptionChange(build.id, e.target.value)}
-                  rows="4"
-                  style={{ width: '100%' }}
+                <TextEditor
+                  initialValue={editableBuildDescriptions[build.id] || build.description}
+                  onChange={(newDescription) => {
+                    handleBuildDescriptionChange(build.id, newDescription);
+                  }}
                 />
                 <button onClick={() => updateBuildDescription(build.id)}>Update</button>
-                <div>
+                {/* <div>
                   {renderBuildImageUpload(build)}            
-                </div>
+                </div> */}
                 {testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
                   <div key={test.id} className="test-record">
                     <div className="flex-space-between align-items-center">
@@ -833,34 +831,32 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                       <>
                         <div>
                           <strong>Description</strong>
-                          <textarea
-                            value={editableTestDescriptions[test.id] || test.description}
-                            onChange={(e) => handleTestDescriptionChange(test.id, e.target.value)}
-                            rows="4"
-                            style={{ width: '100%' }}
+                          <TextEditor
+                            initialValue={editableTestDescriptions[test.id] || test.description}
+                            onChange={(newTestDescription) => {
+                              handleTestDescriptionChange(test.id, newTestDescription);
+                            }}
                           />
                         </div>
-                        <div> 
+                        {/* <div> 
                           {renderTestImageUpload(test, build.id)}
-                        </div>
+                        </div> */}
                         <div>
                           <strong>Results</strong>
-                          <textarea
-                            value={editableTestResults[test.id] || test.results}
-                            onChange={(e) => handleTestResultsChange(test.id, e.target.value)}
-                            rows="4"
-                            style={{ width: '100%', marginTop: '10px' }}
-                            placeholder="Results"
+                          <TextEditor
+                            initialValue={editableTestResults[test.id] || test.results}
+                            onChange={(newTestResults) => {
+                              handleTestResultsChange(test.id, newTestResults);
+                            }}
                           />
                         </div>
                         <div>
                           <strong>Conclusions</strong>
-                          <textarea
-                            value={editableTestConclusions[test.id] || test.conclusions}
-                            onChange={(e) => handleTestConclusionsChange(test.id, e.target.value)}
-                            rows="4"
-                            style={{ width: '100%', marginTop: '10px' }}
-                            placeholder="Conclusions"
+                          <TextEditor
+                            initialValue={editableTestConclusions[test.id] || test.conclusions}
+                            onChange={(newTestConclusions) => {
+                              handleTestConclusionsChange(test.id, newTestConclusions);
+                            }}
                           />
                         </div>
                         <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>

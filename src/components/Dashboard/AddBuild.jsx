@@ -8,6 +8,8 @@ import { db } from '../../config/firestore';
 
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
+import TextEditor from './TextEditor';
+
 const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
   const [buildTitle, setBuildTitle] = useState('');
   const [buildDescription, setBuildDescription] = useState('');
@@ -108,13 +110,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
           style={{ width: '100%', marginBottom: '20px' }}
         />
         <label htmlFor="buildDescription">Description</label>
-        <textarea
-          id="buildDescription"
-          value={buildDescription}
-          onChange={e => setBuildDescription(e.target.value)}
-          rows="4"
-          style={{ width: '100%' }}
-        ></textarea>
+        <TextEditor onChange={setBuildDescription} /> {/* Use TextEditor for build description */}
         <div className="flex-space-between">
           <input type="submit" value="Save" className="button muted-button"/>
           <button onClick={() => setIsAddingBuild(false)} className="button muted-button">Cancel</button>

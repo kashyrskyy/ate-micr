@@ -21,7 +21,8 @@
     "url": "https://kashyrskyy.github.io/ate-micr/"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^41.2.1",
+    "@ckeditor/ckeditor5-build-classic": "^41.3.0",
+    "@ckeditor/ckeditor5-build-multi-root": "^41.3.0",
     "@ckeditor/ckeditor5-react": "^6.2.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
@@ -32,7 +33,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@tinymce/tinymce-react": "^5.0.1",
     "browser-image-compression": "^2.0.2",
-    "dompurify": "^3.0.11",
+    "dompurify": "^3.1.0",
     "firebase": "^9.23.0",
     "firebase-admin": "^12.0.0",
     "react": "^18.2.0",

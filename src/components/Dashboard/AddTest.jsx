@@ -8,6 +8,8 @@ import { useUser } from '../../contexts/UserContext';
 
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
+import TextEditor from './TextEditor'; 
+
 const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) => { 
   const [testTitle, setTestTitle] = useState('');
   const [testDescription, setTestDescription] = useState('');
@@ -77,27 +79,12 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
         onChange={(e) => setTestTitle(e.target.value)}
         style={{ width: '100%', margin: '10px 0' }}
       />
-      <textarea
-        placeholder="Describe the test"
-        value={testDescription}
-        onChange={(e) => setTestDescription(e.target.value)}
-        rows="4" // Adjust rows as needed
-        style={{ width: '100%' }} // Adjust width as needed
-      ></textarea>
-      <textarea
-        placeholder="Test Results"
-        value={testResults}
-        onChange={(e) => setTestResults(e.target.value)}
-        rows="4"
-        style={{ width: '100%', margin: '10px 0' }}
-      ></textarea>
-      <textarea
-        placeholder="Test Conclusions"
-        value={testConclusions}
-        onChange={(e) => setTestConclusions(e.target.value)}
-        rows="4"
-        style={{ width: '100%', margin: '10px 0' }}
-      ></textarea>
+      <label htmlFor="testDescription">Description</label>
+      <TextEditor onChange={setTestDescription} /> {/* Use TextEditor for test description */}
+      <label htmlFor="testResults">Results</label>
+      <TextEditor onChange={setTestResults} /> {/* Use TextEditor for test results */}
+      <label htmlFor="testConclusions">Conclusions</label>
+      <TextEditor onChange={setTestConclusions} /> {/* Use TextEditor for test description */}
       <div className="flex-space-between">
         <button onClick={handleAddTest} className="button muted-button">Save</button>
         <button onClick={() => setAddingTestIdForBuild(null)} className="button muted-button">Cancel</button> 
