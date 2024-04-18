@@ -8,7 +8,8 @@ import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firesto
 import { db } from '../../config/firestore'
 
 import ImageUpload from './ImageUpload'; 
-import TextEditor from './TextEditor'; // Import TextEditor
+import TextEditor from './TextEditor'; 
+import FileUpload from './FileUpload'; 
 
 const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
   const { userDetails } = useUser();
@@ -19,9 +20,9 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   
   const [date, setDate] = useState('');
   const [title, setTitle] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageStoragePath, setImageStoragePath] = useState('');
-  const [imageTitle, setImageTitle] = useState('');
+
+  const [images, setImages] = useState([]); // This now handles multiple images
+  const [files, setFiles] = useState([]);  // State for storing file information
 
   // Newly added state variables for Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -45,7 +46,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
     setSnackbarOpen(false);
   };
   
-  const handleAdd = async (e) => {
+  const saveDesign = async (e) => {
     e.preventDefault();
 
     // Check if the user object is defined and has a uid property
@@ -67,9 +68,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       description: description,
       dateDue: Timestamp.fromDate(new Date(date)),
       dateCreated: serverTimestamp(),
-      imageUrl: imageUrl, // Include the image URL in the design document
-      imageStoragePath: imageStoragePath, // Make sure this is being saved
-      imageTitle: imageTitle, // Include the image title/description
+      images: images,  // This now includes all image data including URL, title, path
+      files: files.map(file => ({ url: file.url, name: file.name, path: file.path })),  // Include file URLs and
       userId: userDetails.uid, // Use the user's ID to associate the design with the user
     };     
   
@@ -90,10 +90,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       setTitle('');
       setDesignDescription('');
       setDate('');
-      setImageUrl('');
-      setImageStoragePath('');
-      setImageTitle('');
-  
+      setImages([]);
+      setFiles([]);  // Reset the files state
     } catch (error) {
       console.log(error);
       setDialogContent('There was an issue adding your design.');
@@ -104,8 +102,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   return (
     <div className="small-container">
       <button onClick={onReturnToDashboard} className="muted-button margin-top-20">← All Designs</button>
-      <form onSubmit={handleAdd}>
-        <h1>Create Design</h1>
+      <form onSubmit={saveDesign}>
+        <h1>Create New Design</h1>
         <label htmlFor="title">Title</label>
         <input
           id="title"
@@ -113,6 +111,14 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
           name="title"
           value={title}
           onChange={e => setTitle(e.target.value)}
+        />
+        <label htmlFor="dateDue">Due Date</label>
+        <input
+          id="date"
+          type="date" // Make sure this is set to 'date'
+          name="date"
+          value={date}
+          onChange={e => setDate(e.target.value)}
         />
         <label htmlFor="description">Description</label>
         <ul>
@@ -123,39 +129,22 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
             <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
         </ul>
         <TextEditor onChange={setDesignDescription} /> {/* Use TextEditor for description */}
-        <label htmlFor="file">Image</label>
         <ImageUpload 
-          path="designs" 
-          imageUrl={imageUrl}
-          setImageUrl={setImageUrl}
-          imageStoragePath={imageStoragePath}
-          setImageStoragePath={setImageStoragePath}
-          imageTitle={imageTitle}
-          setImageTitle={setImageTitle}
-          onDelete={() => {
-            // Since there's no design document yet, just reset the related state.
-            setImageUrl('');
-            setImageStoragePath('');
-            setImageTitle('');
+          path="designs/images"
+          images={images}
+          setImages={setImages}
+          onImagesUpdated={(updatedImages) => {
+            setImages(updatedImages);
           }}
         />
-        <label htmlFor="dateDue">Due Date</label>
-        <input
-          id="date"
-          type="date" // Make sure this is set to 'date'
-          name="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
+        <FileUpload  // Include the FileUpload component in the form
+          path="designs/files" 
+          files={files}
+          setFiles={setFiles}
         />
         <div style={{ marginTop: '30px' }}>
-          <input type="submit" value="Add" />
-          <input
-            style={{ marginLeft: '12px' }}
-            className="muted-button"
-            type="button"
-            value="Cancel"
-            onClick={() => setIsAdding(false)}
-          />
+          <Button type="submit" variant="contained">Add</Button>
+          <Button onClick={() => setIsAdding(false)} style={{ marginLeft: '12px' }} variant="outlined">Cancel</Button>
         </div>
       </form>
       <Dialog

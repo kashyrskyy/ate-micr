@@ -9,10 +9,14 @@ import { db } from '../../config/firestore';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
 import TextEditor from './TextEditor';
+import ImageUpload from './ImageUpload'; // Import ImageUpload component
+import FileUpload from './FileUpload'; // Import FileUpload component
 
 const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
   const [buildTitle, setBuildTitle] = useState('');
   const [buildDescription, setBuildDescription] = useState('');
+  const [images, setImages] = useState([]); // State to store images
+  const [files, setFiles] = useState([]); // State to store files
   const { userDetails } = useUser();
 
   console.log("AddBuild loaded");
@@ -62,6 +66,8 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
         design_ID: designId,
         dateCreated: serverTimestamp(), 
         userId: userDetails.uid, // Assuming you have access to the current user's UID
+        images: images.map(img => ({ url: img.url, title: img.title })), // Include image URLs and titles
+        files: files.map(file => ({ url: file.url, name: file.name }))
       });
 
       console.log("Build added with ID: ", docRef.id);
@@ -76,6 +82,8 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
       setTimeout(() => {
         setBuildTitle(''); // Reset the title input field
         setBuildDescription(''); // Reset the input field
+        setImages([]); // Reset the images
+        setFiles([]); // Reset the files
         setIsAddingBuild(false); // Hide the AddBuild component
         refreshBuilds();  // Refresh builds
       }, 1000); // Delay of 1 second
@@ -111,9 +119,18 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
         />
         <label htmlFor="buildDescription">Description</label>
         <TextEditor onChange={setBuildDescription} /> {/* Use TextEditor for build description */}
+        <ImageUpload 
+          path={`builds/${designId}/images`} // Ensure the path is unique for each build
+          images={images}
+          setImages={setImages}
+        />
+        <FileUpload 
+          path={`builds/${designId}/files`} // Adjust the path to organize files separately
+          files={files}
+          setFiles={setFiles}
+        />
         <div className="flex-space-between">
           <input type="submit" value="Save" className="button muted-button"/>
-          <button onClick={() => setIsAddingBuild(false)} className="button muted-button">Cancel</button>
         </div>
       </form>
       <Dialog open={dialogOpen} onClose={handleClose}>

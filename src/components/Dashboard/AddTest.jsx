@@ -9,12 +9,17 @@ import { useUser } from '../../contexts/UserContext';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert } from '@mui/material';
 
 import TextEditor from './TextEditor'; 
+import ImageUpload from './ImageUpload'; // Import ImageUpload component
+import FileUpload from './FileUpload'; // Import FileUpload component
 
 const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) => { 
   const [testTitle, setTestTitle] = useState('');
   const [testDescription, setTestDescription] = useState('');
   const [testResults, setTestResults] = useState('');
   const [testConclusions, setTestConclusions] = useState('');
+  const [images, setImages] = useState([]); // State to store images
+  const [files, setFiles] = useState([]); // State to store files
+
   const { userDetails } = useUser();
 
   console.log("AddTest loaded");
@@ -43,6 +48,8 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
         results: testResults,
         conclusions: testConclusions,
         userId: userDetails.uid,
+        images: images.map(img => ({ url: img.url, title: img.title })), // Include image URLs and titles
+        files: files.map(file => ({ url: file.url, name: file.name })) // Include file URLs and names
       });
 
       // Delay the rest of the operations to ensure the Snackbar is visible
@@ -52,6 +59,8 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
         setTestDescription(''); // Reset the title description field
         setTestResults(''); // Reset the title results field
         setTestConclusions(''); // Reset the title conclusions field
+        setImages([]); // Reset the images
+        setFiles([]); // Reset the files
         setAddingTestIdForBuild(null); // Hide the input form if needed
 
         // Consider even redirecting or triggering other UI changes here
@@ -85,6 +94,16 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
       <TextEditor onChange={setTestResults} /> {/* Use TextEditor for test results */}
       <label htmlFor="testConclusions">Conclusions</label>
       <TextEditor onChange={setTestConclusions} /> {/* Use TextEditor for test description */}
+      <ImageUpload 
+        path={`tests/${buildId}/images`} 
+        images={images}
+        setImages={setImages}
+      />
+      <FileUpload 
+        path={`tests/${buildId}/files`} 
+        files={files}
+        setFiles={setFiles}
+      />
       <div className="flex-space-between">
         <button onClick={handleAddTest} className="button muted-button">Save</button>
         <button onClick={() => setAddingTestIdForBuild(null)} className="button muted-button">Cancel</button> 

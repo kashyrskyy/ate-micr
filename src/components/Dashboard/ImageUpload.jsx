@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Button from '@mui/material/Button';
 
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,25 +17,28 @@ import CloseIcon from '@mui/icons-material/Close';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageStoragePath, imageTitle, setImageTitle, onDelete }) => {
+const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
+  const [images, setImages] = useState(initialImages);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(null);  // To handle which image is shown in full screen
   const [zoomScale, setZoomScale] = useState(1);
-  const fileInputRef = useRef(null);
-
-  const imgRef = useRef(null);
-
   const [isFullScreen, setIsFullScreen] = useState(false);
-
-  // Add states for Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // 'success', 'error', etc.
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    console.log('Initial images received:', initialImages);
+    setImages(initialImages);
+  }, []);  // This will only run once when the component mounts
 
   const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    setUploading(true);
 
     const options = {
       maxSizeMB: 1,
@@ -42,113 +46,114 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
       useWebWorker: true
     };
 
-    try {
+    const uploadPromises = files.map(async (file) => {
       let compressedFile = file;
+
+      // Check if the file is larger than 1 MB and needs compression
       if (file.size > 1024 * 1024) {
         compressedFile = await imageCompression(file, options);
-
+        // Notify the user that the image is being compressed
         setSnackbarMessage('Your image was compressed before uploading due to file size larger than 1 MB.');
         setSnackbarSeverity('info');
         setSnackbarOpen(true);
       }
-
-      setUploading(true);
+            
       const uniqueIdentifier = new Date().getTime();
       const modifiedFileName = `${uniqueIdentifier}-${compressedFile.name}`;
       const storage = getStorage();
       const storageRef = firebaseRef(storage, `${path}/${modifiedFileName}`);
       const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error("Upload failed:", error);
-          setUploading(false);
-          setUploadProgress(0);
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setImageUrl(downloadURL);
-            setImageStoragePath(storageRef.fullPath);
-            setUploading(false);
-            setUploadProgress(0);
-            if (fileInputRef.current) {
-              fileInputRef.current.value = ''; // Reset the file input
-            }
-          });
-        }
-      );
-    } catch (error) {
-      console.error("Error processing image:", error);
+      return new Promise((resolve, reject) => {
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          },
+          (error) => {
+            console.error("Upload failed:", error);
+            reject(error);
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              resolve({ url: downloadURL, path: storageRef.fullPath, title: '' });
+            });
+          }
+        );
+      });
+    });
+
+    Promise.all(uploadPromises).then(newImages => {
+      const updatedImages = [...images, ...newImages];
+      setImages(updatedImages);
+      if (onImagesUpdated) {
+        onImagesUpdated(updatedImages);
+      }
+      setSnackbarMessage('Images uploaded successfully.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
       setUploading(false);
       setUploadProgress(0);
-    }
+      fileInputRef.current.value = '';
+    }).catch(error => {
+      console.error("Error uploading images: ", error);
+      setSnackbarMessage('Failed to upload images.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      setUploading(false);
+      setUploadProgress(0);
+    });
   };
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen); // Toggle the custom full-screen view state
-  };
-
-  const deleteImage = async () => {
-    if (!imageStoragePath) return; // Exit if there's no path to delete
-
+  const deleteImage = async (index) => {
+    const imageToDelete = images[index];
     const storage = getStorage();
-    const imageRef = firebaseRef(storage, imageStoragePath);
+    const imageRef = firebaseRef(storage, imageToDelete.path);
 
     try {
-        await deleteObject(imageRef);
-        console.log("Image deleted successfully");
-        setImageUrl(''); // Clear the image URL state
-        setImageStoragePath(''); // Clear the image storage path state
-        setImageTitle('');
-        
-        onDelete(); // Call the passed deletion callback
-        
-        // Use Snackbar for success message
-        setSnackbarMessage('The image has been deleted.');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
+      await deleteObject(imageRef);
+      const updatedImages = images.filter((_, idx) => idx !== index);
+      setImages(updatedImages);
+      if (onImagesUpdated) {
+        onImagesUpdated(updatedImages);
+      }
+      setSnackbarMessage('Image deleted successfully.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
     } catch (error) {
-        console.error("Error removing file: ", error);
-        // Use Snackbar for error message
-        setSnackbarMessage('There was an issue deleting your image.');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
+      console.error("Error removing file:", error);
+      setSnackbarMessage('Failed to delete image.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
-  
-  const zoomIn = () => setZoomScale(zoomScale * 1.2);
-  const zoomOut = () => setZoomScale(zoomScale / 1.2);
 
-  // Update useEffect for fullscreen changes
+  const toggleFullScreen = (index) => {
+    setIsFullScreen(!isFullScreen);
+    setCurrentImageIndex(index);
+  };
+
   useEffect(() => {
     const handleFullScreenChange = () => {
       const isFullScreenNow = !!document.fullscreenElement;
       setIsFullScreen(isFullScreenNow);
-      document.body.style.backgroundColor = isFullScreenNow ? "white" : ""; // Set or clear the background color
-    }; 
-
-    document.addEventListener('fullscreenchange', handleFullScreenChange);
-
-    return () => {
-        document.removeEventListener('fullscreenchange', handleFullScreenChange);
     };
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
   }, []);
 
-  // Snackbar component for displaying messages
   const handleCloseSnackbar = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+    if (reason === 'clickaway') return;
     setSnackbarOpen(false);
   };
 
   return (
     <div>
-      <input type="file" onChange={handleImageChange} disabled={uploading} ref={fileInputRef} />
+      <h5>Images</h5>
+      <Button variant="outlined" component="label">
+        Upload Image(s)
+        <input type="file" hidden multiple onChange={handleImageChange} disabled={uploading} ref={fileInputRef} accept="image/*" />
+      </Button>
       {uploading && (
         <>
           <p>Uploading... {Math.round(uploadProgress)}%</p>
@@ -157,26 +162,28 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
           </div>
         </>
       )}
-      {imageUrl && (
-        <>
-          <div>
-            <img ref={imgRef} src={imageUrl} alt="Design" onClick={() => setIsModalVisible(true)} style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', cursor: 'pointer' }} />
-            <IconButton onClick={deleteImage} style={{ marginLeft: '10px' }}>
-              <DeleteIcon />
-            </IconButton>
-          </div>
-          <label htmlFor="imageTitle" style={{ display: 'block', marginTop: '10px' }}></label>
+      {images.map((image, index) => (
+        <div key={index}>
+          <img src={image.url} alt={`Uploaded design ${index}`} onClick={() => { setIsModalVisible(true); setCurrentImageIndex(index); }} style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', cursor: 'pointer' }} />
+          <IconButton onClick={() => deleteImage(index)}><DeleteIcon /></IconButton>
           <textarea
-            id="imageTitle"
-            name="imageTitle"
-            value={imageTitle}
-            onChange={e => setImageTitle(e.target.value)}
+            value={image.title}
+            onChange={(e) => {
+              const newTitle = e.target.value;
+              setImages(prev => {
+                const updatedImages = prev.map((img, idx) => idx === index ? {...img, title: newTitle} : img);
+                if (onImagesUpdated) {
+                  onImagesUpdated(updatedImages);
+                }
+                return updatedImages;
+              });
+            }}
+            placeholder="Enter image title"
             rows="2"
             style={{ width: '100%' }}
-            placeholder="Figure."
-          ></textarea>
-        </>
-      )}
+          />
+        </div>
+      ))}
       <Dialog 
         open={isModalVisible} 
         onClose={() => setIsModalVisible(false)} 
@@ -191,41 +198,43 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
             width: isFullScreen ? '100%' : undefined,
             overflowY: 'auto'
           }
-        }} 
+        }}
       >
-        <DialogContent>
-          <div style={{ textAlign: 'center' }}>
-            <img 
-              src={imageUrl} 
-              alt="Zoomed Design" 
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: isFullScreen ? '100vh' : undefined, 
-                transform: `scale(${zoomScale})`, 
-                transition: 'transform 0.2s ease-out' 
-              }} 
-            />
-          </div>
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <IconButton onClick={zoomIn}><ZoomInIcon /></IconButton>
-            <IconButton onClick={zoomOut} style={{ marginLeft: '10px' }}><ZoomOutIcon /></IconButton>
-            <IconButton onClick={toggleFullScreen} style={{ marginLeft: '10px' }}>
-              <FullscreenIcon />
-            </IconButton>
-            {isFullScreen && (
-              <IconButton
-                onClick={toggleFullScreen}
-                style={{
-                  position: 'absolute', // Changed from 'fixed' to 'absolute' within the dialog context
-                  top: 20,
-                  right: 20,
-                }}
-              >
-                <CloseIcon /> 
+        {currentImageIndex !== null && (
+          <DialogContent>
+            <div style={{ textAlign: 'center' }}>
+              <img 
+                src={images[currentImageIndex].url} 
+                alt={`Zoomed Design ${currentImageIndex}`}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: isFullScreen ? '100vh' : undefined, 
+                  transform: `scale(${zoomScale})`, 
+                  transition: 'transform 0.2s ease-out' 
+                }} 
+              />
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <IconButton onClick={() => setZoomScale(zoomScale * 1.2)}><ZoomInIcon /></IconButton>
+              <IconButton onClick={() => setZoomScale(zoomScale / 1.2)} style={{ marginLeft: '10px' }}><ZoomOutIcon /></IconButton>
+              <IconButton onClick={() => toggleFullScreen(currentImageIndex)} style={{ marginLeft: '10px' }}>
+                <FullscreenIcon />
               </IconButton>
-            )}
-          </div>
-        </DialogContent>
+              {isFullScreen && (
+                <IconButton
+                  onClick={() => toggleFullScreen(currentImageIndex)}
+                  style={{
+                    position: 'absolute', // Changed from 'fixed' to 'absolute' within the dialog context
+                    top: 20,
+                    right: 20,
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              )}
+            </div>
+          </DialogContent>
+        )}
       </Dialog>
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
@@ -233,7 +242,7 @@ const ImageUpload = ({ path, imageUrl, setImageUrl, imageStoragePath, setImageSt
         </Alert>
       </Snackbar>
     </div>
-  );  
+  );
 };
 
 export default ImageUpload;

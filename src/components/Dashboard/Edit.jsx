@@ -21,7 +21,7 @@ import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import SaveIcon from '@mui/icons-material/Save';
 
-const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
+const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, initialImages }) => {
   const { userDetails, loading } = useUser();
   console.log("Edit page loaded");
 
@@ -41,9 +41,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [editableTestResults, setEditableTestResults] = useState({});
   const [editableTestConclusions, setEditableTestConclusions] = useState({});
 
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageStoragePath, setImageStoragePath] = useState('');
-  const [imageTitle, setImageTitle] = useState('');
+  const [images, setImages] = useState([]);
 
   const [buildImages, setBuildImages] = useState({}); // { buildId: { imageUrl: '', imageStoragePath: '' } }
   const [testImages, setTestImages] = useState({}); // { testId: { imageUrl: '', imageStoragePath: '' } }
@@ -76,6 +74,11 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [editableTestTitles, setEditableTestTitles] = useState({});
 
   console.log('Editing Design by user:', userDetails);
+
+  useEffect(() => {
+    console.log('Images for editing received:', initialImages);
+    setImages(initialImages);
+  }, [initialImages]);  // Updates only if initialImages changes  
 
   const handleBuildTitleChange = (buildId, newTitle) => {
     setEditableBuildTitles(prev => ({ ...prev, [buildId]: newTitle }));
@@ -189,18 +192,17 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       setTitle(selectedDesign.title || '');
 
       // Fetch image URL from Firestore
-      const fetchImageUrl = async () => {
+      const fetchData = async () => {
         const designRef = doc(db, "designs", id);
         const docSnap = await getDoc(designRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setImageUrl(data.imageUrl || '');
-          setImageStoragePath(data.imageStoragePath || '');
-          setImageTitle(data.imageTitle || ''); // Set image title
+          console.log('Fetched images:', data.images); // Add this line to debug
+          setImages(data.images || []);
         }
       };
 
-      fetchImageUrl();
+      fetchData();
   
       // Check if 'dateDue' exists and handle both string and Timestamp cases
       let dueDateString;
@@ -345,6 +347,10 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     }));
   };  
 
+  const handleImagesUpdated = (updatedImages) => {
+    setImages(updatedImages);  // Update state with new image data
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -359,9 +365,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         title,
         description,
         dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
-        imageUrl,
-        imageStoragePath,
-        imageTitle,
+        images: images.map(img => ({ url: img.url, title: img.title, path: img.path })),
         userId: userDetails.uid
     };
 
@@ -647,16 +651,10 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
             }}
           />
           {/* Example for adding an image to a Design */}
-          <label htmlFor="file">Image</label>
-          <ImageUpload 
-            path={`designs/${id}`} 
-            imageUrl={imageUrl}
-            setImageUrl={setImageUrl}
-            imageStoragePath={imageStoragePath}
-            setImageStoragePath={setImageStoragePath}
-            imageTitle={imageTitle}
-            setImageTitle={setImageTitle}
-            onDelete={handleDesignImageDeleted}
+          <ImageUpload
+            path={`designs/${selectedDesign.id}/images`}
+            images={initialImages}
+            onImagesUpdated={handleImagesUpdated}
           />
           <label htmlFor="dateDue">Due Date</label>
           <input
