@@ -1,5 +1,5 @@
 // FileUpload.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getStorage, ref as firebaseRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 
 import List from '@mui/material/List';
@@ -16,16 +16,36 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-const FileUpload = ({ path }) => {
-    const [files, setFiles] = useState([]);
+const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
+    const [files, setFiles] = useState(initialFiles);
+
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
-    const [editState, setEditState] = useState({ id: null, name: "" });
+
+    const [editStates, setEditStates] = useState({}); // This will hold editing states for each file
+    
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('info');
 
     const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        console.log("Initial files received:", initialFiles);
+        setFiles(initialFiles);
+    }, [initialFiles]);
+
+    useEffect(() => {
+        return () => {
+            setEditStates({});  // Reset editing states when the component unmounts
+        };
+    }, []);    
+
+    // Replace internal setFiles calls with onFilesChange from props
+    const updateFiles = (newFiles) => {
+        onFilesChange(newFiles);
+        setFiles(newFiles); // Optional: maintain local state if necessary for display
+    };
 
     const handleFileChange = async (event) => {
         const fileList = Array.from(event.target.files);
@@ -69,7 +89,7 @@ const FileUpload = ({ path }) => {
         });
 
         Promise.all(uploadPromises).then(newFiles => {
-            setFiles(prev => [...prev, ...newFiles]);
+            updateFiles(prev => [...prev, ...newFiles]); // Changed from setFiles to updateFiles
             setSnackbarMessage('Files uploaded successfully.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
@@ -95,7 +115,7 @@ const FileUpload = ({ path }) => {
 
         try {
             await deleteObject(fileRef);
-            setFiles(prev => prev.filter(file => file.id !== id));
+            updateFiles(prev => prev.filter(file => file.id !== id)); // Changed from setFiles to updateFiles
             setSnackbarMessage('File deleted successfully.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
@@ -105,38 +125,44 @@ const FileUpload = ({ path }) => {
             setSnackbarSeverity('error');
             setSnackbarOpen(true);
         }
-    };
+    };    
 
     const handleEditClick = (fileId) => {
-        const file = files.find(f => f.id === fileId);
-        if (file) {
-            setEditState({ id: file.id, name: file.name });
-        }
+        setEditStates((prevEditStates) => ({
+            ...prevEditStates,
+            [fileId]: files.find((file) => file.id === fileId)?.name || '', // Ensure fallback to empty string if file is not found
+        }));
+        console.log("editStates after handleEditClick:", editStates);
     };
 
+    // When you're done editing and want to save the new name
     const handleSaveClick = (fileId) => {
-        const updatedFiles = files.map(file => {
-            if (file.id === fileId) {
-                return { ...file, name: editState.name };
+        const newFiles = files.map(file => {
+            if (file.id === fileId && editStates[fileId] !== undefined) {
+                return { ...file, name: editStates[fileId] }; // Only update the name of the file being edited
             }
             return file;
         });
-        setFiles(updatedFiles);
-        setEditState({ id: null, name: "" });
+        
+        setFiles(newFiles); // Update the state with the new files array
+        onFilesChange(newFiles); // Propagate changes up to the parent component
+
+        setEditStates(prev => {
+            const newState = { ...prev };
+            delete newState[fileId]; // Remove the edit state for this fileId
+            return newState;
+        });
         setSnackbarMessage('File name updated successfully.');
         setSnackbarSeverity('info');
         setSnackbarOpen(true);
     };
 
-    const handleNameChange = (event) => {
-        setEditState(prev => ({ ...prev, name: event.target.value }));
-    };
-
-    const handleKeyPress = (event, fileId) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            handleSaveClick(fileId);
-        }
+    // Update the name in the editStates when typing
+    const handleNameChange = (fileId, newName) => {
+        setEditStates(prev => ({
+            ...prev,
+            [fileId]: newName // Update the edit state for this specific fileId
+        }));
     };
 
     const handleCloseSnackbar = (event, reason) => {
@@ -162,19 +188,19 @@ const FileUpload = ({ path }) => {
                         <ListItemIcon>
                             <InsertDriveFileIcon />
                         </ListItemIcon>
-                        {editState.id === file.id ? (
+                        {typeof editStates[file.id] === 'string' ? (
                             <TextField
                                 variant="outlined"
                                 size="small"
-                                value={editState.name}
-                                onChange={handleNameChange}
-                                onKeyPress={(e) => handleKeyPress(e, file.id)}
+                                value={editStates[file.id]}
+                                onChange={(e) => handleNameChange(file.id, e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSaveClick(file.id)}
                                 fullWidth
                             />
                         ) : (
                             <ListItemText primary={file.name} secondary={<a href={file.url} target="_blank" rel="noopener noreferrer">Download</a>} />
                         )}
-                        {editState.id === file.id ? (
+                        {typeof editStates[file.id] === 'string' ? (
                             <IconButton onClick={() => handleSaveClick(file.id)} edge="end" aria-label="save">
                                 <SaveIcon />
                             </IconButton>

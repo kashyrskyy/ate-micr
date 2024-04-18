@@ -10,6 +10,7 @@ import AddTest from './AddTest';
 
 import ImageUpload from './ImageUpload';
 import TextEditor from './TextEditor'; 
+import FileUpload from './FileUpload'; 
 
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
@@ -21,7 +22,7 @@ import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import SaveIcon from '@mui/icons-material/Save';
 
-const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, initialImages }) => {
+const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
   const { userDetails, loading } = useUser();
   console.log("Edit page loaded");
 
@@ -42,6 +43,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
   const [editableTestConclusions, setEditableTestConclusions] = useState({});
 
   const [images, setImages] = useState([]);
+  const [files, setFiles] = useState([]);
 
   const [buildImages, setBuildImages] = useState({}); // { buildId: { imageUrl: '', imageStoragePath: '' } }
   const [testImages, setTestImages] = useState({}); // { testId: { imageUrl: '', imageStoragePath: '' } }
@@ -74,11 +76,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
   const [editableTestTitles, setEditableTestTitles] = useState({});
 
   console.log('Editing Design by user:', userDetails);
-
-  useEffect(() => {
-    console.log('Images for editing received:', initialImages);
-    setImages(initialImages);
-  }, [initialImages]);  // Updates only if initialImages changes  
 
   const handleBuildTitleChange = (buildId, newTitle) => {
     setEditableBuildTitles(prev => ({ ...prev, [buildId]: newTitle }));
@@ -198,7 +195,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
         if (docSnap.exists()) {
           const data = docSnap.data();
           console.log('Fetched images:', data.images); // Add this line to debug
+          console.log('Fetched files:', data.files); // Add this line to debug
           setImages(data.images || []);
+          setFiles(data.files || []);
         }
       };
 
@@ -366,6 +365,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
         description,
         dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
         images: images.map(img => ({ url: img.url, title: img.title, path: img.path })),
+        files: files.map(file => ({ url: file.url, name: file.name, path: file.path })), // Include files in the update
         userId: userDetails.uid
     };
 
@@ -607,7 +607,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
       />
     );
   };
-
+  
   return (
     <div className="small-container">
       <button onClick={() => {
@@ -635,6 +635,17 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
               setUnsavedChanges(prev => ({ ...prev, design: true }));
             }}          
           />
+          <label htmlFor="dateDue">Due Date</label>
+          <input
+            id="dateDue"
+            type="date"
+            name="dateDue"
+            value={date}
+            onChange={e => {
+              setDate(e.target.value);
+              setUnsavedChanges(prev => ({ ...prev, design: true }));
+            }}
+          />
           <label htmlFor="description">Description</label>
           <ul>
               <li>Objective: What is the goal for this design?</li>
@@ -653,19 +664,13 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard, i
           {/* Example for adding an image to a Design */}
           <ImageUpload
             path={`designs/${selectedDesign.id}/images`}
-            images={initialImages}
+            initialImages={images}
             onImagesUpdated={handleImagesUpdated}
           />
-          <label htmlFor="dateDue">Due Date</label>
-          <input
-            id="dateDue"
-            type="date"
-            name="dateDue"
-            value={date}
-            onChange={e => {
-              setDate(e.target.value);
-              setUnsavedChanges(prev => ({ ...prev, design: true }));
-            }}
+          <FileUpload
+            path={`designs/${selectedDesign.id}/files`} // Adjust path to include the design ID
+            initialFiles={files}
+            onFilesChange={setFiles} // Handler to update state when files change
           />
           <div style={{ marginTop: '30px' }}>
             <input type="submit" value="Update" />

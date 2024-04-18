@@ -48,6 +48,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   
   const saveDesign = async (e) => {
     e.preventDefault();
+    console.log("Files to be saved:", files);
 
     // Check if the user object is defined and has a uid property
     if (!userDetails || !userDetails.uid) {
@@ -69,7 +70,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       dateDue: Timestamp.fromDate(new Date(date)),
       dateCreated: serverTimestamp(),
       images: images,  // This now includes all image data including URL, title, path
-      files: files.map(file => ({ url: file.url, name: file.name, path: file.path })),  // Include file URLs and
+      files: files.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),  // Include file URLs and
       userId: userDetails.uid, // Use the user's ID to associate the design with the user
     };     
   
@@ -139,8 +140,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
         />
         <FileUpload  // Include the FileUpload component in the form
           path="designs/files" 
-          files={files}
-          setFiles={setFiles}
+          initialFiles={files}
+          onFilesChange={setFiles} // Ensure this is correctly passed and used
         />
         <div style={{ marginTop: '30px' }}>
           <Button type="submit" variant="contained">Add</Button>
