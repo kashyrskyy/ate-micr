@@ -38,6 +38,8 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
       return;
     }
 
+    const filteredImagesTest = testImages.filter(img => !img.deleted); // Only save images that aren't marked as deleted
+
     try {
       await addDoc(collection(db, "tests"), {
         title: testTitle,
@@ -48,7 +50,7 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
         results: testResults,
         conclusions: testConclusions,
         userId: userDetails.uid,
-        images: testImages,  // This now includes all image data including URL, title, path
+        images: filteredImagesTest,  // This now includes all image data including URL, title, path
         files: testFiles // Include file URLs and names
       });
 

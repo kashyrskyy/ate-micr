@@ -140,19 +140,18 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
   const updateBuildDescription = async (buildId) => {
     const buildRef = doc(db, "builds", buildId);
+
+    // Filter out deleted images before sending update to Firestore
+    const filteredBuildImages = buildImages[buildId]?.filter(img => !img.deleted).map(({ url, path, title }) => ({ url, path, title })) || [];
   
     // Prepare the update data object and include only defined fields.
     const updatedData = {};
     if (editableBuildDescriptions[buildId] !== undefined) {
       updatedData.description = editableBuildDescriptions[buildId];
     }
-    if (buildImages[buildId] && buildImages[buildId].length > 0) {
-      updatedData.images = buildImages[buildId].map(img => ({
-        url: img.url,
-        title: img.title,
-        path: img.path
-      }));
-    }
+
+    updatedData.images = filteredBuildImages;
+
     if (buildFiles[buildId] && buildFiles[buildId].length > 0) {
       updatedData.files = buildFiles[buildId].map(file => ({
         id: file.id,  // Preserve the ID
@@ -180,6 +179,10 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const updateTestDescription = async (testId, buildId) => {
     // Prepare the update data object and include only defined fields.
     const updateData = {};
+
+    // Filter out deleted images before sending update to Firestore
+    const filteredTestImages = testImages[testId].filter(img => !img.deleted).map(({ url, path, title }) => ({ url, path, title }));
+
     if (editableTestDescriptions[testId] !== undefined) {
       updateData.description = editableTestDescriptions[testId];
     }
@@ -190,14 +193,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       updateData.conclusions = editableTestConclusions[testId];
     }
 
-    // Include image and file data if they are defined.
-    if (testImages[testId]) {
-      updateData.images = testImages[testId].map(img => ({
-        url: img.url,
-        title: img.title,
-        path: img.path
-      }));
-    }
+    updateData.images = filteredTestImages;
+
     if (testFiles[testId]) {
       updateData.files = testFiles[testId].map(file => ({
         id: file.id,  // Preserve the ID
@@ -441,6 +438,59 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       .then(() => console.log("Firestore successfully updated"))
       .catch(error => console.error("Failed to update Firestore:", error));
   };  
+
+  const handleBuildImageDeletions = (buildId, deletedImages) => {
+    const buildRef = doc(db, "builds", buildId);
+    const remainingImages = buildImages[buildId].filter(img => !deletedImages.some(delImg => delImg.path === img.path));
+  
+    // Update the local state
+    setBuildImages(prev => ({
+      ...prev,
+      [buildId]: remainingImages
+    }));
+  
+    // Update Firestore
+    const imageUpdate = remainingImages.map(img => ({ url: img.url, title: img.title, path: img.path }));
+    setDoc(buildRef, { images: imageUpdate }, { merge: true })
+      .then(() => {
+        console.log("Firestore successfully updated for build images");
+        setSnackbarMessage('Build Image deletions updated.');
+        setSnackbarSeverity('success');
+      })
+      .catch(error => {
+        console.error("Failed to update build images in Firestore:", error);
+        setSnackbarMessage('Failed to update build image deletions.');
+        setSnackbarSeverity('error');
+      });
+    setSnackbarOpen(true);
+  };  
+
+  const handleTestImageDeletions = (testId, deletedImages) => {
+    const testRef = doc(db, "tests", testId);
+    const remainingImages = testImages[testId].filter(img => !deletedImages.includes(img));
+
+    // Update the local state
+    setTestImages(prev => ({
+        ...prev,
+        [testId]: remainingImages
+    }));
+
+    // Update Firestore 
+    const updatedImages = remainingImages.map(({ url, path, title }) => ({ url, path, title }));
+    setDoc(testRef, { images: updatedImages }, { merge: true })
+        .then(() => {
+          console.log("Firestore successfully updated for test images");
+          setSnackbarMessage('Test Image deletions updated.');
+          setSnackbarSeverity('success');
+        })
+        .catch(error => {
+          console.error("Failed to update test images in Firestore:", error);
+          setSnackbarMessage('Failed to update test image deletions.');
+          setSnackbarSeverity('error');
+        });
+    setSnackbarOpen(true);
+  };
+
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -774,9 +824,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                 />
                 <ImageUpload
                   path={`builds/${build.id}/images`}
-                  // initialImages={buildImages[build.id] || []}
                   initialImages={build.images}
                   onImagesUpdated={images => handleBuildImagesUpdated(build.id, images)}
+                  onDelete={(deletedImages) => handleBuildImageDeletions(build.id, deletedImages)}
                 />
                 <FileUpload
                   path={`builds/${build.id}/files`}
@@ -870,6 +920,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                               path={`tests/${test.id}/images`}
                               initialImages={testImages[test.id] || []}
                               onImagesUpdated={(images) => handleTestImagesUpdated(test.id, images)}
+                              onDelete={(deletedImages) => handleTestImageDeletions(test.id, deletedImages)}
                             />
                             <FileUpload
                               path={`tests/${test.id}/files`}

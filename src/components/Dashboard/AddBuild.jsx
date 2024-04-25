@@ -66,6 +66,8 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
       return;
     }
 
+    const filteredImagesBuild = buildImages.filter(img => !img.deleted); // Only save images that aren't marked as deleted
+
     try {
       // Inside the handleAddBuild function or equivalent
       const docRef = await addDoc(collection(db, "builds"), {
@@ -74,7 +76,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
         design_ID: designId,
         dateCreated: serverTimestamp(), 
         userId: userDetails.uid, // Assuming you have access to the current user's UID
-        images: buildImages,  // This now includes all image data including URL, title, path
+        images: filteredImagesBuild,  // This now includes all image data including URL, title, path
         files: buildFiles
       });
 
