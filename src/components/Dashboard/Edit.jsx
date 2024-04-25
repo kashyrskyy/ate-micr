@@ -27,6 +27,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   console.log("Edit page loaded");
 
   const id = selectedDesign.id;
+
+  console.log("Design ID:", id);
+
   const [description, setDesignDescription] = useState(selectedDesign.description);
   const [date, setDate] = useState(selectedDesign.dateDue || '');
   const [title, setTitle] = useState('');
@@ -34,7 +37,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [isAddingBuild, setIsAddingBuild] = useState(false);
   const [builds, setBuilds] = useState([]);
   const [testsByBuildId, setTestsByBuildId] = useState({});
-  const [addingTestIdForBuild, setAddingTestIdForBuild] = useState(null);
+  const [addingTestIdForBuild, setAddingTestIdForBuild] = useState(false);
 
   const [editableBuildDescriptions, setEditableBuildDescriptions] = useState({});
 
@@ -43,10 +46,14 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [editableTestConclusions, setEditableTestConclusions] = useState({});
 
   const [images, setImages] = useState([]);
+  const imageUploadRef = useRef(null);
+
   const [files, setFiles] = useState([]);
 
-  const [buildImages, setBuildImages] = useState({}); // { buildId: { imageUrl: '', imageStoragePath: '' } }
-  const [testImages, setTestImages] = useState({}); // { testId: { imageUrl: '', imageStoragePath: '' } }
+  const [buildImages, setBuildImages] = useState({});
+  const [testImages, setTestImages] = useState({});
+  const [buildFiles, setBuildFiles] = useState({});
+  const [testFiles, setTestFiles] = useState({});
 
   const addBuildFormRef = useRef(null);
   const addTestFormRef = useRef(null);
@@ -125,22 +132,51 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   };
   
   const handleTestDescriptionChange = (testId, value) => {
+    console.log(`Updating description for test ID ${testId}:`, value);
     setEditableTestDescriptions(prev => ({ ...prev, [testId]: value }));
     setUnsavedChanges(prev => ({ ...prev, tests: true }));
   };  
-  
+
   const updateBuildDescription = async (buildId) => {
     const buildRef = doc(db, "builds", buildId);
-    await setDoc(buildRef, { description: editableBuildDescriptions[buildId] }, { merge: true });
-    setSnackbarMessage('Your build has been updated.');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-    refreshBuilds(); // Ensure this method updates local state to reflect changes
-    setUnsavedChanges(prev => ({ ...prev, builds: false }));
-  }; 
   
-  const updateTestDescription = async (testId, buildId) => { // Note: buildId is now a parameter
-    // Prepare updateData object, omitting properties that are undefined
+    // Prepare the update data object and include only defined fields.
+    const updatedData = {};
+    if (editableBuildDescriptions[buildId] !== undefined) {
+      updatedData.description = editableBuildDescriptions[buildId];
+    }
+    if (buildImages[buildId] && buildImages[buildId].length > 0) {
+      updatedData.images = buildImages[buildId].map(img => ({
+        url: img.url,
+        title: img.title,
+        path: img.path
+      }));
+    }
+    if (buildFiles[buildId] && buildFiles[buildId].length > 0) {
+      updatedData.files = buildFiles[buildId].map(file => ({
+        url: file.url,
+        name: file.name,
+        path: file.path
+      }));
+    }
+  
+    try {
+      await setDoc(buildRef, updatedData, { merge: true });
+      setSnackbarMessage('Your build has been updated.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      refreshBuilds();
+      setUnsavedChanges(prev => ({ ...prev, builds: false }));
+    } catch (error) {
+      console.error("Error updating build:", error);
+      setSnackbarMessage('Failed to update build.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };  
+
+  const updateTestDescription = async (testId, buildId) => {
+    // Prepare the update data object and include only defined fields.
     const updateData = {};
     if (editableTestDescriptions[testId] !== undefined) {
       updateData.description = editableTestDescriptions[testId];
@@ -152,27 +188,46 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       updateData.conclusions = editableTestConclusions[testId];
     }
 
-    // Proceed only if there's something to update
-    if (Object.keys(updateData).length > 0) {
-      const testRef = doc(db, "tests", testId);
-      try {
-        await setDoc(testRef, updateData, { merge: true });
-        console.log(`Successfully updated test ID: ${testId}`);
-        setSnackbarMessage('Your test has been updated.');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-        await refreshTestsForBuild(buildId); // Now refreshes only tests for the specific build
-      } catch (error) {
-        console.error(`Error updating test ID: ${testId}:`, error);
-        setSnackbarMessage('There was an issue updating your test.');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      }
+    // Include image and file data if they are defined.
+    if (testImages[testId]) {
+      updateData.images = testImages[testId].map(img => ({
+        url: img.url,
+        title: img.title,
+        path: img.path
+      }));
     }
-    setUnsavedChanges(prev => ({ ...prev, tests: false }));
+    if (testFiles[testId]) {
+      updateData.files = testFiles[testId].map(file => ({
+        url: file.url,
+        name: file.name,
+        path: file.path
+      }));
+    }
+
+    try {
+      // Perform the update in Firestore.
+      const testRef = doc(db, "tests", testId);
+      await setDoc(testRef, updateData, { merge: true });
+      
+      // Show a success message.
+      setSnackbarMessage('Your test has been updated.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+  
+      // Refresh the tests to show the updated information.
+      refreshTestsForBuild(buildId);
+    } catch (error) {
+      console.error(`Error updating test ID: ${testId}:`, error);
+      
+      // Show an error message.
+      setSnackbarMessage('There was an issue updating your test.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };  
 
   const handleTestResultsChange = (testId, value) => {
+    console.log(`Updating results for test ID ${testId}:`, value);
     setEditableTestResults(prev => ({ ...prev, [testId]: value }));
     setUnsavedChanges(prev => ({ ...prev, tests: true }));
   };
@@ -218,8 +273,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         setDate(''); // If no 'dateDue', reset the date field
       }
     }
-  }, [selectedDesign, id]); // Included 'id' in the dependency array
-  
+  }, [selectedDesign, id]); // Included 'id' in the dependency array  
+
   // UseEffect to fetch tests for all builds initially and whenever builds are refreshed
   useEffect(() => {
     const fetchBuildsAndTests = async () => {
@@ -227,58 +282,61 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
       const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", id), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
       const querySnapshot = await getDocs(buildsQuery);
-      const fetchedBuilds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      let tempBuildImages = {};
+      let fetchedBuilds = [];
       let tempTestsByBuildId = {};
-      let tempTestResults = {};
-      let tempTestConclusions = {};
-      let tempTestImages = {}; // Create an object to hold test images
-      let tempTestDescriptions = {}; // Initialize temporary storage for test descriptions
 
-      for (const build of fetchedBuilds) {
-        // Set image data for each build
-        tempBuildImages[build.id] = {
-          imageUrl: build.imageUrl || '',
-          imageStoragePath: build.imageStoragePath || '',
-          imageTitle: build.imageTitle || ''
-        };
-        
-        const testsQuery = query(collection(db, "tests"), where("build_ID", "==", build.id), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
-        const testsSnapshot = await getDocs(testsQuery);
-        const fetchedTests = testsSnapshot.docs.map(doc => {
-          const testData = doc.data();
-          // Set image data for each test
-          tempTestImages[doc.id] = {
-            imageUrl: testData.imageUrl || '',
-            imageStoragePath: testData.imageStoragePath || '',
-            imageTitle: testData.imageTitle || ''
-          };
-          
-          // Initialize editable fields for descriptions, results, and conclusions
-          tempTestDescriptions[doc.id] = testData.description || "";
-          tempTestResults[doc.id] = testData.results || "";
-          tempTestConclusions[doc.id] = testData.conclusions || "";
-          return { id: doc.id, ...testData };
+      for (const buildDoc of querySnapshot.docs) {
+        const buildData = buildDoc.data();
+        const buildId = buildDoc.id;
+        fetchedBuilds.push({
+          id: buildId,
+          ...buildData,
+          images: buildData.images || [], // Make sure images is an array
+          files: buildData.files || [] // Make sure files is an array
         });
-        tempTestsByBuildId[build.id] = fetchedTests;
+
+        const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
+        const testsSnapshot = await getDocs(testsQuery);
+        let fetchedTests = [];
+        let buildTestImages = {};
+        let buildTestFiles = {};
+
+        for (const testDoc of testsSnapshot.docs) {
+          const testData = testDoc.data();
+          fetchedTests.push({
+            id: testDoc.id,
+            ...testData,
+          });
+          buildTestImages[testDoc.id] = testData.images || [];
+          buildTestFiles[testDoc.id] = testData.files || [];
+        }
+        tempTestsByBuildId[buildId] = fetchedTests;
+        
+        setTestImages(prevImages => {
+          let updatedImages = {...prevImages};
+          for (const testId in buildTestImages) {
+            updatedImages[testId] = buildTestImages[testId];
+          }
+          return updatedImages;
+        });
+
+        setTestFiles(prevFiles => {
+          let updatedFiles = {...prevFiles};
+          for (const testId in buildTestFiles) {
+            updatedFiles[testId] = buildTestFiles[testId];
+          }
+          return updatedFiles;
+        });
       }
-    
       // Update state with fetched data
       setBuilds(fetchedBuilds);
-      setBuildImages(tempBuildImages); // Set the state for build images
       setTestsByBuildId(tempTestsByBuildId);
-      setEditableTestDescriptions(tempTestDescriptions); 
-      setEditableTestResults(tempTestResults);
-      setEditableTestConclusions(tempTestConclusions);
-      setTestImages(tempTestImages); // Set the state for test images
-    };    
-    
+    };
+
     if (!loading && userDetails) {
       fetchBuildsAndTests();
     }
-
-  }, [loading, userDetails, selectedDesign.id, id]); // 'id' is included in the dependency array    
+  }, [loading, userDetails, selectedDesign.id, id]);
 
   // This function now focuses on refreshing builds only, with detailed console logging
   const refreshBuilds = async () => {
@@ -319,7 +377,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         console.error("An unexpected error occurred when trying to refresh builds:", error);
       }
     }
-  }; 
+  };  
 
   const refreshTestsForBuild = async (buildId) => {
     if (!userDetails) {
@@ -327,28 +385,59 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       return;
     }
   
-    const testsQuery = query(
-      collection(db, "tests"),
-      where("build_ID", "==", buildId),
-      where("userId", "==", userDetails.uid), // Ensure the user can only access their tests
-      orderBy("dateCreated")
-    );
-    const testsSnapshot = await getDocs(testsQuery);
-    const fetchedTests = testsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    try {
+      const testsQuery = query(
+        collection(db, "tests"),
+        where("build_ID", "==", buildId),
+        where("userId", "==", userDetails.uid), // Ensure the user can only access their tests
+        orderBy("dateCreated")
+      );
+      const testsSnapshot = await getDocs(testsQuery);
+      const fetchedTests = testsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        images: doc.data().images || [], // Ensure images is an array
+        files: doc.data().files || [] // Ensure files is an array
+      }));
+    
+      // Update tests for the specific build in state
+      setTestsByBuildId(prev => ({
+        ...prev,
+        [buildId]: fetchedTests
+      }));
   
-    // Update tests for the specific build in state
-    setTestsByBuildId(prev => ({
-      ...prev,
-      [buildId]: fetchedTests
-    }));
+      let newTestImages = {};
+      let newTestFiles = {};
+    
+      fetchedTests.forEach(test => {
+        newTestImages[test.id] = test.images;
+        newTestFiles[test.id] = test.files;
+      });
+    
+      setTestImages(newTestImages);
+      setTestFiles(newTestFiles);
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+      // Optionally set an error state or show a notification
+    }
   };  
 
   const handleImagesUpdated = (updatedImages) => {
-    setImages(updatedImages);  // Update state with new image data
-  };
+    if (JSON.stringify(images) !== JSON.stringify(updatedImages)) {
+      setImages(updatedImages);  // Update state with new image data
+      console.log("Updated images received:", updatedImages);
+    }
+  };  
+
+  const handleImageDeletions = (deletedImages) => {
+    const remainingImages = images.filter(img => !deletedImages.some(delImg => delImg.path === img.path));
+    console.log("Remaining images after deletion:", remainingImages);
+    setImages(remainingImages);
+    const imageUpdate = remainingImages.map(img => ({ url: img.url, title: img.title, path: img.path }));
+    setDoc(doc(db, "designs", id), { images: imageUpdate }, { merge: true })
+      .then(() => console.log("Firestore successfully updated"))
+      .catch(error => console.error("Failed to update Firestore:", error));
+  };  
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -359,12 +448,24 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       return;
     }
 
+    // Delete images if needed
+    console.log("About to check image deletions", imageUploadRef.current);
+    console.log(imageUploadRef.current)
+    console.log(images.some(img => img.deleted))
+    if (imageUploadRef.current && images.some(img => img.deleted)) {
+      console.log("Committing deletions");
+      await imageUploadRef.current.commitDeletions();
+    }
+
+    // Filter out images marked as deleted (this might be redundant if handled by commitDeletions)
+    const activeImages = images.filter(img => !img.deleted);
+
     // Construct the update object dynamically
     let updateObject = {
         title,
         description,
         dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
-        images: images.map(img => ({ url: img.url, title: img.title, path: img.path })),
+        images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
         files: files.map(file => ({ url: file.url, name: file.name, path: file.path })), // Include files in the update
         userId: userDetails.uid
     };
@@ -376,7 +477,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Error updating design:", error);
-
       setSnackbarMessage('There was an issue updating your design.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
@@ -386,88 +486,35 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     setUnsavedChanges(prev => ({ ...prev, design: false }));
   };
 
-  const updateBuildImageDetailsInFirestore = async (buildId, imageUrl, imageStoragePath, imageTitle) => {
-    const buildRef = doc(db, "builds", buildId);
-    const updateData = {
-      ...(imageUrl !== undefined && { imageUrl }),
-      ...(imageStoragePath !== undefined && { imageStoragePath }),
-      ...(imageTitle !== undefined && { imageTitle })
-    };
-    
-    if (Object.keys(updateData).length > 0) {
-      await setDoc(buildRef, updateData, { merge: true });
-    }
-  };  
-
-  const handleDesignImageDeleted = async () => {
-    try {
-      // Update the design document in Firestore to remove image references
-      const designRef = doc(db, "designs", id);
-      await setDoc(designRef, {
-        imageUrl: '',
-        imageStoragePath: '',
-        imageTitle: ''
-      }, { merge: true });
-
-      // Update local state to reflect the deletion
-      setImageUrl('');
-      setImageStoragePath('');
-      setImageTitle('');
-
-      console.log("Design image references removed from Firestore.");
-    } catch (error) {
-      console.error("Failed to update design document in Firestore:", error);
-    }
+  // Function to handle updates to build images
+  const handleBuildImagesUpdated = (buildId, newImages) => {
+    setBuildImages(prev => ({
+      ...prev,
+      [buildId]: newImages
+    }));
   };
 
-  const handleDeleteBuildImage = async (buildId) => {
-    const buildRef = doc(db, "builds", buildId);
-    await setDoc(buildRef, { imageUrl: '', imageStoragePath: '', imageTitle: '' }, { merge: true });
+  // Function to update images for a specific test
+  const handleTestImagesUpdated = (testId, newImages) => {
+    setTestImages(prevImages => ({
+      ...prevImages,
+      [testId]: newImages
+    }));
   };
-  
-  const renderBuildImageUpload = (build) => (
-    <ImageUpload
-      path={`builds/${build.id}/images`}
-      imageUrl={buildImages[build.id]?.imageUrl || ''}
-      setImageUrl={(url) => {
-        setBuildImages(prev => {
-          const updatedBuildImages = {
-            ...prev,
-            [build.id]: { ...prev[build.id], imageUrl: url }
-          };
-          updateBuildImageDetailsInFirestore(build.id, url, updatedBuildImages[build.id].imageStoragePath, updatedBuildImages[build.id].imageTitle);
-          return updatedBuildImages;
-        });
-      }}
-      imageStoragePath={buildImages[build.id]?.imageStoragePath || ''}
-      setImageStoragePath={(path) => {
-        setBuildImages(prev => {
-          const updatedBuildImages = {
-            ...prev,
-            [build.id]: { ...prev[build.id], imageStoragePath: path }
-          };
-          updateBuildImageDetailsInFirestore(build.id, updatedBuildImages[build.id].imageUrl, path, updatedBuildImages[build.id].imageTitle);
-          return updatedBuildImages;
-        });
-      }}
-      imageTitle={buildImages[build.id]?.imageTitle || ''}
-      setImageTitle={(title) => {
-        setBuildImages(prev => {
-          const updatedBuildImages = {
-            ...prev,
-            [build.id]: { ...prev[build.id], imageTitle: title }
-          };
-          updateBuildImageDetailsInFirestore(build.id, updatedBuildImages[build.id].imageUrl, updatedBuildImages[build.id].imageStoragePath, title);
-          return updatedBuildImages;
-        });
-      }}
-      onDelete={() => handleDeleteBuildImage(build.id)}
-    />
-  );
-  
-  const handleDeleteTestImage = async (testId) => {
-    const testRef = doc(db, "tests", testId);
-    await setDoc(testRef, { imageUrl: '', imageStoragePath: '', imageTitle: '' }, { merge: true });
+
+  // Function to update files for a specific test
+  const handleTestFilesUpdated = (testId, newFiles) => {
+    setTestFiles(prevFiles => ({
+      ...prevFiles,
+      [testId]: newFiles
+    }));
+  };
+
+  const handleBuildFilesUpdated = (buildId, newFiles) => {
+    setBuildFiles(prev => ({
+      ...prev,
+      [buildId]: newFiles
+    }));
   };
 
   const promptBeforeLeaving = () => {
@@ -553,61 +600,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     setDialogOpen(true);
   }; 
   
-  const renderTestImageUpload = (test) => {
-    // Local function to handle the update to Firestore
-    const handleUpdateTestImageDetails = async (testId, imageUrl, imageStoragePath, imageTitle) => {
-      const updateObject = {};
-      if (typeof imageUrl !== 'undefined') updateObject.imageUrl = imageUrl;
-      if (typeof imageStoragePath !== 'undefined') updateObject.imageStoragePath = imageStoragePath;
-      if (typeof imageTitle !== 'undefined') updateObject.imageTitle = imageTitle;
-  
-      if (Object.keys(updateObject).length === 0) {
-        console.log('No data to update for testId:', testId);
-        return;
-      }
-  
-      const testRef = doc(db, "tests", testId);
-      try {
-        await setDoc(testRef, updateObject, { merge: true });
-        console.log("Firestore updated successfully for testId:", testId);
-      } catch (error) {
-        console.error("Error updating Firestore for testId:", testId, error);
-      }
-    };   
-  
-    return (
-      <ImageUpload
-        path={`tests/${test.id}/images`}
-        imageUrl={testImages[test.id]?.imageUrl || ''}
-        setImageUrl={(url) => {
-          setTestImages(prev => ({
-            ...prev,
-            [test.id]: { ...prev[test.id], imageUrl: url }
-          }));
-          // Immediately call the update function after state update
-          handleUpdateTestImageDetails(test.id, url, testImages[test.id]?.imageStoragePath, testImages[test.id]?.imageTitle);
-        }}
-        imageStoragePath={testImages[test.id]?.imageStoragePath || ''}
-        setImageStoragePath={(path) => {
-          setTestImages(prev => ({
-            ...prev,
-            [test.id]: { ...prev[test.id], imageStoragePath: path }
-          }));
-          handleUpdateTestImageDetails(test.id, testImages[test.id]?.imageUrl, path, testImages[test.id]?.imageTitle);
-        }}
-        imageTitle={testImages[test.id]?.imageTitle || ''}
-        setImageTitle={(title) => {
-          setTestImages(prev => ({
-            ...prev,
-            [test.id]: { ...prev[test.id], imageTitle: title }
-          }));
-          handleUpdateTestImageDetails(test.id, testImages[test.id]?.imageUrl, testImages[test.id]?.imageStoragePath, title);
-        }}
-        onDelete={() => handleDeleteTestImage(test.id)}
-      />
-    );
-  };
-  
   return (
     <div className="small-container">
       <button onClick={() => {
@@ -663,9 +655,11 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           />
           {/* Example for adding an image to a Design */}
           <ImageUpload
+            ref={imageUploadRef}
             path={`designs/${selectedDesign.id}/images`}
             initialImages={images}
             onImagesUpdated={handleImagesUpdated}
+            onDelete={handleImageDeletions}  
           />
           <FileUpload
             path={`designs/${selectedDesign.id}/files`} // Adjust path to include the design ID
@@ -775,10 +769,19 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                     handleBuildDescriptionChange(build.id, newDescription);
                   }}
                 />
+                <ImageUpload
+                  path={`builds/${build.id}/images`}
+                  // initialImages={buildImages[build.id] || []}
+                  initialImages={build.images}
+                  onImagesUpdated={images => handleBuildImagesUpdated(build.id, images)}
+                />
+                <FileUpload
+                  path={`builds/${build.id}/files`}
+                  initialFiles={buildFiles[build.id] || []}
+                  // initialFiles={build.files}
+                  onFilesChange={files => handleBuildFilesUpdated(build.id, files)}
+                />
                 <button onClick={() => updateBuildDescription(build.id)}>Update</button>
-                {/* <div>
-                  {renderBuildImageUpload(build)}            
-                </div> */}
                 {testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
                   <div key={test.id} className="test-record">
                     <div className="flex-space-between align-items-center">
@@ -840,10 +843,17 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                               handleTestDescriptionChange(test.id, newTestDescription);
                             }}
                           />
+                          <ImageUpload
+                            path={`tests/${test.id}/images`}
+                            initialImages={testImages[test.id] || []}
+                            onImagesUpdated={(images) => handleTestImagesUpdated(test.id, images)}
+                          />
+                          <FileUpload
+                            path={`tests/${test.id}/files`}
+                            initialFiles={testFiles[test.id] || []}
+                            onFilesChange={(files) => handleTestFilesUpdated(test.id, files)}
+                          />
                         </div>
-                        {/* <div> 
-                          {renderTestImageUpload(test, build.id)}
-                        </div> */}
                         <div>
                           <strong>Results</strong>
                           <TextEditor
@@ -878,6 +888,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                   buildId={build.id}
                   refreshTests={() => refreshTestsForBuild(build.id)}
                   setAddingTestIdForBuild={setAddingTestIdForBuild}
+                  onImagesUpdated={(images) => handleTestImagesUpdated(build.id, images)}
+                  onFilesUpdated={(files) => handleTestFilesUpdated(build.id, files)}
                 />
               </div>
             )}
@@ -891,6 +903,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                 designId={selectedDesign.id}
                 setIsAddingBuild={setIsAddingBuild}
                 refreshBuilds={refreshBuilds}
+                onImagesUpdated={(images) => handleBuildImagesUpdated(build.id, images)}
+                onFilesUpdated={(files) => handleBuildFilesUpdated(build.id, files)}
               />
             </div>
           )}

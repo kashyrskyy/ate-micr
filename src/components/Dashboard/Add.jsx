@@ -1,5 +1,5 @@
 // Add.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
 
 import { useUser } from '../../contexts/UserContext';
@@ -23,6 +23,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
 
   const [images, setImages] = useState([]); // This now handles multiple images
   const [files, setFiles] = useState([]);  // State for storing file information
+
+  const initialImagesMemo = useMemo(() => images, [images]);
 
   // Newly added state variables for Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -63,13 +65,15 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       setDialogOpen(true);
       return;
     }
+
+    const filteredImages = images.filter(img => !img.deleted); // Only save images that aren't marked as deleted
   
     const newDesign = {
       title: title,
       description: description,
       dateDue: Timestamp.fromDate(new Date(date)),
       dateCreated: serverTimestamp(),
-      images: images,  // This now includes all image data including URL, title, path
+      images: filteredImages, // Pass filtered images
       files: files.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),  // Include file URLs and
       userId: userDetails.uid, // Use the user's ID to associate the design with the user
     };     
@@ -132,11 +136,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
         <TextEditor onChange={setDesignDescription} /> {/* Use TextEditor for description */}
         <ImageUpload 
           path="designs/images"
-          images={images}
-          setImages={setImages}
-          onImagesUpdated={(updatedImages) => {
-            setImages(updatedImages);
-          }}
+          initialImages={initialImagesMemo}
+          onImagesUpdated={setImages}
         />
         <FileUpload  // Include the FileUpload component in the form
           path="designs/files" 

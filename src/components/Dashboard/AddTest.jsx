@@ -1,5 +1,5 @@
 // AddTest.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore';
@@ -12,13 +12,13 @@ import TextEditor from './TextEditor';
 import ImageUpload from './ImageUpload'; // Import ImageUpload component
 import FileUpload from './FileUpload'; // Import FileUpload component
 
-const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) => { 
+const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onImagesUpdated, onFilesUpdated }) => { 
   const [testTitle, setTestTitle] = useState('');
   const [testDescription, setTestDescription] = useState('');
   const [testResults, setTestResults] = useState('');
   const [testConclusions, setTestConclusions] = useState('');
-  const [images, setImages] = useState([]); // State to store images
-  const [files, setFiles] = useState([]); // State to store files
+  const [testImages, setTestImages] = useState([]);
+  const [testFiles, setTestFiles] = useState([]); // State to store files
 
   const { userDetails } = useUser();
 
@@ -48,20 +48,20 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
         results: testResults,
         conclusions: testConclusions,
         userId: userDetails.uid,
-        images: images.map(img => ({ url: img.url, title: img.title })), // Include image URLs and titles
-        files: files.map(file => ({ url: file.url, name: file.name })) // Include file URLs and names
+        images: testImages,  // This now includes all image data including URL, title, path
+        files: testFiles.map(file => ({ url: file.url, name: file.name })) // Include file URLs and names
       });
 
       // Delay the rest of the operations to ensure the Snackbar is visible
       setTimeout(() => {
-        refreshTests(buildId); // Refresh the list of tests
+        refreshTests(buildId)
         setTestTitle(''); // Reset the title input field
         setTestDescription(''); // Reset the title description field
         setTestResults(''); // Reset the title results field
         setTestConclusions(''); // Reset the title conclusions field
-        setImages([]); // Reset the images
-        setFiles([]); // Reset the files
-        setAddingTestIdForBuild(null); // Hide the input form if needed
+        setTestImages([]); // Reset the images
+        setTestFiles([]); // Reset the files
+        setAddingTestIdForBuild(false); // Hide the input form if needed
 
         // Consider even redirecting or triggering other UI changes here
       }, 1000); // Adjust the delay as needed, but ensure it's slightly less than the Snackbar's autoHideDuration
@@ -96,17 +96,21 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) =
       <TextEditor onChange={setTestConclusions} /> {/* Use TextEditor for test description */}
       <ImageUpload 
         path={`tests/${buildId}/images`} 
-        images={images}
-        setImages={setImages}
+        initialImages={testImages}
+        onImagesUpdated={(updatedImages) => {
+          setTestImages(updatedImages);
+        }}       
       />
       <FileUpload 
         path={`tests/${buildId}/files`} 
-        files={files}
-        setFiles={setFiles}
+        initialFiles={testFiles}
+        onFilesChange={(updatedFiles) => {
+          setTestFiles(updatedFiles);
+        }}      
       />
       <div className="flex-space-between">
         <button onClick={handleAddTest} className="button muted-button">Save</button>
-        <button onClick={() => setAddingTestIdForBuild(null)} className="button muted-button">Cancel</button> 
+        <button onClick={() => setAddingTestIdForBuild(false)} className="button muted-button">Cancel</button> 
       </div>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>{"Notification"}</DialogTitle>

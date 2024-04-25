@@ -1,5 +1,5 @@
 // ImageUpload.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { getStorage, ref as firebaseRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import imageCompression from 'browser-image-compression';
 
@@ -17,14 +17,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
-  const [images, setImages] = useState(initialImages);
+const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onDelete }, ref) => {
+  const [images, setImages] = useState(initialImages.map(img => ({ ...img, deleted: false })));
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(null);  // To handle which image is shown in full screen
   const [zoomScale, setZoomScale] = useState(1);
   const [isFullScreen, setIsFullScreen] = useState(false);
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('info');
@@ -32,9 +33,9 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    console.log('Initial images received:', initialImages);
-    setImages(initialImages);
-  }, []);  // This will only run once when the component mounts
+    console.log("Initial images received:", initialImages);
+    setImages(initialImages.map(img => ({ ...img, deleted: !!img.deleted })));
+  }, [initialImages]);  
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -46,7 +47,7 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
       useWebWorker: true
     };
 
-    const uploadPromises = files.map(async (file) => {
+    const uploadPromises = files.map(async (file, index) => {
       let compressedFile = file;
 
       // Check if the file is larger than 1 MB and needs compression
@@ -68,7 +69,7 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
         uploadTask.on('state_changed',
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setUploadProgress(progress);
+            setUploadProgress(progress); 
           },
           (error) => {
             console.error("Upload failed:", error);
@@ -105,28 +106,53 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
     });
   };
 
-  const deleteImage = async (index) => {
-    const imageToDelete = images[index];
-    const storage = getStorage();
-    const imageRef = firebaseRef(storage, imageToDelete.path);
+  const deleteImage = (index) => {
+    setImages(images => {
+      const updatedImages = images.map((img, idx) => {
+        if (idx === index) {
+          return { ...img, deleted: true };  // Mark as deleted
+        }
+        return img;
+      });
+  
+      // Inform the parent component about the deletion
+      onImagesUpdated(updatedImages);
+  
+      return updatedImages;
+    });
+    
+    setSnackbarMessage('Image marked for deletion. Update to permanently delete.');
+    setSnackbarSeverity('info');
+    setSnackbarOpen(true);
+  };  
 
-    try {
-      await deleteObject(imageRef);
-      const updatedImages = images.filter((_, idx) => idx !== index);
-      setImages(updatedImages);
-      if (onImagesUpdated) {
-        onImagesUpdated(updatedImages);
+  const commitDeletions = async () => {
+    const imagesToDelete = images.filter(img => img.deleted);
+    console.log("Attempting to delete images:", imagesToDelete);
+    if (imagesToDelete.length > 0) {
+      const deletePromises = imagesToDelete.map(img => {
+        const storage = getStorage();
+        const imageRef = firebaseRef(storage, img.path);
+        return deleteObject(imageRef); // Deletes from Firebase storage
+      });
+  
+      try {
+        await Promise.all(deletePromises);
+        // Assuming onDelete properly handles the deletion in Firestore with user ID check
+        onDelete(imagesToDelete); // Passing user ID to onDelete method
+        setImages(images => images.filter(img => !img.deleted)); // Clean up local state
+        setSnackbarMessage('Deleted images have been permanently removed.');
+        setSnackbarSeverity('success');
+      } catch (error) {
+        console.error("Error committing deletions:", error);
+        setSnackbarMessage('Failed to commit deletions.');
+        setSnackbarSeverity('error');
       }
-      setSnackbarMessage('Image deleted successfully.');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error("Error removing file:", error);
-      setSnackbarMessage('Failed to delete image.');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      setSnackbarOpen(true); // Show snackbar regardless of success or failure
+    } else {
+      console.log("No images marked for deletion."); // For debugging
     }
-  };
+  };  
 
   const toggleFullScreen = (index) => {
     setIsFullScreen(!isFullScreen);
@@ -147,6 +173,10 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
     setSnackbarOpen(false);
   };
 
+  useImperativeHandle(ref, () => ({
+    commitDeletions,
+  }));
+
   return (
     <div>
       <h5>Images</h5>
@@ -162,7 +192,7 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
           </div>
         </>
       )}
-      {images.map((image, index) => (
+      {images.filter(img => !img.deleted).map((image, index) => (
         <div key={index}>
           <img src={image.url} alt={`Uploaded design ${index}`} onClick={() => { setIsModalVisible(true); setCurrentImageIndex(index); }} style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', cursor: 'pointer' }} />
           <IconButton onClick={() => deleteImage(index)}><DeleteIcon /></IconButton>
@@ -177,7 +207,7 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
                 }
                 return updatedImages;
               });
-            }}
+            }}            
             placeholder="Enter image title"
             rows="2"
             style={{ width: '100%' }}
@@ -243,6 +273,6 @@ const ImageUpload = ({ path, initialImages = [], onImagesUpdated }) => {
       </Snackbar>
     </div>
   );
-};
+});
 
 export default ImageUpload;

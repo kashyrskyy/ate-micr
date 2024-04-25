@@ -43,10 +43,11 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
 
     // Replace internal setFiles calls with onFilesChange from props
     const updateFiles = (newFiles) => {
+        console.log('Updating files with', newFiles);
         onFilesChange(newFiles);
         setFiles(newFiles); // Optional: maintain local state if necessary for display
     };
-
+    
     const handleFileChange = async (event) => {
         const fileList = Array.from(event.target.files);
 
