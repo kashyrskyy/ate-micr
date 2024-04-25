@@ -155,6 +155,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     }
     if (buildFiles[buildId] && buildFiles[buildId].length > 0) {
       updatedData.files = buildFiles[buildId].map(file => ({
+        id: file.id,  // Preserve the ID
         url: file.url,
         name: file.name,
         path: file.path
@@ -199,6 +200,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     }
     if (testFiles[testId]) {
       updateData.files = testFiles[testId].map(file => ({
+        id: file.id,  // Preserve the ID
         url: file.url,
         name: file.name,
         path: file.path
@@ -467,7 +469,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         description,
         dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
         images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
-        files: files.map(file => ({ url: file.url, name: file.name, path: file.path })), // Include files in the update
+        files: files.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })), // Include files in the update
         userId: userDetails.uid
     };
 
