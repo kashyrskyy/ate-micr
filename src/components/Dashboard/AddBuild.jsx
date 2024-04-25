@@ -75,7 +75,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
         dateCreated: serverTimestamp(), 
         userId: userDetails.uid, // Assuming you have access to the current user's UID
         images: buildImages,  // This now includes all image data including URL, title, path
-        files: buildFiles.map(file => ({ url: file.url, name: file.name }))
+        files: buildFiles
       });
 
       console.log("Build added with ID: ", docRef.id);

@@ -52,6 +52,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
 
   const [buildImages, setBuildImages] = useState({});
   const [testImages, setTestImages] = useState({});
+
   const [buildFiles, setBuildFiles] = useState({});
   const [testFiles, setTestFiles] = useState({});
 
@@ -777,8 +778,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                 />
                 <FileUpload
                   path={`builds/${build.id}/files`}
-                  initialFiles={buildFiles[build.id] || []}
-                  // initialFiles={build.files}
+                  //initialFiles={buildFiles[build.id] || []}
+                  initialFiles={build.files}
                   onFilesChange={files => handleBuildFilesUpdated(build.id, files)}
                 />
                 <button onClick={() => updateBuildDescription(build.id)}>Update</button>
@@ -843,16 +844,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                               handleTestDescriptionChange(test.id, newTestDescription);
                             }}
                           />
-                          <ImageUpload
-                            path={`tests/${test.id}/images`}
-                            initialImages={testImages[test.id] || []}
-                            onImagesUpdated={(images) => handleTestImagesUpdated(test.id, images)}
-                          />
-                          <FileUpload
-                            path={`tests/${test.id}/files`}
-                            initialFiles={testFiles[test.id] || []}
-                            onFilesChange={(files) => handleTestFilesUpdated(test.id, files)}
-                          />
                         </div>
                         <div>
                           <strong>Results</strong>
@@ -871,6 +862,18 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                               handleTestConclusionsChange(test.id, newTestConclusions);
                             }}
                           />
+                        </div>
+                        <div>
+                          <ImageUpload
+                              path={`tests/${test.id}/images`}
+                              initialImages={testImages[test.id] || []}
+                              onImagesUpdated={(images) => handleTestImagesUpdated(test.id, images)}
+                            />
+                            <FileUpload
+                              path={`tests/${test.id}/files`}
+                              initialFiles={testFiles[test.id] || []}
+                              onFilesChange={(files) => handleTestFilesUpdated(test.id, files)}
+                            />
                         </div>
                         <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
                       </>

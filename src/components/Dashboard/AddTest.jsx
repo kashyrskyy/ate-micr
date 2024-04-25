@@ -49,7 +49,7 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
         conclusions: testConclusions,
         userId: userDetails.uid,
         images: testImages,  // This now includes all image data including URL, title, path
-        files: testFiles.map(file => ({ url: file.url, name: file.name })) // Include file URLs and names
+        files: testFiles // Include file URLs and names
       });
 
       // Delay the rest of the operations to ensure the Snackbar is visible
