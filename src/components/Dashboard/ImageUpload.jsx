@@ -17,6 +17,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import Tooltip from '@mui/material/Tooltip';
+
 const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onDelete }, ref) => {
   const [images, setImages] = useState(initialImages.map(img => ({ ...img, deleted: false })));
   const [uploading, setUploading] = useState(false);
@@ -179,11 +182,21 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
 
   return (
     <div>
-      <h5>Images</h5>
-      <Button variant="outlined" component="label">
-        Upload Image(s)
-        <input type="file" hidden multiple onChange={handleImageChange} disabled={uploading} ref={fileInputRef} accept="image/*" />
-      </Button>
+      <Tooltip title="Upload Images">
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<PhotoCameraIcon />}
+          sx={{
+            m: 1, // Adds margin around the button
+            pl: 2, // Adds padding inside the button, on the left of the icon and text
+            pr: 2, // Adds padding inside the button, on the right of the icon and text
+          }}
+        >
+          Upload Image(s)
+          <input type="file" hidden multiple onChange={handleImageChange} disabled={uploading} ref={fileInputRef} accept="image/*" />
+        </Button>
+      </Tooltip>
       {uploading && (
         <>
           <p>Uploading... {Math.round(uploadProgress)}%</p>

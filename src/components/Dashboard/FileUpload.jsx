@@ -16,6 +16,9 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import Tooltip from '@mui/material/Tooltip';
+
 const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
     const [files, setFiles] = useState(initialFiles);
 
@@ -173,11 +176,21 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
 
     return (
         <div>
-            <h5>Files</h5>
-            <Button variant="outlined" component="label">
-                Upload File(s)
-                <input type="file" hidden multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={handleFileChange} disabled={uploading} ref={fileInputRef} />
-            </Button>
+            <Tooltip title="Upload Files">
+                <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<CloudUploadIcon />}
+                    sx={{
+                        m: 1, // Adds margin around the button
+                        pl: 2, // Adds padding inside the button, on the left of the icon and text
+                        pr: 2, // Adds padding inside the button, on the right of the icon and text
+                    }}
+                >
+                    Upload File(s)
+                    <input type="file" hidden multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={handleFileChange} disabled={uploading} ref={fileInputRef} />
+                </Button>
+            </Tooltip>
             {uploading && (
                 <div>
                     <p>Uploading... {Math.round(uploadProgress)}%</p>
