@@ -81,7 +81,7 @@ function TextEditor({ onChange, initialValue}) {
             onChange={handleSymbolChange}
             displayEmpty
           >
-            <MenuItem value="" disabled>±</MenuItem>
+            <MenuItem value="" disabled>Math</MenuItem>
             {mathOperators.map(op => (
                 <MenuItem key={op} value={op}>{op}</MenuItem>
             ))}
@@ -95,7 +95,7 @@ function TextEditor({ onChange, initialValue}) {
             onChange={handleSymbolChange}
             displayEmpty
           >
-            <MenuItem value="" disabled>Σ</MenuItem>
+            <MenuItem value="" disabled>Greek</MenuItem>
             {greekLetters.map(letter => (
                 <MenuItem key={letter} value={letter}>{letter}</MenuItem>
             ))}

@@ -1164,7 +1164,7 @@ table {
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   background-color: #ffffff; /* Or another light color that fits your design */
-  border: 1px solid #e0e0e0; /* Light border for definition */
+  border: 2px solid #3B0D11; /* Light border for definition */
   transition: box-shadow 0.3s ease, background-color 0.3s ease; /* Smooth transitions for interactions */
 }
 
@@ -1174,6 +1174,7 @@ table {
   margin-top: 20px; /* Additional space to separate from the previous build */
   border-radius: 10px; /* Rounded borders */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds subtle shadow for depth */
+  border: 2px solid #0E402D;
 }
 
 .build-record:nth-child(odd) {
@@ -1186,18 +1187,31 @@ table {
 
 /* Styles for the new build area */
 .new-build-record {
-  background-color: #ffffe0; /* Yellow background for new build area */
+  background-color: #EEFBF6; /* Yellow background for new build area */
   padding: 20px;
   margin-top: 20px;
   border-radius: 10px; /* Rounded borders */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds subtle shadow for depth */
+  border: 1px dashed #0E402D; 
+}
+
+/* Styles for the new build area */
+.new-test-record {
+  background-color: #ECF4FE; /* Yellow background for new build area */
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 10px; /* Rounded borders */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Optional: adds subtle shadow for depth */
+  border: 1px dashed #4F86C6; 
 }
 
 .test-record {
-  border: 3px dashed #e0e0e0; /* Dashed light grey border */
+  border: 2px solid #4F86C6; 
   border-radius: 8px; /* Rounded corners for aesthetics */
   padding: 10px; /* Increased space inside the border */
   margin-bottom: 10px; /* Space between each test record */
+  margin-left: 12px;
+  margin-right: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Optional: adds subtle shadow for depth */
 }
 
@@ -1210,6 +1224,81 @@ table {
 .editableTitle:hover {
   text-decoration: underline;
   background-color: #f8f9fa; /* A very light gray as an example */
+}
+
+.designHeader {
+  color: #3B0D11;
+}
+
+.designTitles {
+  color: #8F5C38;
+}
+
+.buildsHeader {
+  color: #0E402D;
+  margin-top: 35px;
+}
+
+.newBuildHeader {
+  color: #0E402D;
+  margin-top: 35px;
+  border: 1px solid #0E402D;
+  border-radius: 10px;
+  padding: 8px 16px;
+  display: inline-block;
+}
+
+.newTestHeader {
+  color: #4F86C6;
+  margin-top: 35px;
+  border: 1px solid #4F86C6;
+  border-radius: 10px;
+  padding: 8px 16px;
+  display: inline-block;
+}
+
+.buildTitle {
+  cursor: pointer;
+  border: 1px solid #0E402D;
+  color: #0E402D;
+  border-radius: 10px;
+  padding: 8px 16px;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-weight: bold; /* Makes the text bold */
+  font-size: 1.25rem; /* Adjust the size as needed */
+}
+
+.buildTitle:hover {
+  text-decoration: underline;
+  background-color: #f8f9fa; /* A very light gray as an example */
+}
+
+.testTitle {
+  cursor: pointer;
+  border: 1px solid #4F86C6;
+  color: #4F86C6;
+  border-radius: 10px;
+  padding: 8px 16px;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  margin-left: 12px;
+  font-weight: bold; /* Makes the text bold */
+  font-size: 1.25rem; /* Adjust the size as needed */
+}
+
+.testTitle:hover {
+  text-decoration: underline;
+  background-color: #f8f9fa; /* A very light gray as an example */
+}
+
+.buildTitles {
+  color: #0E402D;
+}
+
+.testTitles {
+  color: #4F86C6;
+  margin-left: 12px;
 }
 
 thead th {

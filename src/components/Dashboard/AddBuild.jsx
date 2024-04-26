@@ -119,7 +119,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
   return (
     <div className="small-container">
       <form onSubmit={handleAddBuild}>
-        <label htmlFor="buildTitle">Title</label>
+        <label className="buildTitles" htmlFor="buildTitle">Title</label>
         <input
           id="buildTitle"
           type="text"
@@ -127,7 +127,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
           onChange={e => setBuildTitle(e.target.value)}
           style={{ width: '100%', marginBottom: '20px' }}
         />
-        <label htmlFor="buildDescription">Description</label>
+        <label className="buildTitles" htmlFor="buildDescription">Description</label>
         <TextEditor onChange={setBuildDescription} /> {/* Use TextEditor for build description */}
         <ImageUpload 
           path={`builds/${designId}/images`} // Ensure the path is unique for each build
@@ -139,8 +139,9 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
           initialFiles={buildFiles}
           onFilesChange={handleFilesChange}
         />
-        <div className="flex-space-between">
-          <input type="submit" value="Save" className="button muted-button"/>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <input type="submit" value="Save"/>
+          <button style={{ marginLeft: '12px' }} onClick={() => setIsAddingBuild(false)} className="button muted-button">Cancel</button> 
         </div>
       </form>
       <Dialog open={dialogOpen} onClose={handleClose}>

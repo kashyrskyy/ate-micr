@@ -83,6 +83,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const [editableBuildTitles, setEditableBuildTitles] = useState({});
   const [editableTestTitles, setEditableTestTitles] = useState({});
 
+  const [collapsedTestsByBuild, setCollapsedTestsByBuild] = useState({});
+
   console.log('Editing Design by user:', userDetails);
 
   const handleBuildTitleChange = (buildId, newTitle) => {
@@ -285,6 +287,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       let fetchedBuilds = [];
       let tempTestsByBuildId = {};
 
+      let initialCollapseState = {};
+
       for (const buildDoc of querySnapshot.docs) {
         const buildData = buildDoc.data();
         const buildId = buildDoc.id;
@@ -294,6 +298,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
           images: buildData.images || [], // Make sure images is an array
           files: buildData.files || [] // Make sure files is an array
         });
+
+        initialCollapseState[buildId] = true;  // Initialize collapse state as true for each build
 
         const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
         const testsSnapshot = await getDocs(testsQuery);
@@ -331,6 +337,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       // Update state with fetched data
       setBuilds(fetchedBuilds);
       setTestsByBuildId(tempTestsByBuildId);
+      setCollapsedTestsByBuild(initialCollapseState);  // Set the initial collapsed state for all builds
     };
 
     if (!loading && userDetails) {
@@ -420,6 +427,13 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       console.error("Error fetching tests:", error);
       // Optionally set an error state or show a notification
     }
+  }; 
+  
+  const toggleCollapseTests = (buildId) => {
+    setCollapsedTestsByBuild(prev => ({
+      ...prev,
+      [buildId]: !prev[buildId]
+    }));
   };  
 
   const handleImagesUpdated = (updatedImages) => {
@@ -666,32 +680,38 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       }} className="muted-button margin-top-20">← All Designs</button>
       <div className="design-record">
         <form onSubmit={handleUpdate}>
-          <h1>Design Document</h1>
-          <div style={{ marginBottom: '20px' }}>
+          <h1 className="designHeader" style={{ marginBottom: '20px' }}>Design Document</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ flexGrow: 8, marginRight: '12px' }}>
+              <label className="designTitles" htmlFor="title">Title</label>
+              <input
+                id="title"
+                type="text"
+                name="title"
+                value={title}
+                onChange={e => {
+                  setTitle(e.target.value);
+                  setUnsavedChanges(prev => ({ ...prev, design: true }));
+                }}  
+                style={{ width: '100%' }} // Make sure the input fills the div        
+              />
+            </div>
+            <div style={{ flexGrow: 2 }}>
+              <label className="designTitles" htmlFor="dateDue">Date</label>
+              <input
+                id="dateDue"
+                type="date"
+                name="dateDue"
+                value={date}
+                onChange={e => {
+                  setDate(e.target.value);
+                  setUnsavedChanges(prev => ({ ...prev, design: true }));
+                }}
+                style={{ width: '100%' }} // Make sure the input fills the div
+              />
+            </div>
           </div>
-          <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            type="text"
-            name="title"
-            value={title}
-            onChange={e => {
-              setTitle(e.target.value);
-              setUnsavedChanges(prev => ({ ...prev, design: true }));
-            }}          
-          />
-          <label htmlFor="dateDue">Due Date</label>
-          <input
-            id="dateDue"
-            type="date"
-            name="dateDue"
-            value={date}
-            onChange={e => {
-              setDate(e.target.value);
-              setUnsavedChanges(prev => ({ ...prev, design: true }));
-            }}
-          />
-          <label htmlFor="description">Description</label>
+          <label className="designTitles" htmlFor="description">Description</label>
           <ul>
               <li>Objective: What is the goal for this design?</li>
               <li>Rationale: Why is this new design being done?</li>
@@ -719,7 +739,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
             initialFiles={files}
             onFilesChange={setFiles} // Handler to update state when files change
           />
-          <div style={{ marginTop: '30px' }}>
+          <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
             <input type="submit" value="Update" />
             <button
               style={{ marginLeft: '12px' }}
@@ -734,7 +754,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
       </div>
       <div>
         <div className="flex-space-between">
-          <h2>Builds</h2>
+          <h2 className="buildsHeader">Builds</h2>
           <button 
             className="button muted-button"
             onClick={() => {
@@ -772,7 +792,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                     />
                   ) : (
                     <div
-                      className="editableTitle"
+                      className="buildTitle"
                       onClick={() => setEditableBuildTitles(prev => ({ ...prev, [build.id]: build.title || `Build ${index + 1}` }))} 
                       style={{ cursor: 'pointer' }}
                     >
@@ -834,8 +854,32 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                   initialFiles={build.files}
                   onFilesChange={files => handleBuildFilesUpdated(build.id, files)}
                 />
-                <button onClick={() => updateBuildDescription(build.id)}>Update</button>
-                {testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => updateBuildDescription(build.id)}>Update</button>
+                </div>
+                <div>
+                  {testsByBuildId[build.id] && testsByBuildId[build.id].length > 0 && (
+                    <button
+                      onClick={() => toggleCollapseTests(build.id)}
+                      className="button muted-button"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '12px', marginBottom: '12px' }}
+                    >
+                      {collapsedTestsByBuild[build.id] ? (
+                        <>
+                          <VisibilityIcon style={{ marginRight: '8px' }} />
+                          Tests
+                        </>
+                      ) : (
+                        <>
+                          <VisibilityOffIcon style={{ marginRight: '8px' }} />
+                          Tests
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                {/* Only render tests if they are not collapsed */}
+                {!collapsedTestsByBuild[build.id] && testsByBuildId[build.id] && testsByBuildId[build.id].map((test, testIndex) => (
                   <div key={test.id} className="test-record">
                     <div className="flex-space-between align-items-center">
                       <div>
@@ -858,7 +902,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                           />
                         ) : (
                           <div
-                            className="editableTitle"
+                            className="testTitle"
                             onClick={() => setEditableTestTitles(prev => ({ ...prev, [test.id]: test.title || `Test ${testIndex + 1}` }))} style={{ cursor: 'pointer' }}
                           >
                             {test.title || `Test ${testIndex + 1}`}
@@ -889,7 +933,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                     {visibleTestDetails[test.id] && (
                       <>
                         <div>
-                          <strong>Description</strong>
+                          <label className="testTitles">Description</label>
                           <TextEditor
                             initialValue={editableTestDescriptions[test.id] || test.description}
                             onChange={(newTestDescription) => {
@@ -898,7 +942,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                           />
                         </div>
                         <div>
-                          <strong>Results</strong>
+                          <label className="testTitles">Results</label>
                           <TextEditor
                             initialValue={editableTestResults[test.id] || test.results}
                             onChange={(newTestResults) => {
@@ -907,7 +951,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                           />
                         </div>
                         <div>
-                          <strong>Conclusions</strong>
+                          <label className="testTitles">Conclusions</label>
                           <TextEditor
                             initialValue={editableTestConclusions[test.id] || test.conclusions}
                             onChange={(newTestConclusions) => {
@@ -928,7 +972,9 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                               onFilesChange={(files) => handleTestFilesUpdated(test.id, files)}
                             />
                         </div>
-                        <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
+                        </div>
                       </>
                     )}
                   </div>
@@ -937,8 +983,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
             )}
 
             {addingTestIdForBuild === build.id && (
-              <div className="new-build-record" ref={addTestFormRef}>
-                <h3>Add New Test</h3>
+              <div className="new-test-record" ref={addTestFormRef}>
+                <h3 className="newTestHeader">New Test</h3>
                 <AddTest
                   designId={selectedDesign.id}
                   buildId={build.id}
@@ -954,7 +1000,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         <div>
           {isAddingBuild && (
             <div className="new-build-record" ref={addBuildFormRef}>
-              <h3>Add New Build</h3>
+              <h3 className="newBuildHeader">New Build</h3>
               <AddBuild
                 designId={selectedDesign.id}
                 setIsAddingBuild={setIsAddingBuild}

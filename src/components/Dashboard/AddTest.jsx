@@ -84,17 +84,19 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
 
   return (
     <div>
-      <textarea
-        placeholder="Test Title"
-        value={testTitle}
-        onChange={(e) => setTestTitle(e.target.value)}
-        style={{ width: '100%', margin: '10px 0' }}
+      <label className="testTitles" htmlFor="testTitle">Title</label>
+      <input
+          id="testTitle"
+          type="text"
+          value={testTitle}
+          onChange={e => setTestTitle(e.target.value)}
+          style={{ width: '100%', marginBottom: '20px' }}
       />
-      <label htmlFor="testDescription">Description</label>
+      <label className="testTitles" htmlFor="testDescription">Description</label>
       <TextEditor onChange={setTestDescription} /> {/* Use TextEditor for test description */}
-      <label htmlFor="testResults">Results</label>
+      <label className="testTitles" htmlFor="testResults">Results</label>
       <TextEditor onChange={setTestResults} /> {/* Use TextEditor for test results */}
-      <label htmlFor="testConclusions">Conclusions</label>
+      <label className="testTitles" htmlFor="testConclusions">Conclusions</label>
       <TextEditor onChange={setTestConclusions} /> {/* Use TextEditor for test description */}
       <ImageUpload 
         path={`tests/${buildId}/images`} 
@@ -110,9 +112,9 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
           setTestFiles(updatedFiles);
         }}      
       />
-      <div className="flex-space-between">
-        <button onClick={handleAddTest} className="button muted-button">Save</button>
-        <button onClick={() => setAddingTestIdForBuild(false)} className="button muted-button">Cancel</button> 
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button onClick={handleAddTest}>Save</button>
+        <button style={{ marginLeft: '12px' }} onClick={() => setAddingTestIdForBuild(false)} className="button muted-button">Cancel</button> 
       </div>
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>{"Notification"}</DialogTitle>

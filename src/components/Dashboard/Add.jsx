@@ -117,7 +117,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
           value={title}
           onChange={e => setTitle(e.target.value)}
         />
-        <label htmlFor="dateDue">Due Date</label>
+        <label htmlFor="dateDue">Date</label>
         <input
           id="date"
           type="date" // Make sure this is set to 'date'
