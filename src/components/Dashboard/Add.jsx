@@ -107,48 +107,58 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   return (
     <div className="small-container">
       <button onClick={onReturnToDashboard} className="muted-button margin-top-20">← All Designs</button>
-      <form onSubmit={saveDesign}>
-        <h1>Create New Design</h1>
-        <label htmlFor="title">Title</label>
-        <input
-          id="title"
-          type="text"
-          name="title"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-        <label htmlFor="dateDue">Date</label>
-        <input
-          id="date"
-          type="date" // Make sure this is set to 'date'
-          name="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-        />
-        <label htmlFor="description">Description</label>
-        <ul>
-            <li>Objective: What is the goal for this design?</li>
-            <li>Rationale: Why is this new design being done?</li>
-            <li>Selected Target Identified: What is the target for the design being made?</li>
-            <li>Functional Modification: What is being done to this target?</li>
-            <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
-        </ul>
-        <TextEditor onChange={setDesignDescription} /> {/* Use TextEditor for description */}
-        <ImageUpload 
-          path="designs/images"
-          initialImages={initialImagesMemo}
-          onImagesUpdated={setImages}
-        />
-        <FileUpload  // Include the FileUpload component in the form
-          path="designs/files" 
-          initialFiles={files}
-          onFilesChange={setFiles} // Ensure this is correctly passed and used
-        />
-        <div style={{ marginTop: '30px' }}>
-          <Button type="submit" variant="contained">Add</Button>
-          <Button onClick={() => setIsAdding(false)} style={{ marginLeft: '12px' }} variant="outlined">Cancel</Button>
-        </div>
-      </form>
+      <div className="design-record">
+        <form onSubmit={saveDesign}>
+          <h1 className="designHeader">New Design</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ flexGrow: 8, marginRight: '12px' }}>
+              <label className="designTitles" htmlFor="title">Title</label>
+              <input
+                id="title"
+                type="text"
+                name="title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                style={{ width: '100%' }} // Make sure the input fills the div        
+              />
+            </div>
+            <div style={{ flexGrow: 2 }}>
+              <label className="designTitles" htmlFor="dateDue">Date</label>
+              <input
+                id="date"
+                type="date" // Make sure this is set to 'date'
+                name="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                style={{ width: '100%' }} // Make sure the input fills the div
+              />
+            </div>
+          </div>
+          <label className="designTitles" htmlFor="description">Description</label>
+          <ul>
+              <li>Objective: What is the goal for this design?</li>
+              <li>Rationale: Why is this new design being done?</li>
+              <li>Selected Target Identified: What is the target for the design being made?</li>
+              <li>Functional Modification: What is being done to this target?</li>
+              <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
+          </ul>
+          <TextEditor onChange={setDesignDescription} /> {/* Use TextEditor for description */}
+          <ImageUpload 
+            path="designs/images"
+            initialImages={initialImagesMemo}
+            onImagesUpdated={setImages}
+          />
+          <FileUpload  // Include the FileUpload component in the form
+            path="designs/files" 
+            initialFiles={files}
+            onFilesChange={setFiles} // Ensure this is correctly passed and used
+          />
+          <div style={{ marginTop: '30px' }}>
+            <Button type="submit" variant="contained">Add</Button>
+            <Button onClick={() => setIsAdding(false)} style={{ marginLeft: '12px' }} variant="outlined">Cancel</Button>
+          </div>
+        </form>
+      </div>
       <Dialog
         open={dialogOpen}
         onClose={handleDialogClose}
