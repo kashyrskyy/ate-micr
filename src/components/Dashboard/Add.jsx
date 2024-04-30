@@ -153,7 +153,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
             initialFiles={files}
             onFilesChange={setFiles} // Ensure this is correctly passed and used
           />
-          <div style={{ marginTop: '30px' }}>
+          <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
             <Button type="submit" variant="contained">Add</Button>
             <Button onClick={() => setIsAdding(false)} style={{ marginLeft: '12px' }} variant="outlined">Cancel</Button>
           </div>
