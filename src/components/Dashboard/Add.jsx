@@ -154,8 +154,52 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
             onFilesChange={setFiles} // Ensure this is correctly passed and used
           />
           <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
-            <Button type="submit" variant="contained">Add</Button>
-            <Button onClick={() => setIsAdding(false)} style={{ marginLeft: '12px' }} variant="outlined">Cancel</Button>
+            <Button 
+              type="submit" 
+              variant="contained"
+              sx={{ 
+                fontSize: '1rem',
+                mt: 2, 
+                textTransform: 'none',
+                // Define a minimum width or width if necessary
+                // Apply a box-shadow for hover effect instead of changing border or size
+                boxShadow: 'none', // No box-shadow initially
+                '&:hover': {
+                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
+                  // Use transform for visual feedback without layout shift
+                  transform: 'scale(1.05)',
+                },
+                // Transition for the transform property for smooth effect
+                transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                // Prevent layout shift by applying a transparent border
+                border: '1px solid transparent',
+              }}
+            >
+              Add
+            </Button>
+            <Button 
+              onClick={() => setIsAdding(false)} 
+              style={{ marginLeft: '12px' }} 
+              variant="outlined"
+              sx={{ 
+                fontSize: '1rem',
+                mt: 2, 
+                textTransform: 'none',
+                color: 'currentColor', // Ensures the font color stays the same
+                borderColor: 'rgba(255, 0, 0, 0.5)', // Lighter red border for the default state
+                boxShadow: 'none', // No box-shadow initially
+                '&:hover': {
+                  borderColor: 'rgba(255, 0, 0, 0.7)', // Slightly darker red border on hover
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)', // Light red background on hover
+                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
+                  color: 'currentColor', // Ensure the text color remains the same
+                  transform: 'scale(1.05)', // Transform effect on hover
+                },
+                transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, background-color 0.3s ease-in-out',
+              }}
+            >
+              Cancel
+            </Button>
           </div>
         </form>
       </div>
