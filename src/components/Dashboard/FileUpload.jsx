@@ -93,7 +93,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
         });
 
         Promise.all(uploadPromises).then(newFiles => {
-            updateFiles(prev => [...prev, ...newFiles]); // Changed from setFiles to updateFiles
+            updateFiles(newFiles); // Changed from setFiles to updateFiles
             setSnackbarMessage('Files uploaded successfully.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);

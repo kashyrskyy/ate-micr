@@ -146,24 +146,36 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   const updateBuildDescription = async (buildId) => {
     const buildRef = doc(db, "builds", buildId);
 
+    // Call commitBuildFileDeletions to handle file deletions
+    // Handle file deletions first
+    try {
+      await commitBuildFileDeletions(buildId);
+    } catch (error) {
+      console.error("Error deleting files:", error);
+      setSnackbarMessage('Failed to delete build files.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+
     // Filter out deleted images before sending update to Firestore
     const filteredBuildImages = buildImages[buildId]?.filter(img => !img.deleted).map(({ url, path, title }) => ({ url, path, title })) || [];
   
-    // Prepare the update data object and include only defined fields.
-    const updatedData = {};
+    // Filter out deleted files before updating Firestore
+    const filteredFiles = buildFiles[buildId]?.filter(file => !file.deleted).map(file => ({
+      id: file.id,  // Preserve the ID
+      url: file.url,
+      name: file.name,
+      path: file.path
+    })) || [];
+
+    // Prepare the update data object and include only defined fields
+    const updatedData = {
+      images: filteredBuildImages,
+      files: filteredFiles
+    };
+
     if (editableBuildDescriptions[buildId] !== undefined) {
       updatedData.description = editableBuildDescriptions[buildId];
-    }
-
-    updatedData.images = filteredBuildImages;
-
-    if (buildFiles[buildId] && buildFiles[buildId].length > 0) {
-      updatedData.files = buildFiles[buildId].map(file => ({
-        id: file.id,  // Preserve the ID
-        url: file.url,
-        name: file.name,
-        path: file.path
-      }));
     }
   
     try {
@@ -508,7 +520,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     setSnackbarOpen(true);
   };
 
-
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -711,7 +722,57 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         setSnackbarOpen(true);
       }
     }
-  };     
+  };  
+
+  const commitBuildFileDeletions = async (buildId) => {
+    if (!Array.isArray(buildFiles[buildId])) {
+      console.error(`Expected buildFiles[${buildId}] to be an array, got:`, buildFiles[buildId]);
+      return; // Exit the function if it's not an array
+    }
+
+    const filesToDelete = buildFiles[buildId]?.filter(file => file.deleted) || [];
+    console.log("Build files to delete:", filesToDelete);
+  
+    if (filesToDelete.length > 0) {
+        const storage = getStorage();
+        const deletePromises = filesToDelete.map(file => {
+            const fileRef = ref(storage, file.path);
+            return deleteObject(fileRef);
+        });
+  
+        try {
+            await Promise.all(deletePromises);
+            console.log("Build files deleted successfully");
+  
+            // Remove the deleted files from the local state for this build
+            const remainingFiles = buildFiles[buildId].filter(file => !file.deleted);
+            setBuildFiles(prev => ({
+                ...prev,
+                [buildId]: remainingFiles
+            }));
+  
+            // Update Firestore to reflect the deletion
+            await updateDoc(doc(db, "builds", buildId), {
+                files: remainingFiles.map(file => ({
+                    id: file.id,
+                    url: file.url,
+                    name: file.name,
+                    path: file.path
+                })),
+            });
+  
+            console.log("Firestore successfully updated to remove deleted files");
+            setSnackbarMessage("Deleted build files have been permanently removed.");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+        } catch (error) {
+            console.error("Failed to delete build files: ", error);
+            setSnackbarMessage("Failed to delete build files.");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+        }
+    }
+  };  
   
   return (
     <div className="small-container">
@@ -896,9 +957,8 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                 />
                 <FileUpload
                   path={`builds/${build.id}/files`}
-                  //initialFiles={buildFiles[build.id] || []}
                   initialFiles={build.files}
-                  onFilesChange={files => handleBuildFilesUpdated(build.id, files)}
+                  onFilesChange={(files) => handleBuildFilesUpdated(build.id, files)}
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <button onClick={() => updateBuildDescription(build.id)}>Update</button>
@@ -1037,7 +1097,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                   refreshTests={() => refreshTestsForBuild(build.id)}
                   setAddingTestIdForBuild={setAddingTestIdForBuild}
                   onImagesUpdated={(images) => handleTestImagesUpdated(build.id, images)}
-                  onFilesUpdated={(files) => handleTestFilesUpdated(build.id, files)}
+                  onFilesChange={(files) => handleTestFilesUpdated(build.id, files)}
                 />
               </div>
             )}
@@ -1052,7 +1112,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
                 setIsAddingBuild={setIsAddingBuild}
                 refreshBuilds={refreshBuilds}
                 onImagesUpdated={(images) => handleBuildImagesUpdated(build.id, images)}
-                onFilesUpdated={(files) => handleBuildFilesUpdated(build.id, files)}
+                onFilesChange={(files) => handleBuildFilesUpdated(build.id, files)}
               />
             </div>
           )}

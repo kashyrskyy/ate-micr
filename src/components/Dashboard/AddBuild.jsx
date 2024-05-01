@@ -16,15 +16,15 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
   const [buildTitle, setBuildTitle] = useState('');
   const [buildDescription, setBuildDescription] = useState('');
   const [buildImages, setBuildImages] = useState([]);
-  const [buildFiles, setBuildFiles] = useState([]); // State to store files
+  const [buildFiles, setBuildFiles] = useState([]); // Initialize as an array
   const { userDetails } = useUser();
-
-  const handleFilesChange = (newFiles) => {
-    setBuildFiles(newFiles);
-  };
 
   const handleImagesChange = (newImages) => {
     setBuildImages(newImages);
+  };
+
+  const handleFilesChange = (newFiles) => {
+    setBuildFiles(newFiles);
   };
 
   console.log("AddBuild loaded");
@@ -68,6 +68,13 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
 
     const filteredImagesBuild = buildImages.filter(img => !img.deleted); // Only save images that aren't marked as deleted
 
+    const filteredFiles = buildFiles.filter(file => !file.deleted).map(file => ({
+      id: file.id,
+      url: file.url,
+      name: file.name,
+      path: file.path
+    }));
+
     try {
       // Inside the handleAddBuild function or equivalent
       const docRef = await addDoc(collection(db, "builds"), {
@@ -77,7 +84,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
         dateCreated: serverTimestamp(), 
         userId: userDetails.uid, // Assuming you have access to the current user's UID
         images: filteredImagesBuild,  // This now includes all image data including URL, title, path
-        files: buildFiles
+        files: filteredFiles
       });
 
       console.log("Build added with ID: ", docRef.id);
@@ -137,7 +144,7 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
         <FileUpload 
           path={`builds/${designId}/files`} // Adjust the path to organize files separately
           initialFiles={buildFiles}
-          onFilesChange={handleFilesChange}
+          onFilesChange={handleFilesChange} // Directly set files from FileUpload
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <input type="submit" value="Save"/>
