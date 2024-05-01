@@ -2,7 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../contexts/UserContext';
 
-import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
+
+import { getStorage, ref, deleteObject } from "firebase/storage";
+
 import { db } from '../../config/firestore';
 
 import AddBuild from './AddBuild';
@@ -527,13 +530,20 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     // Filter out images marked as deleted (this might be redundant if handled by commitDeletions)
     const activeImages = images.filter(img => !img.deleted);
 
+      // Commit file deletions first
+    if (files.some(file => file.deleted)) {
+      await commitFileDeletions();
+    }
+
+    const activeFiles = files.filter(file => !file.deleted);
+
     // Construct the update object dynamically
     let updateObject = {
         title,
         description,
         dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
         images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
-        files: files.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })), // Include files in the update
+        files: activeFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
         userId: userDetails.uid
     };
 
@@ -666,6 +676,42 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     setDialogConfirmAction(() => () => deleteTest(testId, buildId));
     setDialogOpen(true);
   }; 
+
+  const commitFileDeletions = async () => {
+    const filesToDelete = files.filter(file => file.deleted);
+    console.log("Files to delete:", filesToDelete);
+  
+    if (filesToDelete.length > 0) {
+      // Assuming FileUpload uses Firebase Storage, and you have a delete function in FileUpload
+      const storage = getStorage();
+      const deletePromises = filesToDelete.map(file => {
+        const fileRef = ref(storage, file.path);
+        return deleteObject(fileRef);
+      });
+  
+      try {
+        await Promise.all(deletePromises);
+        console.log("Files deleted successfully");
+        // Remove the deleted files from the local state
+        const remainingFiles = files.filter(file => !file.deleted);
+        setFiles(remainingFiles);
+  
+        // Update Firestore to reflect the deletion
+        await updateDoc(doc(db, "designs", selectedDesign.id), {
+          files: remainingFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
+        });
+  
+        setSnackbarMessage("Deleted files have been permanently removed.");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Failed to delete files: ", error);
+        setSnackbarMessage("Failed to delete files.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    }
+  };     
   
   return (
     <div className="small-container">

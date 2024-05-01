@@ -20,7 +20,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Tooltip from '@mui/material/Tooltip';
 
 const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
-    const [files, setFiles] = useState(initialFiles);
+    const [files, setFiles] = useState(initialFiles.map(file => ({ ...file, deleted: false })));
 
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -35,7 +35,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
 
     useEffect(() => {
         console.log("Initial files received:", initialFiles);
-        setFiles(initialFiles);
+        setFiles(initialFiles.map(file => ({ ...file, deleted: !!file.deleted })));
     }, [initialFiles]);
 
     useEffect(() => {
@@ -110,26 +110,18 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
         });
     };
 
-    const deleteFile = async (id) => {
-        const fileToDelete = files.find(file => file.id === id);
-        if (!fileToDelete) return;
-
-        const storage = getStorage();
-        const fileRef = firebaseRef(storage, fileToDelete.path);
-
-        try {
-            await deleteObject(fileRef);
-            updateFiles(prev => prev.filter(file => file.id !== id)); // Changed from setFiles to updateFiles
-            setSnackbarMessage('File deleted successfully.');
-            setSnackbarSeverity('success');
-            setSnackbarOpen(true);
-        } catch (error) {
-            console.error("Error removing file:", error);
-            setSnackbarMessage('Failed to delete file.');
-            setSnackbarSeverity('error');
-            setSnackbarOpen(true);
-        }
-    };    
+    const markFileForDeletion = (id) => {
+        const newFiles = files.map(file => {
+            if (file.id === id) {
+                return { ...file, deleted: true };
+            }
+            return file;
+        });
+        updateFiles(newFiles);
+        setSnackbarMessage('File marked for deletion. Update to permanently delete.');
+        setSnackbarSeverity('info');
+        setSnackbarOpen(true);
+    }; 
 
     const handleEditClick = (fileId) => {
         setEditStates((prevEditStates) => ({
@@ -141,21 +133,24 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
 
     // When you're done editing and want to save the new name
     const handleSaveClick = (fileId) => {
-        const newFiles = files.map(file => {
-            if (file.id === fileId && editStates[fileId] !== undefined) {
-                return { ...file, name: editStates[fileId] }; // Only update the name of the file being edited
-            }
-            return file;
+        setFiles(prevFiles => {
+            const newFiles = prevFiles.map(file => {
+                if (file.id === fileId && editStates[fileId] !== undefined) {
+                    return { ...file, name: editStates[fileId] }; // Only update the name of the file being edited
+                }
+                return file;
+            });
+    
+            onFilesChange(newFiles); // Propagate changes up to the parent component
+            return newFiles;
         });
-        
-        setFiles(newFiles); // Update the state with the new files array
-        onFilesChange(newFiles); // Propagate changes up to the parent component
 
         setEditStates(prev => {
             const newState = { ...prev };
             delete newState[fileId]; // Remove the edit state for this fileId
             return newState;
         });
+
         setSnackbarMessage('File name updated successfully.');
         setSnackbarSeverity('info');
         setSnackbarOpen(true);
@@ -198,7 +193,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
             )}
             <List>
                 {files.map((file) => (
-                    <ListItem key={file.id} component="div">
+                    <ListItem key={file.id} component="div" disabled={file.deleted}>
                         <ListItemIcon>
                             <InsertDriveFileIcon />
                         </ListItemIcon>
@@ -223,7 +218,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
                                 <IconButton onClick={() => handleEditClick(file.id)} edge="end" aria-label="edit">
                                     <EditIcon />
                                 </IconButton>
-                                <IconButton onClick={() => deleteFile(file.id)} edge="end" aria-label="delete">     
+                                <IconButton onClick={() => markFileForDeletion(file.id)} edge="end" aria-label="delete">
                                     <DeleteIcon />
                                 </IconButton>
                             </>

@@ -67,6 +67,13 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
     }
 
     const filteredImages = images.filter(img => !img.deleted); // Only save images that aren't marked as deleted
+
+    const filteredFiles = files.filter(file => !file.deleted).map(file => ({
+      id: file.id,
+      url: file.url,
+      name: file.name,
+      path: file.path
+    }));
   
     const newDesign = {
       title: title,
@@ -74,7 +81,7 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       dateDue: Timestamp.fromDate(new Date(date)),
       dateCreated: serverTimestamp(),
       images: filteredImages, // Pass filtered images
-      files: files.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),  // Include file URLs and
+      files: filteredFiles,  // Only include non-deleted files
       userId: userDetails.uid, // Use the user's ID to associate the design with the user
     };     
   
