@@ -144,7 +144,6 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   };  
 
   const updateBuildDescription = async (buildId) => {
-    const buildRef = doc(db, "builds", buildId);
 
     // Call commitBuildFileDeletions to handle file deletions
     // Handle file deletions first
@@ -169,16 +168,22 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     })) || [];
 
     // Prepare the update data object and include only defined fields
-    const updatedData = {
-      images: filteredBuildImages,
-      files: filteredFiles
-    };
+    const updatedData = {};
 
+    if (filteredBuildImages.length > 0) {
+      updatedData.images = filteredBuildImages;
+    }
+    
+    if (filteredFiles.length > 0) {
+      updatedData.files = filteredFiles;
+    }
+    
     if (editableBuildDescriptions[buildId] !== undefined) {
       updatedData.description = editableBuildDescriptions[buildId];
-    }
+    }    
   
     try {
+      const buildRef = doc(db, "builds", buildId);
       await setDoc(buildRef, updatedData, { merge: true });
       setSnackbarMessage('Your build has been updated.');
       setSnackbarSeverity('success');
@@ -736,10 +741,10 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   };  
 
   const commitBuildFileDeletions = async (buildId) => {
-    if (!Array.isArray(buildFiles[buildId])) {
-      console.error(`Expected buildFiles[${buildId}] to be an array, got:`, buildFiles[buildId]);
-      return; // Exit the function if it's not an array
-    }
+    // if (!Array.isArray(buildFiles[buildId])) {
+    //   console.error(`Expected buildFiles[${buildId}] to be an array, got:`, buildFiles[buildId]);
+    //   return; // Exit the function if it's not an array
+    // }
 
     const filesToDelete = buildFiles[buildId]?.filter(file => file.deleted) || [];
     console.log("Build files to delete:", filesToDelete);
