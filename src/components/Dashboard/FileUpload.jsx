@@ -44,11 +44,12 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
         };
     }, []);    
 
-    // Replace internal setFiles calls with onFilesChange from props
+    // This function updates both the local component state and notifies the parent component.
+    // Note: This function also updates the list of files by merging new files with existing ones (inside handleFileChange).
     const updateFiles = (newFiles) => {
         console.log('Updating files with', newFiles);
-        onFilesChange(newFiles);
-        setFiles(newFiles); // Optional: maintain local state if necessary for display
+        onFilesChange(newFiles);  // Notify parent component of the updated files list
+        setFiles(newFiles);       // Update local state to reflect the new list of files
     };
     
     const handleFileChange = async (event) => {
@@ -93,7 +94,9 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
         });
 
         Promise.all(uploadPromises).then(newFiles => {
-            updateFiles(newFiles); // Changed from setFiles to updateFiles
+            // Combine existing files with the new files, making sure to filter out deleted ones
+            const updatedFiles = [...files.filter(file => !file.deleted), ...newFiles];
+            updateFiles(updatedFiles); // Changed from setFiles to updateFiles
             setSnackbarMessage('Files uploaded successfully.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);

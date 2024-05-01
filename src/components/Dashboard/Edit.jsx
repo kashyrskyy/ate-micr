@@ -194,11 +194,30 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
   };  
 
   const updateTestDescription = async (testId, buildId) => {
+    
+    // Call commitTestFileDeletions to handle file deletions
+    try {
+      await commitTestFileDeletions(testId);
+    } catch (error) {
+      console.error("Error deleting files:", error);
+      setSnackbarMessage('Failed to delete build files.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+
     // Prepare the update data object and include only defined fields.
     const updateData = {};
 
     // Filter out deleted images before sending update to Firestore
     const filteredTestImages = testImages[testId].filter(img => !img.deleted).map(({ url, path, title }) => ({ url, path, title }));
+    
+    // Filter out deleted files before updating Firestore
+    const filteredFilesTest = testFiles[testId]?.filter(file => !file.deleted).map(file => ({
+      id: file.id,  // Preserve the ID
+      url: file.url,
+      name: file.name,
+      path: file.path
+    })) || [];
 
     if (editableTestDescriptions[testId] !== undefined) {
       updateData.description = editableTestDescriptions[testId];
@@ -211,15 +230,7 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
     }
 
     updateData.images = filteredTestImages;
-
-    if (testFiles[testId]) {
-      updateData.files = testFiles[testId].map(file => ({
-        id: file.id,  // Preserve the ID
-        url: file.url,
-        name: file.name,
-        path: file.path
-      }));
-    }
+    updateData.files = filteredFilesTest;
 
     try {
       // Perform the update in Firestore.
@@ -768,6 +779,44 @@ const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard })
         } catch (error) {
             console.error("Failed to delete build files: ", error);
             setSnackbarMessage("Failed to delete build files.");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+        }
+    }
+  };  
+
+  const commitTestFileDeletions = async (testId) => {
+  
+    const filesToDelete = testFiles[testId]?.filter(file => file.deleted) || [];
+    if (filesToDelete.length > 0) {
+        const storage = getStorage();
+        const deletePromises = filesToDelete.map(file => {
+            const fileRef = ref(storage, file.path);
+            return deleteObject(fileRef);
+        });
+  
+        try {
+            await Promise.all(deletePromises);
+            const remainingFiles = testFiles[testId].filter(file => !file.deleted);
+            setTestFiles(prev => ({
+                ...prev,
+                [testId]: remainingFiles
+            }));
+  
+            await updateDoc(doc(db, "tests", testId), {
+                files: remainingFiles.map(file => ({
+                    id: file.id,
+                    url: file.url,
+                    name: file.name,
+                    path: file.path
+                })),
+            });
+            setSnackbarMessage("Deleted test files have been permanently removed.");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+        } catch (error) {
+            console.error("Failed to delete test files: ", error);
+            setSnackbarMessage("Failed to delete test files.");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);
         }

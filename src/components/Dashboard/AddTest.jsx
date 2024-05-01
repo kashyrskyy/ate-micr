@@ -12,7 +12,7 @@ import TextEditor from './TextEditor';
 import ImageUpload from './ImageUpload'; // Import ImageUpload component
 import FileUpload from './FileUpload'; // Import FileUpload component
 
-const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onImagesUpdated, onFilesUpdated }) => { 
+const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild }) => { 
   const [testTitle, setTestTitle] = useState('');
   const [testDescription, setTestDescription] = useState('');
   const [testResults, setTestResults] = useState('');
@@ -31,6 +31,10 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('info');
 
+  const handleTestFilesChange = (newFiles) => {
+    setTestFiles(newFiles);
+  };
+
   const handleAddTest = async () => {
     if (!testDescription) {
       setDialogContent("Test description cannot be empty!");
@@ -39,6 +43,13 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
     }
 
     const filteredImagesTest = testImages.filter(img => !img.deleted); // Only save images that aren't marked as deleted
+
+    const filteredFilesTest = testFiles.filter(file => !file.deleted).map(file => ({
+      id: file.id,
+      url: file.url,
+      name: file.name,
+      path: file.path
+    }));
 
     try {
       await addDoc(collection(db, "tests"), {
@@ -51,7 +62,7 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
         conclusions: testConclusions,
         userId: userDetails.uid,
         images: filteredImagesTest,  // This now includes all image data including URL, title, path
-        files: testFiles // Include file URLs and names
+        files: filteredFilesTest // Include file URLs and names
       });
 
       // Delay the rest of the operations to ensure the Snackbar is visible
@@ -108,9 +119,7 @@ const AddTest = ({ designId, buildId, refreshTests, setAddingTestIdForBuild, onI
       <FileUpload 
         path={`tests/${buildId}/files`} 
         initialFiles={testFiles}
-        onFilesChange={(updatedFiles) => {
-          setTestFiles(updatedFiles);
-        }}      
+        onFilesChange={handleTestFilesChange}            
       />
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button onClick={handleAddTest}>Save</button>
