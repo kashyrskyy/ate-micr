@@ -1,4 +1,4 @@
-// Edit.jsx
+// Edit.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../contexts/UserContext';
 
@@ -25,7 +25,16 @@ import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import SaveIcon from '@mui/icons-material/Save';
 
-const Edit = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
+interface EditProps {
+  designs: { id: string; }[];
+  selectedDesign: { id: string; } | null;
+  setDesigns: React.Dispatch<React.SetStateAction<{ id: string; }[]>>;
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  getDesigns: () => Promise<void>;
+  onReturnToDashboard: () => void;
+}
+
+const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
   const { userDetails, loading } = useUser();
   console.log("Edit page loaded");
 

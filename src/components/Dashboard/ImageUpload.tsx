@@ -1,7 +1,9 @@
-// ImageUpload.jsx
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+// ImageUpload.tsx
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { getStorage, ref as firebaseRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import imageCompression from 'browser-image-compression';
+
+import debounce from 'lodash/debounce';
 
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -20,28 +22,49 @@ import Alert from '@mui/material/Alert';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import Tooltip from '@mui/material/Tooltip';
 
-const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onDelete }, ref) => {
-  const [images, setImages] = useState(initialImages.map(img => ({ ...img, deleted: false })));
+// Define the type for an image
+interface Image {
+  url: string;
+  path: string;
+  title: string;
+  deleted?: boolean;
+}
+
+// Define the type for the props
+interface ImageUploadProps {
+  path: string;
+  initialImages?: Image[];
+  onImagesUpdated: (images: Image[]) => void;
+  onDelete: (images: Image[]) => void;
+}
+
+// Define the type for the imperative handle
+export interface ImageUploadHandle {
+  commitDeletions: () => Promise<void>;
+}
+
+const ImageUpload = forwardRef<ImageUploadHandle, ImageUploadProps>(({ path, initialImages = [], onImagesUpdated, onDelete }, ref) => {
+  const [images, setImages] = useState<Image[]>(initialImages.map(img => ({ ...img, deleted: false })));
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(null);  // To handle which image is shown in full screen
+  const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);  // To handle which image is shown in full screen
   const [zoomScale, setZoomScale] = useState(1);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'info' | 'success' | 'error'>('info');
 
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     console.log("Initial images received:", initialImages);
     setImages(initialImages.map(img => ({ ...img, deleted: !!img.deleted })));
   }, [initialImages]);  
 
-  const handleImageChange = async (e) => {
-    const files = Array.from(e.target.files);
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
     setUploading(true);
 
     const options = {
@@ -68,7 +91,7 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
       const storageRef = firebaseRef(storage, `${path}/${modifiedFileName}`);
       const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
-      return new Promise((resolve, reject) => {
+      return new Promise<Image>((resolve, reject) => {
         uploadTask.on('state_changed',
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
@@ -98,7 +121,7 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
       setSnackbarOpen(true);
       setUploading(false);
       setUploadProgress(0);
-      fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }).catch(error => {
       console.error("Error uploading images: ", error);
       setSnackbarMessage('Failed to upload images.');
@@ -109,7 +132,7 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
     });
   };
 
-  const deleteImage = (index) => {
+  const deleteImage = (index: number) => {
     setImages(images => {
       const updatedImages = images.map((img, idx) => {
         if (idx === index) {
@@ -157,7 +180,7 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
     }
   };  
 
-  const toggleFullScreen = (index) => {
+  const toggleFullScreen = (index: number | null) => {
     setIsFullScreen(!isFullScreen);
     setCurrentImageIndex(index);
   };
@@ -171,10 +194,22 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
     return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
   }, []);
 
-  const handleCloseSnackbar = (event, reason) => {
+  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') return;
     setSnackbarOpen(false);
   };
+
+  const debouncedUpdateTitle = useCallback(debounce((index: number, newTitle: string) => {
+    setTimeout(() => {
+      setImages(prev => {
+        const updatedImages = prev.map((img, idx) => idx === index ? { ...img, title: newTitle } : img);
+        if (onImagesUpdated) {
+          onImagesUpdated(updatedImages);
+        }
+        return updatedImages;
+      });
+    }, 0);
+  }, 30), [onImagesUpdated]);
 
   useImperativeHandle(ref, () => ({
     commitDeletions,
@@ -211,18 +246,9 @@ const ImageUpload = forwardRef(({ path, initialImages = [], onImagesUpdated, onD
           <IconButton onClick={() => deleteImage(index)}><DeleteIcon /></IconButton>
           <textarea
             value={image.title}
-            onChange={(e) => {
-              const newTitle = e.target.value;
-              setImages(prev => {
-                const updatedImages = prev.map((img, idx) => idx === index ? {...img, title: newTitle} : img);
-                if (onImagesUpdated) {
-                  onImagesUpdated(updatedImages);
-                }
-                return updatedImages;
-              });
-            }}            
+            onChange={(e) => debouncedUpdateTitle(index, e.target.value)}
             placeholder="Enter image title"
-            rows="2"
+            rows={2}
             style={{ width: '100%' }}
           />
         </div>

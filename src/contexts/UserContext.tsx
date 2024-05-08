@@ -1,22 +1,40 @@
-// src/contexts/UserContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+// src/contexts/UserContext.tsx
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getAuth, onAuthStateChanged, User as FirebaseUser  } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import '../config/firestore.jsx'; // Ensure Firebase is initialized
+import '../config/firestore.tsx'; // Ensure Firebase is initialized
 
-const UserContext = createContext();
+interface UserDetails {
+  uid: string;
+  isAdmin?: boolean;
+  lastLogin?: any; // You can further specify the type for date/time if needed
+}
 
-export const useUser = () => useContext(UserContext);
+interface UserContextType {
+  user: FirebaseUser | null;
+  userDetails: UserDetails | null;
+  loading: boolean;
+  error: Error | null;
+}
 
-const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [userDetails, setUserDetails] = useState(null);
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export const useUser = (): UserContextType => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+      throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
+
+const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  // Additional state for managing errors
+  const [error, setError] = useState<Error | null>(null);
 
   console.log("UserContext loaded");
-
-  // Additional state for managing errors
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -33,7 +51,7 @@ const UserProvider = ({ children }) => {
             console.log("User document exists.");
             console.log('User is signed in with UID:', authUser.uid);
             await updateDoc(userRef, { lastLogin: serverTimestamp() });
-            setUserDetails({ uid: authUser.uid, ...userDoc.data() });
+            setUserDetails({ ...userDoc.data() as UserDetails, uid: authUser.uid });
           } else {
             console.error("User document does not exist. Creating a new one...");
             await setDoc(userRef, {
@@ -48,7 +66,7 @@ const UserProvider = ({ children }) => {
           }
         } catch (e) {
           console.error("Error managing user document:", e);
-          setError(e); // Set error state
+          setError(e instanceof Error ? e : new Error("Failed to manage user document"));
         }
       } else {
         setUserDetails(null); // No user signed in

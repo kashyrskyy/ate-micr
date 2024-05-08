@@ -2,19 +2,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import DOMPurify from 'dompurify';
+import { EventInfo } from '@ckeditor/ckeditor5-utils';
 
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Box from '@mui/material/Box';
 
-function TextEditor({ onChange, initialValue}) {
-  const [editorData, setEditorData] = useState(DOMPurify.sanitize(initialValue || ''));
-  const isMounted = useRef(false); // ref to track component mounting
-  const editorRef = useRef(null);
+// Define the type for the props
+interface TextEditorProps {
+  onChange: (data: string) => void;
+  initialValue: string;
+}
 
-  const [selectedSymbol, setSelectedSymbol] = useState("");
+// Define the type for CKEditor instance
+type EditorType = ClassicEditor & { model: any };
+
+const TextEditor: React.FC<TextEditorProps> = ({ onChange, initialValue }) => {
+  const [editorData, setEditorData] = useState<string>(DOMPurify.sanitize(initialValue || ''));
+  const isMounted = useRef(false); // ref to track component mounting
+  const editorRef = useRef<EditorType | null>(null);
+
+  const [selectedSymbol, setSelectedSymbol] = useState<string>("");
   
   // Effect for initializing and responding to changes in initialValue
   useEffect(() => {
@@ -26,7 +36,7 @@ function TextEditor({ onChange, initialValue}) {
     }
   }, [initialValue]);
 
-  const handleEditorChange = (event, editor) => {
+  const handleEditorChange = (event: EventInfo<any>, editor: ClassicEditor) => {
     const data = editor.getData();
     const cleanData = DOMPurify.sanitize(data); // Sanitize the data from CKEditor
     setEditorData(cleanData); // Update internal state with sanitized data
@@ -34,7 +44,7 @@ function TextEditor({ onChange, initialValue}) {
     onChange(cleanData); // Pass sanitized data to the parent component
   };
 
-  const insertSymbol = (symbol) => {
+  const insertSymbol = (symbol: string) => {
     if (!editorRef.current) {
       console.warn("Editor not initialized");
       return;
@@ -44,15 +54,15 @@ function TextEditor({ onChange, initialValue}) {
     const editor = editorRef.current;
 
     // Insert the symbol at the current cursor position
-    editor.model.change(writer => {
+    editor.model.change((writer: any) => {
       const position = editor.model.document.selection.getFirstPosition();
       writer.insertText(symbol, position);
     });
     setSelectedSymbol(""); // Reset the dropdown after inserting symbol
   };
 
-  const handleSymbolChange = (event) => {
-    insertSymbol(event.target.value);
+  const handleSymbolChange = (event: SelectChangeEvent<string>) => {
+    insertSymbol(event.target.value as string);
   };
 
   const greekLetters = [
@@ -106,7 +116,7 @@ function TextEditor({ onChange, initialValue}) {
       <CKEditor
         editor={ClassicEditor}
         data={editorData}
-        onReady={editor => {
+        onReady={(editor: EditorType) => {
           editorRef.current = editor; // Use ref to manage the editor instance
         }}
         config={{

@@ -1,17 +1,52 @@
-// Add.jsx
-import React, { useState, useMemo } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
+// Add.tsx
+import React, { useState, useMemo, useRef } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert, SnackbarCloseReason } from '@mui/material';
 
 import { useUser } from '../../contexts/UserContext';
 
 import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore'
 
-import ImageUpload from './ImageUpload'; 
+import ImageUpload, { ImageUploadHandle } from './ImageUpload'; 
 import TextEditor from './TextEditor'; 
 import FileUpload from './FileUpload'; 
 
-const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
+// Define an interface for the design type
+interface Design {
+  title: string;
+  description: string;
+  dateDue: Timestamp;
+  dateCreated: any;
+  images: Image[]; // Replace 'any' with a more specific type if available
+  files: FileDetails[]; // Replace 'any' with a more specific type if available
+  userId: string;
+}
+
+interface Image {
+  url: string;
+  path: string;
+  title: string;
+  deleted?: boolean;
+}
+
+interface FileDetails {
+  id: string;
+  url: string;
+  name: string;
+  path: string;
+  deleted?: boolean;
+}
+
+// Define an interface for the props
+interface AddProps {
+  designs: Design[];
+  setDesigns: (designs: Design[]) => void;
+  setIsAdding: (isAdding: boolean) => void;
+  getDesigns: () => void;
+  onReturnToDashboard: () => void;
+}
+
+const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard }) => {
   const { userDetails } = useUser();
 
   console.log("Add Design loaded");
@@ -21,15 +56,15 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
   const [date, setDate] = useState('');
   const [title, setTitle] = useState('');
 
-  const [images, setImages] = useState([]); // This now handles multiple images
-  const [files, setFiles] = useState([]);  // State for storing file information
+  const [images, setImages] = useState<Image[]>([]); // This now handles multiple images
+  const [files, setFiles] = useState<FileDetails[]>([]);  // State for storing file information
 
   const initialImagesMemo = useMemo(() => images, [images]);
 
   // Newly added state variables for Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"info" | "error" | "success" | "warning">("info");
 
   // State for handling Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -37,18 +72,20 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
 
   console.log('Adding New Design from user:', userDetails);
 
+  const imageUploadRef = useRef<ImageUploadHandle>(null);
+
   const handleDialogClose = () => {
     setDialogOpen(false);
   };
 
-  const handleSnackbarClose = (event, reason) => {
+  const handleSnackbarClose =  (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
       return;
     }
     setSnackbarOpen(false);
   };
   
-  const saveDesign = async (e) => {
+  const saveDesign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Files to be saved:", files);
 
@@ -65,6 +102,8 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
       setDialogOpen(true);
       return;
     }
+
+    await imageUploadRef.current?.commitDeletions();
 
     const filteredImages = images.filter(img => !img.deleted); // Only save images that aren't marked as deleted
 
@@ -149,11 +188,13 @@ const Add = ({ designs, setDesigns, setIsAdding, getDesigns, onReturnToDashboard
               <li>Functional Modification: What is being done to this target?</li>
               <li>Overview/Plan for making the modification: What are the steps to be carried out to meet the objective?</li>
           </ul>
-          <TextEditor onChange={setDesignDescription} /> {/* Use TextEditor for description */}
+          <TextEditor onChange={setDesignDescription} initialValue={description} />
           <ImageUpload 
+            ref={imageUploadRef}
             path="designs/images"
             initialImages={initialImagesMemo}
             onImagesUpdated={setImages}
+            onDelete={(deletedImages) => setImages(images.filter(img => !deletedImages.includes(img)))}
           />
           <FileUpload  // Include the FileUpload component in the form
             path="designs/files" 

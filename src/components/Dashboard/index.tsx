@@ -1,4 +1,4 @@
-// Dashboard/index.jsx
+// Dashboard/index.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 
@@ -17,8 +17,8 @@ const Dashboard = () => {
 
   console.log("Dashboard loaded");
 
-  const [designs, setDesigns] = useState([]);
-  const [selectedDesign, setSelectedDesign] = useState(null);
+  const [designs, setDesigns] = useState<{ id: string; }[]>([]); // Corrected type for designs state
+  const [selectedDesign, setSelectedDesign] = useState<{ id: string; } | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -29,7 +29,7 @@ const Dashboard = () => {
   // New states for user ID confirmation logic
   const [userIdForConfirmation, setUserIdForConfirmation] = useState('');
   const [userIdConfirmationDialogOpen, setUserIdConfirmationDialogOpen] = useState(false);
-  const [pendingDeleteDesignId, setPendingDeleteDesignId] = useState(null);
+  const [pendingDeleteDesignId, setPendingDeleteDesignId] = useState<string | null>(null); // Added explicit type annotation
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -50,7 +50,7 @@ const Dashboard = () => {
       designsQuery = query(collection(db, "designs"), where("userId", "==", userDetails.uid), orderBy("dateCreated", "desc"));
     }
 
-    const querySnapshot = await getDocs(designsQuery);
+    const querySnapshot = await getDocs(designsQuery || query(collection(db, "designs"))); // Provide default query
     const designs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     setDesigns(designs);
   }, [userDetails]); 
@@ -61,14 +61,14 @@ const Dashboard = () => {
     }
   }, [userDetails, loading, getDesigns]);  
 
-  const handleEdit = id => {
+  const handleEdit = (id: string) => {
     const [design] = designs.filter(design => design.id === id);
 
     setSelectedDesign(design);
     setIsEditing(true);
   };
 
-  const handleDelete = (designId) => {
+  const handleDelete = (designId: string) => {
     setPendingDeleteDesignId(designId); // Temporarily store the design ID for deletion
     setDialogContent('Are you sure you want to delete this design? This action cannot be undone.');
     setDialogOpen(true); // Open the initial confirmation dialog
@@ -78,7 +78,7 @@ const Dashboard = () => {
     // Ensure there's a designId to delete
     if (!pendingDeleteDesignId) return;
 
-    if (userIdForConfirmation !== userDetails.uid) {
+    if (userIdForConfirmation !== userDetails?.uid) {
       // User ID doesn't match, show error message and abort deletion
       setSnackbarMessage('User ID confirmation failed. Enter the correct User ID.');
       setSnackbarSeverity('error');
@@ -219,7 +219,11 @@ const Dashboard = () => {
       </Dialog>
       {/* Snackbar for notifications */}
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity as "info" | "error" | "success" | "warning" | undefined}
+          sx={{ width: '100%' }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

@@ -1,12 +1,12 @@
-// App.jsx
+// App.tsx
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useUser } from './contexts/UserContext';
 import Footer from './components/Dashboard/Footer'; // Import the Footer component
 
 // Lazy loading components
-const Login = lazy(() => import('./components/Login/index.jsx'));
-const Dashboard = lazy(() => import('./components/Dashboard/index.jsx'));
+const Login = lazy(() => import('./components/Login/index'));
+const Dashboard = lazy(() => import('./components/Dashboard/index'));
 
 import CircularProgress from '@mui/material/CircularProgress';
 

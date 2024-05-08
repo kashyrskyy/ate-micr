@@ -1,4 +1,4 @@
-// FileUpload.jsx
+// FileUpload.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { getStorage, ref as firebaseRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 
@@ -19,19 +19,36 @@ import Alert from '@mui/material/Alert';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Tooltip from '@mui/material/Tooltip';
 
-const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
-    const [files, setFiles] = useState(initialFiles.map(file => ({ ...file, deleted: false })));
+interface FileUploadProps {
+    path: string;
+    initialFiles: FileDetails[];
+    onFilesChange: (files: FileDetails[]) => void;
+}
+
+interface FileDetails {
+    id: string;
+    url: string;
+    name: string;
+    path: string;
+    deleted?: boolean; // Optional property to handle file deletion state
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({ path, initialFiles, onFilesChange }) => {
+    const [files, setFiles] = useState<FileDetails[]>(initialFiles.map(file => ({ ...file, deleted: !!file.deleted })));
 
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    const [editStates, setEditStates] = useState({}); // This will hold editing states for each file
+    // Define editStates with an index signature
+    // This will hold editing states for each file
+    const [editStates, setEditStates] = useState<{ [key: string]: string }>({});
     
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+    // Declare this state with specific type
+    const [snackbarSeverity, setSnackbarSeverity] = useState<"info" | "error" | "success" | "warning">("info");
 
-    const fileInputRef = useRef(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         console.log("Initial files received:", initialFiles);
@@ -46,14 +63,16 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
 
     // This function updates both the local component state and notifies the parent component.
     // Note: This function also updates the list of files by merging new files with existing ones (inside handleFileChange).
-    const updateFiles = (newFiles) => {
+    const updateFiles = (newFiles: FileDetails[]) => {
         console.log('Updating files with', newFiles);
         onFilesChange(newFiles);  // Notify parent component of the updated files list
         setFiles(newFiles);       // Update local state to reflect the new list of files
-    };
+    };    
     
-    const handleFileChange = async (event) => {
-        const fileList = Array.from(event.target.files);
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files) return;
+
+        const fileList: File[] = Array.from(event.target.files);
 
         const filteredFiles = fileList.filter(file => {
             if (file.size > 5242880) {  // 5 MB in bytes
@@ -74,7 +93,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
             const storageRef = firebaseRef(storage, `${path}/${modifiedFileName}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
-            return new Promise((resolve, reject) => {
+            return new Promise<FileDetails>((resolve, reject) => { // Explicitly type the Promise
                 uploadTask.on('state_changed',
                     (snapshot) => {
                         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
@@ -86,7 +105,12 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
                     },
                     () => {
                         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                            resolve({ id: uniqueIdentifier, url: downloadURL, name: file.name, path: storageRef.fullPath });
+                            resolve({
+                                id: uniqueIdentifier.toString(),
+                                url: downloadURL,
+                                name: file.name,
+                                path: storageRef.fullPath,
+                            });
                         });
                     }
                 );
@@ -95,14 +119,16 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
 
         Promise.all(uploadPromises).then(newFiles => {
             // Combine existing files with the new files, making sure to filter out deleted ones
-            const updatedFiles = [...files.filter(file => !file.deleted), ...newFiles];
+            const updatedFiles: FileDetails[] = [...files.filter(file => !file.deleted), ...newFiles];
             updateFiles(updatedFiles); // Changed from setFiles to updateFiles
             setSnackbarMessage('Files uploaded successfully.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
             setUploading(false);
             setUploadProgress(0);
-            fileInputRef.current.value = ''; // Clear the input after upload
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''; // Clear the input after upload
+            }
         }).catch(error => {
             console.error("Error uploading files: ", error);
             setSnackbarMessage('Failed to upload files.');
@@ -113,7 +139,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
         });
     };
 
-    const markFileForDeletion = (id) => {
+    const markFileForDeletion = (id: string) => {
         const newFiles = files.map(file => {
             if (file.id === id) {
                 return { ...file, deleted: true };
@@ -126,7 +152,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
         setSnackbarOpen(true);
     }; 
 
-    const handleEditClick = (fileId) => {
+    const handleEditClick = (fileId: string) => {
         setEditStates((prevEditStates) => ({
             ...prevEditStates,
             [fileId]: files.find((file) => file.id === fileId)?.name || '', // Ensure fallback to empty string if file is not found
@@ -135,7 +161,7 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
     };
 
     // When you're done editing and want to save the new name
-    const handleSaveClick = (fileId) => {
+    const handleSaveClick = (fileId: string) => {
         setFiles(prevFiles => {
             const newFiles = prevFiles.map(file => {
                 if (file.id === fileId && editStates[fileId] !== undefined) {
@@ -160,14 +186,14 @@ const FileUpload = ({ path, initialFiles = [], onFilesChange }) => {
     };
 
     // Update the name in the editStates when typing
-    const handleNameChange = (fileId, newName) => {
+    const handleNameChange = (fileId: string, newName: string) => {
         setEditStates(prev => ({
             ...prev,
             [fileId]: newName // Update the edit state for this specific fileId
         }));
     };
 
-    const handleCloseSnackbar = (event, reason) => {
+    const handleCloseSnackbar = (event: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') return;
         setSnackbarOpen(false);
     };

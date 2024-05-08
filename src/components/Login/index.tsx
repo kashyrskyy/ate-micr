@@ -1,4 +1,4 @@
-// Login/index.jsx
+// Login/index.tsx
 import React, { useState } from 'react';
 import { getAuth, signInWithPopup, GoogleAuthProvider, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { Button, Typography, Container, Box, Snackbar, Alert, TextField, Checkbox, FormControlLabel, Tooltip } from '@mui/material';
@@ -12,7 +12,7 @@ const Login = () => {
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'error' | 'info' | 'success' | 'warning'>('success');
 
   const [passcode, setPasscode] = useState('');
   const [isPasscodeValid, setIsPasscodeValid] = useState(false);
@@ -21,7 +21,7 @@ const Login = () => {
 
   const VALID_PASSCODE = import.meta.env.VITE_VALID_PASSCODE;
 
-  const validatePasscode = (input) => {
+  const validatePasscode = (input: string): void => {
     if (input === VALID_PASSCODE) {
       setIsPasscodeValid(true);
       setSnackbarMessage("Passcode Entered Correctly.");
@@ -46,21 +46,23 @@ const Login = () => {
       setSnackbarMessage('Successfully logged in with Google!');
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
-    } catch (error) {
+    } catch (error: any) {
       let errorMessage = 'Login Failed: An unexpected error occurred.';
-      switch (error.code) {
-        case 'auth/network-request-failed':
-          errorMessage = 'Login Failed: Network error, please check your connection.';
-          break;
-        case 'auth/popup-closed-by-user':
-          errorMessage = 'Login Failed: The sign-in popup was closed before completion.';
-          break;
-        case 'auth/cancelled-popup-request':
-          errorMessage = 'Login Failed: Another sign-in request was made before the first one was completed.';
-          break;
-        case 'auth/popup-blocked':
-          errorMessage = 'Login Failed: The sign-in popup was blocked by the browser. Please allow popups for this site.';
-          break;
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        switch (error.code) {
+          case 'auth/network-request-failed':
+            errorMessage = 'Login Failed: Network error, please check your connection.';
+            break;
+          case 'auth/popup-closed-by-user':
+            errorMessage = 'Login Failed: The sign-in popup was closed before completion.';
+            break;
+          case 'auth/cancelled-popup-request':
+            errorMessage = 'Login Failed: Another sign-in request was made before the first one was completed.';
+            break;
+          case 'auth/popup-blocked':
+            errorMessage = 'Login Failed: The sign-in popup was blocked by the browser. Please allow popups for this site.';
+            break;
+        }
       }
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity('error');

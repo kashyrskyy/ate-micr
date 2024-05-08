@@ -1,4 +1,4 @@
-// Footer.jsx
+// Footer.tsx
 
 import React from 'react';
 import { Divider, Box, Typography } from '@mui/material';

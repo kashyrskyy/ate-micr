@@ -1,29 +1,40 @@
-// Header.jsx
+// Header.tsx
 import React, { useState, memo } from 'react';
 
 import { useUser } from '../../contexts/UserContext';
 
 import Logout from '../Logout';
 
-import { Typography, Button, Box, Chip, Snackbar, Alert, Tooltip } from '@mui/material';
+import { Typography, Button, Box, Chip, Snackbar, Alert, Tooltip, SnackbarCloseReason } from '@mui/material';
 
-const Header = memo(({ setIsAdding }) => {
+interface HeaderProps {
+  setIsAdding: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
   const { userDetails } = useUser();
   console.log("Header loaded");
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const handleCopyUserId = () => {
-    navigator.clipboard.writeText(userDetails.uid).then(() => {
-      // Open the snackbar on successful copy
-      setOpenSnackbar(true);
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
-    });
+    // Check if userDetails exists before accessing its uid property
+    if (userDetails?.uid) {
+      navigator.clipboard.writeText(userDetails.uid)
+        .then(() => {
+          // Open the snackbar on successful copy
+          setOpenSnackbar(true);
+        })
+        .catch(err => {
+          console.error('Could not copy text: ', err);
+        });
+    } else {
+      console.error('User details are null or undefined');
+    }
   };
-
+  
   // Close snackbar
-  const handleCloseSnackbar = (event, reason) => {
+  const handleCloseSnackbar = (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
       return;
     }

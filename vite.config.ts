@@ -8,4 +8,9 @@ const deployEnv = process.env.VITE_DEPLOY_ENV ?? 'local';
 export default defineConfig({
   base: deployEnv === 'github' ? '/ate-micr/' : '/',
   plugins: [react()],
+  server: {
+    open: true,
+    port: 3001,
+    host: true,
+  },
 })

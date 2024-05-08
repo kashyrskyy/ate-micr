@@ -1,4 +1,4 @@
-// Logout/index.jsx
+// Logout/index.tsx
 import React, { useState } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
 
@@ -9,9 +9,10 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
 
-const Alert = React.forwardRef(function Alert(props, ref) {
+// Define the correct type for the ref prop
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
