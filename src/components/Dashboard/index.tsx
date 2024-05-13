@@ -12,13 +12,15 @@ import NotebookTable from './NotebookTable';
 import Add from './Add';
 import Edit from './Edit';
 
+import { Design } from '../../types/types';
+
 const Dashboard = () => {
   const { userDetails, loading } = useUser();
 
   console.log("Dashboard loaded");
 
-  const [designs, setDesigns] = useState<{ id: string; }[]>([]); // Corrected type for designs state
-  const [selectedDesign, setSelectedDesign] = useState<{ id: string; } | null>(null);
+  const [designs, setDesigns] = useState<Design[]>([]); // Updated type for designs state
+  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null); // Updated type for selectedDesign state
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -51,7 +53,19 @@ const Dashboard = () => {
     }
 
     const querySnapshot = await getDocs(designsQuery || query(collection(db, "designs"))); // Provide default query
-    const designs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const designs = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        description: data.description,
+        dateDue: data.dateDue,
+        dateCreated: data.dateCreated,
+        userId: data.userId,
+        images: data.images || [],
+        files: data.files || []
+      } as Design;
+    });
     setDesigns(designs);
   }, [userDetails]); 
 

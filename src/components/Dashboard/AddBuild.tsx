@@ -12,28 +12,36 @@ import TextEditor from './TextEditor';
 import ImageUpload from './ImageUpload'; // Import ImageUpload component
 import FileUpload from './FileUpload'; // Import FileUpload component
 
-const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
-  const [buildTitle, setBuildTitle] = useState('');
-  const [buildDescription, setBuildDescription] = useState('');
-  const [buildImages, setBuildImages] = useState([]);
-  const [buildFiles, setBuildFiles] = useState([]); // Initialize as an array
+import { Image, FileDetails } from '../../types/types'; // Import the necessary types
+
+interface AddBuildProps {
+  designId: string;
+  setIsAddingBuild: (isAdding: boolean) => void;
+  refreshBuilds: () => void;
+}
+
+const AddBuild: React.FC<AddBuildProps> = ({ designId, setIsAddingBuild, refreshBuilds }) => {
+  const [buildTitle, setBuildTitle] = useState<string>('');
+  const [buildDescription, setBuildDescription] = useState<string>('');
+  const [buildImages, setBuildImages] = useState<Image[]>([]);
+  const [buildFiles, setBuildFiles] = useState<FileDetails[]>([]); // Initialize as an array
   const { userDetails } = useUser();
 
-  const handleImagesChange = (newImages) => {
+  const handleImagesChange = (newImages: Image[]) => {
     setBuildImages(newImages);
   };
 
-  const handleFilesChange = (newFiles) => {
+  const handleFilesChange = (newFiles: FileDetails[]) => {
     setBuildFiles(newFiles);
   };
 
   console.log("AddBuild loaded");
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogContent, setDialogContent] = useState('');
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [dialogContent, setDialogContent] = useState<string>('');
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'info' | 'success' | 'warning' | 'error'>('info');
 
   console.log('Adding New Build by user:', userDetails);
 
@@ -41,14 +49,14 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
     setDialogOpen(false);
   };
 
-  const handleSnackbarClose = (event, reason) => {
+  const handleSnackbarClose = (event: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
     setSnackbarOpen(false);
   };
 
-  const handleAddBuild = async (e) => {
+  const handleAddBuild = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Check if the user object is defined and has a uid property
@@ -108,18 +116,19 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
     } catch (error) {
       console.error("Error adding build: ", error);
     
-      // Set a default error message
-      let errorMessage = `Failed to add the build. ${error.message || "Please try again later."}`;
-    
-      // Customize the message for a permission-denied error
-      if (error.code === "permission-denied") {
-        errorMessage = "You do not have permission to perform this operation.";
+      if (error instanceof Error) {
+        let errorMessage = `Failed to add the build. ${error.message}`;
+        if (error.message === "permission-denied") {
+          errorMessage = "You do not have permission to perform this operation.";
+        }
+        setSnackbarMessage(errorMessage);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarMessage('Failed to add the build. Please try again later.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
       }
-    
-      // Use the Snackbar for displaying the error message
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
     }
   };
 
@@ -135,11 +144,12 @@ const AddBuild = ({ designId, setIsAddingBuild, refreshBuilds }) => {
           style={{ width: '100%', marginBottom: '20px' }}
         />
         <label className="buildTitles" htmlFor="buildDescription">Description</label>
-        <TextEditor onChange={setBuildDescription} /> {/* Use TextEditor for build description */}
+        <TextEditor onChange={setBuildDescription} initialValue={buildDescription} /> {/* Use TextEditor for build description */}
         <ImageUpload 
           path={`builds/${designId}/images`} // Ensure the path is unique for each build
           initialImages={buildImages}
           onImagesUpdated={handleImagesChange}
+          // onDelete={(deletedImages) => setBuildImages(currentImages => currentImages.filter(image => !deletedImages.includes(image)))}
         />
         <FileUpload 
           path={`builds/${designId}/files`} // Adjust the path to organize files separately

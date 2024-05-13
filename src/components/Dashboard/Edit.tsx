@@ -25,12 +25,14 @@ import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import SaveIcon from '@mui/icons-material/Save';
 
+import { Design, Image, FileDetails } from '../../types/types'; // Import the Design, Image, and FileDetails types
+
 interface EditProps {
-  designs: { id: string; }[];
-  selectedDesign: { id: string; } | null;
-  setDesigns: React.Dispatch<React.SetStateAction<{ id: string; }[]>>;
-  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  getDesigns: () => Promise<void>;
+  designs: Design[];
+  selectedDesign: Design | null;
+  setDesigns: (designs: Design[]) => void;
+  setIsEditing: (isEditing: boolean) => void;
+  getDesigns: () => void;
   onReturnToDashboard: () => void;
 }
 

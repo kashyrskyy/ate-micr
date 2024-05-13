@@ -11,36 +11,12 @@ import ImageUpload, { ImageUploadHandle } from './ImageUpload';
 import TextEditor from './TextEditor'; 
 import FileUpload from './FileUpload'; 
 
-// Define an interface for the design type
-interface Design {
-  title: string;
-  description: string;
-  dateDue: Timestamp;
-  dateCreated: any;
-  images: Image[]; // Replace 'any' with a more specific type if available
-  files: FileDetails[]; // Replace 'any' with a more specific type if available
-  userId: string;
-}
-
-interface Image {
-  url: string;
-  path: string;
-  title: string;
-  deleted?: boolean;
-}
-
-interface FileDetails {
-  id: string;
-  url: string;
-  name: string;
-  path: string;
-  deleted?: boolean;
-}
+import { NewDesign, Design, Image, FileDetails } from '../../types/types'; // Import the interfaces
 
 // Define an interface for the props
 interface AddProps {
   designs: Design[];
-  setDesigns: (designs: Design[]) => void;
+  setDesigns: React.Dispatch<React.SetStateAction<Design[]>>;
   setIsAdding: (isAdding: boolean) => void;
   getDesigns: () => void;
   onReturnToDashboard: () => void;
@@ -114,7 +90,7 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
       path: file.path
     }));
   
-    const newDesign = {
+    const newDesign: NewDesign = {
       title: title,
       description: description,
       dateDue: Timestamp.fromDate(new Date(date)),
@@ -125,8 +101,9 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
     };     
   
     try {
-      await addDoc(collection(db, "designs"), newDesign);
-      setDesigns([...designs, newDesign]); // Update state correctly
+      const docRef = await addDoc(collection(db, "designs"), newDesign);
+      const addedDesign: Design = { ...newDesign, id: docRef.id };
+      setDesigns([...designs, addedDesign]); // Update state correctly
       // Assuming Snackbar state is set here
       setTimeout(() => {
         setIsAdding(false); // Or any other operation that might hide the Snackbar
