@@ -1017,7 +1017,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                 <ImageUpload
                   path={`builds/${build.id}/images`}
                   initialImages={build.images}
-                  onImagesUpdated={images => handleBuildImagesUpdated(build.id, images)}
+                  onImagesUpdated={(images) => handleBuildImagesUpdated(build.id, images)}
                   onDelete={(deletedImages) => handleBuildImageDeletions(build.id, deletedImages)}
                 />
                 <FileUpload
