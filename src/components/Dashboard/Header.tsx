@@ -17,6 +17,8 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
+  const [copied, setCopied] = useState(false);
+
   const handleCopyUserId = () => {
     // Check if userDetails exists before accessing its uid property
     if (userDetails?.uid) {
@@ -24,6 +26,8 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
         .then(() => {
           // Open the snackbar on successful copy
           setOpenSnackbar(true);
+          // Set copied state to true
+          setCopied(true);
         })
         .catch(err => {
           console.error('Could not copy text: ', err);
@@ -31,7 +35,7 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
     } else {
       console.error('User details are null or undefined');
     }
-  };
+  };  
   
   // Close snackbar
   const handleCloseSnackbar = (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
@@ -55,12 +59,20 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
             />
           )}
-          <Tooltip title="Click to Copy" enterDelay={300} leaveDelay={200}>
+          <Tooltip title={copied ? "Copied!" : "Click to Copy"} enterDelay={300} leaveDelay={200}>
             <Chip
               label={`User ID: ${userDetails.uid}`}
               variant="outlined"
               onClick={handleCopyUserId}
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#e0f2f1', color: '#00695c', mr: 1, cursor: 'pointer' }}
+              sx={{
+                borderRadius: '15px',
+                fontWeight: 'bold',
+                background: '#e0f2f1',
+                color: '#00695c',
+                mr: 1,
+                cursor: 'pointer',
+                transition: 'background-color 0.3s'
+              }}
             />
           </Tooltip>
         </Box>
