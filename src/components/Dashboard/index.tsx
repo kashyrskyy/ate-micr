@@ -19,7 +19,8 @@ const Dashboard = () => {
 
   console.log("Dashboard loaded");
 
-  const [designs, setDesigns] = useState<Design[]>([]); // Updated type for designs state
+  const [adminDesigns, setAdminDesigns] = useState<Design[]>([]); // State for admin's designs
+  const [userDesigns, setUserDesigns] = useState<Design[]>([]); // State for other users' designs
   const [selectedDesign, setSelectedDesign] = useState<Design | null>(null); // Updated type for selectedDesign state
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -53,9 +54,12 @@ const Dashboard = () => {
     }
 
     const querySnapshot = await getDocs(designsQuery || query(collection(db, "designs"))); // Provide default query
-    const designs = querySnapshot.docs.map(doc => {
+    const adminDesigns: Design[] = [];
+    const userDesigns: Design[] = [];
+    
+    querySnapshot.forEach(doc => {
       const data = doc.data();
-      return {
+      const design = {
         id: doc.id,
         title: data.title,
         description: data.description,
@@ -65,9 +69,17 @@ const Dashboard = () => {
         images: data.images || [],
         files: data.files || []
       } as Design;
+
+      if (data.userId === userDetails?.uid) {
+        adminDesigns.push(design);
+      } else {
+        userDesigns.push(design);
+      }
     });
-    setDesigns(designs);
-  }, [userDetails]); 
+
+    setAdminDesigns(adminDesigns);
+    setUserDesigns(userDesigns);
+  }, [userDetails]);
 
   useEffect(() => {
     if (!loading && userDetails) {
@@ -76,9 +88,8 @@ const Dashboard = () => {
   }, [userDetails, loading, getDesigns]);  
 
   const handleEdit = (id: string) => {
-    const [design] = designs.filter(design => design.id === id);
-
-    setSelectedDesign(design);
+    const design = [...adminDesigns, ...userDesigns].find(design => design.id === id);
+    setSelectedDesign(design || null);
     setIsEditing(true);
   };
 
@@ -124,8 +135,8 @@ const Dashboard = () => {
             await deleteDoc(doc(db, "designs", pendingDeleteDesignId));
 
             // Update UI
-            const updatedDesigns = designs.filter(design => design.id !== pendingDeleteDesignId);
-            setDesigns(updatedDesigns);
+            setAdminDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
+            setUserDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
 
             // Show success message
             setSnackbarMessage('Your design and its associated builds and tests have been deleted.');
@@ -151,18 +162,44 @@ const Dashboard = () => {
       {!isAdding && !isEditing && (
         <>
           <Header setIsAdding={setIsAdding} />
-          <NotebookTable
-            designs={designs}
-            handleEdit={handleEdit}
-            handleDelete={handleDelete}
-            isAdmin={userDetails?.isAdmin ?? false} // Use optional chaining and provide a default value
-          />
+          {userDetails?.isAdmin && (
+            <>
+              <h2>Admin Designs</h2>
+              <NotebookTable
+                designs={adminDesigns}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+                isAdmin={true}
+                userDetails={userDetails} // Pass userDetails as a prop
+                showUserIdColumn={true} // Show User ID column for admin designs
+              />
+              <h2>Users' Designs</h2>
+              <NotebookTable
+                designs={userDesigns}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+                isAdmin={false}
+                userDetails={userDetails} // Pass userDetails as a prop
+                showUserIdColumn={true} // Show User ID column for admin designs
+              />
+            </>
+          )}
+          {!userDetails?.isAdmin && (
+            <NotebookTable
+              designs={adminDesigns} // Regular users only see their designs
+              handleEdit={handleEdit}
+              handleDelete={handleDelete}
+              isAdmin={false}
+              userDetails={userDetails} // Pass userDetails as a prop
+              showUserIdColumn={false} // Do not show User ID column for regular users
+            />
+          )}
         </>
       )}
       {isAdding && (
         <Add
-          designs={designs}
-          setDesigns={setDesigns}
+          designs={adminDesigns}
+          setDesigns={setAdminDesigns}
           setIsAdding={setIsAdding}
           getDesigns={getDesigns}
           onReturnToDashboard={handleReturnToDashboard}
@@ -170,9 +207,9 @@ const Dashboard = () => {
       )}
       {isEditing && (
         <Edit
-          designs={designs}
+          designs={adminDesigns}
           selectedDesign={selectedDesign}
-          setDesigns={setDesigns}
+          setDesigns={setAdminDesigns}
           setIsEditing={setIsEditing}
           getDesigns={getDesigns}
           onReturnToDashboard={handleReturnToDashboard}

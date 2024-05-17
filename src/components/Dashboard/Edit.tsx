@@ -44,6 +44,9 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
 
   console.log("Design ID:", id);
 
+  // Check if the current user is viewing their own design or another user's design
+  const isOwnDesign = selectedDesign.userId === userDetails?.uid;
+
   const [description, setDesignDescription] = useState(selectedDesign.description);
   const [date, setDate] = useState(selectedDesign.dateDue || '');
   const [title, setTitle] = useState('');
@@ -324,7 +327,13 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     const fetchBuildsAndTests = async () => {
       if (!userDetails) return;
 
-      const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", id), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
+      let buildsQuery;
+      if (userDetails.isAdmin) {
+        buildsQuery = query(collection(db, "builds"), where("design_ID", "==", id), orderBy("dateCreated"));
+      } else {
+        buildsQuery = query(collection(db, "builds"), where("design_ID", "==", id), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
+      }
+
       const querySnapshot = await getDocs(buildsQuery);
       let fetchedBuilds = [];
       let tempTestsByBuildId = {};
@@ -342,8 +351,14 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
         });
 
         initialCollapseState[buildId] = true;  // Initialize collapse state as true for each build
+        
+        let testsQuery;
+        if (userDetails.isAdmin) {
+          testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), orderBy("dateCreated"));
+        } else {
+          testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
+        }
 
-        const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid), orderBy("dateCreated"));
         const testsSnapshot = await getDocs(testsQuery);
         let fetchedTests = [];
         let buildTestImages = {};
@@ -397,13 +412,23 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     try {
       console.log("Refreshing builds for user UID:", userDetails?.uid);
       console.log("Selected design ID for query:", selectedDesign?.id);
-      
-      const buildsQuery = query(
-        collection(db, "builds"),
-        where("design_ID", "==", id),
-        where("userId", "==", userDetails.uid), // Ensure this line is present and correct
-        orderBy("dateCreated")
-      );      
+
+      let buildsQuery;
+      if (userDetails.isAdmin) {
+        buildsQuery = query(
+          collection(db, "builds"),
+          where("design_ID", "==", id),
+          orderBy("dateCreated")
+        );
+      } else {
+        buildsQuery = query(
+          collection(db, "builds"),
+          where("design_ID", "==", id),
+          where("userId", "==", userDetails.uid),
+          orderBy("dateCreated")
+        );
+      }
+
       console.log("Builds query details:", JSON.stringify(buildsQuery, null, 2)); // Detailed query logging
 
       const buildsSnapshot = await getDocs(buildsQuery);
@@ -435,12 +460,23 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     }
   
     try {
-      const testsQuery = query(
-        collection(db, "tests"),
-        where("build_ID", "==", buildId),
-        where("userId", "==", userDetails.uid), // Ensure the user can only access their tests
-        orderBy("dateCreated")
-      );
+
+      let testsQuery;
+      if (userDetails.isAdmin) {
+        testsQuery = query(
+          collection(db, "tests"),
+          where("build_ID", "==", buildId),
+          orderBy("dateCreated")
+        );
+      } else {
+        testsQuery = query(
+          collection(db, "tests"),
+          where("build_ID", "==", buildId),
+          where("userId", "==", userDetails.uid),
+          orderBy("dateCreated")
+        );
+      }
+
       const testsSnapshot = await getDocs(testsQuery);
       const fetchedTests = testsSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -911,35 +947,39 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
             initialFiles={files}
             onFilesChange={setFiles} // Handler to update state when files change
           />
-          <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
-            <input type="submit" value="Update" />
-            <button
-              style={{ marginLeft: '12px' }}
-              className="muted-button"
-              type="button"
-              onClick={() => setIsEditing(false)}
-            >
-              Cancel
-            </button>
-          </div>
+          {isOwnDesign && (
+              <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <input type="submit" value="Update" />
+                  <button
+                      style={{ marginLeft: '12px' }}
+                      className="muted-button"
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                  >
+                      Cancel
+                  </button>
+              </div>
+          )}
         </form>
       </div>
       <div>
         <div className="flex-space-between">
           <h2 className="buildsHeader">Builds</h2>
-          <button 
-            className="button muted-button"
-            onClick={() => {
-              setIsAddingBuild(true);
-              // Use a setTimeout to ensure the DOM has been updated
-              setTimeout(() => {
-                if (addBuildFormRef.current) {
-                  addBuildFormRef.current.scrollIntoView({ behavior: 'smooth' });
-                }
-              }, 100);
-            }} style={{ marginTop: '20px' }}> 
-              <span role="img" aria-label="Add Build">➕</span> Build
-          </button>
+          {isOwnDesign && (
+              <button 
+                  className="button muted-button"
+                  onClick={() => {
+                      setIsAddingBuild(true);
+                      // Use a setTimeout to ensure the DOM has been updated
+                      setTimeout(() => {
+                          if (addBuildFormRef.current) {
+                              addBuildFormRef.current.scrollIntoView({ behavior: 'smooth' });
+                          }
+                      }, 100);
+                  }} style={{ marginTop: '20px' }}> 
+                  <span role="img" aria-label="Add Build">➕</span> Build
+              </button>
+          )}
         </div>
         {builds.map((build, index) => (
           <div key={build.id} className="build-record">
@@ -984,26 +1024,29 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                   >
                     {visibleBuildDetails[build.id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
                   </button>
-                  <button 
-                    className="button muted-button"
-                    style={{ border: 'none', background: 'none' }}
-                    onClick={() => confirmDeleteBuild(build.id)}
-                  >
-                    <DeleteIcon />
-                  </button>
-                  <button 
-                    className="button muted-button"
-                    onClick={() => {
-                      setAddingTestIdForBuild(build.id);
-                      // Use a setTimeout to ensure the DOM has been updated
-                      setTimeout(() => {
-                        if (addTestFormRef.current) {
-                          addTestFormRef.current.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      }, 100);
-                    }}>
-                      <span role="img" aria-label="Add Test">➕</span> Test
-                  </button>
+                  {isOwnDesign && (
+                    <>
+                      <button 
+                        className="button muted-button"
+                        style={{ border: 'none', background: 'none' }}
+                        onClick={() => confirmDeleteBuild(build.id)}
+                      >
+                        <DeleteIcon />
+                      </button>
+                      <button 
+                          className="button muted-button"
+                          onClick={() => {
+                              setAddingTestIdForBuild(build.id);
+                              setTimeout(() => {
+                                  if (addTestFormRef.current) {
+                                      addTestFormRef.current.scrollIntoView({ behavior: 'smooth' });
+                                  }
+                              }, 100);
+                          }}>
+                          <span role="img" aria-label="Add Test">➕</span> Test
+                      </button>
+                    </>
+                  )}
                 </div>
             </div>
             {visibleBuildDetails[build.id] && (
@@ -1025,9 +1068,11 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                   initialFiles={build.files}
                   onFilesChange={(files) => handleBuildFilesUpdated(build.id, files)}
                 />
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={() => updateBuildDescription(build.id)}>Update</button>
-                </div>
+                {isOwnDesign && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <button onClick={() => updateBuildDescription(build.id)}>Update</button>
+                    </div>
+                )}
                 <div>
                   {testsByBuildId[build.id] && testsByBuildId[build.id].length > 0 && (
                     <button
@@ -1092,13 +1137,15 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                         >
                           {visibleTestDetails[test.id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
                         </button>
-                        <button 
-                          className="button muted-button"
-                          style={{ border: 'none', background: 'none' }}
-                          onClick={() => confirmDeleteTest(test.id, build.id)}
-                        >
-                          <DeleteIcon />
-                        </button>
+                        {isOwnDesign && (
+                          <button
+                            className="button muted-button"
+                            style={{ border: 'none', background: 'none' }}
+                            onClick={() => confirmDeleteTest(test.id, build.id)}
+                          >
+                            <DeleteIcon />
+                          </button>
+                        )}
                       </div>
                     </div>
                     {visibleTestDetails[test.id] && (
@@ -1143,9 +1190,11 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                               onFilesChange={(files) => handleTestFilesUpdated(test.id, files)}
                             />
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
-                        </div>
+                        {isOwnDesign && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
+                            </div>
+                        )}
                       </>
                     )}
                   </div>

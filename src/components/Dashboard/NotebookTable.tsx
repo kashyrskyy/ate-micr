@@ -3,6 +3,10 @@ import React from 'react';
 
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+
+// import VisibilityIcon from '@mui/icons-material/Visibility'; 
+// Import the visibility icon
+
 import {
   Table,
   TableBody,
@@ -24,9 +28,11 @@ interface NotebookTableProps {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   isAdmin: boolean;
+  userDetails: { uid: string } | null; // Add userDetails prop
+  showUserIdColumn: boolean; // Add showUserIdColumn prop
 }
 
-const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, handleDelete, isAdmin }) => {
+const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, handleDelete, isAdmin, userDetails, showUserIdColumn }) => {
   // Function to format Firestore timestamp to a readable format
   const formatDate = (value: Timestamp | Date | FieldValue | null): string => {
     if (!value) return 'N/A';
@@ -87,8 +93,8 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
       <Table sx={{ '& .MuiTableCell-root': { fontSize: '1rem' }, '& .MuiTableCell-head': { fontSize: '1.2rem', backgroundColor: '#1A76D3', color: "white"} }}>
         <TableHead>
           <TableRow sx={{ height: '60px' }}> 
-            <TableCell sx={{ fontWeight: 'bold', width: '40%' }}>Title</TableCell>
-            {isAdmin && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>}
+            <TableCell sx={{ fontWeight: 'bold', width: showUserIdColumn ? '30%' : '40%' }}>Title</TableCell>
+            {showUserIdColumn && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>}
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Created</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Due</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>Edit</TableCell>
@@ -97,33 +103,40 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
         </TableHead>
         <TableBody>
           {designs && designs.length > 0 ? (
-            designs.map((design) => (
-              <TableRow key={design.id} sx={{ height: '80px' }}>
-                <TableCell>
-                  <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
-                </TableCell>
-                {isAdmin && <TableCell>{design.userId}</TableCell>}
-                <TableCell>{formatDate(design.dateCreated)}</TableCell>
-                <TableCell>{formatInputDate(design.dateDue)}</TableCell>
-                <TableCell>
-                  <Tooltip title="Edit">
-                    <IconButton onClick={() => handleEdit(design.id)} color="primary">
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-                <TableCell>
-                  <Tooltip title="Delete">
-                    <IconButton onClick={() => handleDelete(design.id)} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))
+            designs.map((design) => {
+              const isOwnDesign = design.userId === userDetails?.uid;
+              return (
+                <TableRow key={design.id} sx={{ height: '80px' }}>
+                  <TableCell>
+                    <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
+                  </TableCell>
+                  {showUserIdColumn && <TableCell>{design.userId}</TableCell>}
+                  <TableCell>{formatDate(design.dateCreated)}</TableCell>
+                  <TableCell>{formatInputDate(design.dateDue)}</TableCell>
+                  <TableCell>
+                    <Tooltip title="Edit">
+                      <span>
+                        <IconButton onClick={() => isOwnDesign && handleEdit(design.id)} color="primary" disabled={!isOwnDesign}>
+                          <EditIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title="Delete">
+                      <span>
+                        <IconButton onClick={() => isOwnDesign && handleDelete(design.id)} color="error" disabled={!isOwnDesign}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           ) : (
             <TableRow>
-              <TableCell colSpan={isAdmin ? 6 : 5}>No Designs Found</TableCell>
+              <TableCell colSpan={showUserIdColumn ? 6 : 5}>No Designs Found</TableCell>
             </TableRow>
           )}
         </TableBody>

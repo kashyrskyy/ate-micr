@@ -12,6 +12,7 @@ export interface NewDesign {
 }
 
 export interface Design {
+  isAdmin?: boolean;
   id: string;
   title: string;
   description: string;

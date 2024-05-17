@@ -13,7 +13,7 @@ import Box from '@mui/material/Box';
 // Define the type for the props
 interface TextEditorProps {
   onChange: (data: string) => void;
-  initialValue: string;
+  initialValue?: string;  // This allows for undefined implicitly
 }
 
 // Define the type for CKEditor instance
