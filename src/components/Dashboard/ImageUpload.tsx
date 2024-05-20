@@ -36,6 +36,7 @@ interface ImageUploadProps {
   initialImages?: Image[];
   onImagesUpdated: (images: Image[]) => void;
   onDelete: (images: Image[]) => void;
+  isOwnDesign: boolean;
 }
 
 // Define the type for the imperative handle
@@ -43,7 +44,7 @@ export interface ImageUploadHandle {
   commitDeletions: () => Promise<void>;
 }
 
-const ImageUpload = forwardRef<ImageUploadHandle, ImageUploadProps>(({ path, initialImages = [], onImagesUpdated, onDelete }, ref) => {
+const ImageUpload = forwardRef<ImageUploadHandle, ImageUploadProps>(({ path, initialImages = [], onImagesUpdated, onDelete, isOwnDesign }, ref) => {
   const [images, setImages] = useState<Image[]>(initialImages.map(img => ({ ...img, deleted: false })));
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -217,21 +218,23 @@ const ImageUpload = forwardRef<ImageUploadHandle, ImageUploadProps>(({ path, ini
 
   return (
     <div>
-      <Tooltip title="Upload Images">
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<PhotoCameraIcon />}
-          sx={{
-            m: 1, // Adds margin around the button
-            pl: 2, // Adds padding inside the button, on the left of the icon and text
-            pr: 2, // Adds padding inside the button, on the right of the icon and text
-          }}
-        >
-          Upload Image(s)
-          <input type="file" hidden multiple onChange={handleImageChange} disabled={uploading} ref={fileInputRef} accept="image/*" />
-        </Button>
-      </Tooltip>
+      {isOwnDesign && (
+        <Tooltip title="Upload Images">
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={<PhotoCameraIcon />}
+            sx={{
+              m: 1, // Adds margin around the button
+              pl: 2, // Adds padding inside the button, on the left of the icon and text
+              pr: 2, // Adds padding inside the button, on the right of the icon and text
+            }}
+          >
+            Upload Image(s)
+            <input type="file" hidden multiple onChange={handleImageChange} disabled={uploading} ref={fileInputRef} accept="image/*" />
+          </Button>
+        </Tooltip>
+      )}
       {uploading && (
         <>
           <p>Uploading... {Math.round(uploadProgress)}%</p>
@@ -243,7 +246,11 @@ const ImageUpload = forwardRef<ImageUploadHandle, ImageUploadProps>(({ path, ini
       {images.filter(img => !img.deleted).map((image, index) => (
         <div key={index}>
           <img src={image.url} alt={`Uploaded design ${index}`} onClick={() => { setIsModalVisible(true); setCurrentImageIndex(index); }} style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', cursor: 'pointer' }} />
-          <IconButton onClick={() => deleteImage(index)}><DeleteIcon /></IconButton>
+          {isOwnDesign && (
+            <IconButton onClick={() => deleteImage(index)}>
+              <DeleteIcon />
+            </IconButton>
+          )}
           <textarea
             value={image.title}
             onChange={(e) => debouncedUpdateTitle(index, e.target.value)}

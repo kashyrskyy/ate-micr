@@ -23,6 +23,7 @@ interface FileUploadProps {
     path: string;
     initialFiles: FileDetails[];
     onFilesChange: (files: FileDetails[]) => void;
+    isOwnDesign: boolean; 
 }
 
 interface FileDetails {
@@ -33,7 +34,7 @@ interface FileDetails {
     deleted?: boolean; // Optional property to handle file deletion state
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ path, initialFiles, onFilesChange }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ path, initialFiles, onFilesChange, isOwnDesign }) => {
     const [files, setFiles] = useState<FileDetails[]>(initialFiles.map(file => ({ ...file, deleted: !!file.deleted })));
 
     const [uploading, setUploading] = useState(false);
@@ -200,21 +201,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ path, initialFiles, onFilesChan
 
     return (
         <div>
-            <Tooltip title="Upload Files">
-                <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<CloudUploadIcon />}
-                    sx={{
-                        m: 1, // Adds margin around the button
-                        pl: 2, // Adds padding inside the button, on the left of the icon and text
-                        pr: 2, // Adds padding inside the button, on the right of the icon and text
-                    }}
-                >
-                    Upload File(s)
-                    <input type="file" hidden multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={handleFileChange} disabled={uploading} ref={fileInputRef} />
-                </Button>
-            </Tooltip>
+            {isOwnDesign && (
+                <Tooltip title="Upload Files">
+                    <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<CloudUploadIcon />}
+                        sx={{
+                            m: 1, // Adds margin around the button
+                            pl: 2, // Adds padding inside the button, on the left of the icon and text
+                            pr: 2, // Adds padding inside the button, on the right of the icon and text
+                        }}
+                    >
+                        Upload File(s)
+                        <input type="file" hidden multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={handleFileChange} disabled={uploading} ref={fileInputRef} />
+                    </Button>
+                </Tooltip>
+            )}
             {uploading && (
                 <div>
                     <p>Uploading... {Math.round(uploadProgress)}%</p>
@@ -238,19 +241,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ path, initialFiles, onFilesChan
                         ) : (
                             <ListItemText primary={file.name} secondary={<a href={file.url} target="_blank" rel="noopener noreferrer">Download</a>} />
                         )}
-                        {typeof editStates[file.id] === 'string' ? (
-                            <IconButton onClick={() => handleSaveClick(file.id)} edge="end" aria-label="save">
+                        {isOwnDesign && (
+                            typeof editStates[file.id] === 'string' ? (
+                                <IconButton onClick={() => handleSaveClick(file.id)} edge="end" aria-label="save">
                                 <SaveIcon />
-                            </IconButton>
-                        ) : (
-                            <>
+                                </IconButton>
+                            ) : (
+                                <>
                                 <IconButton onClick={() => handleEditClick(file.id)} edge="end" aria-label="edit">
                                     <EditIcon />
                                 </IconButton>
                                 <IconButton onClick={() => markFileForDeletion(file.id)} edge="end" aria-label="delete">
                                     <DeleteIcon />
                                 </IconButton>
-                            </>
+                                </>
+                            )
                         )}
                     </ListItem>
                 ))}

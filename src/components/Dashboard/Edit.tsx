@@ -941,11 +941,13 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
             initialImages={images}
             onImagesUpdated={handleImagesUpdated}
             onDelete={handleImageDeletions}  
+            isOwnDesign={isOwnDesign} // Pass the ownership information
           />
           <FileUpload
             path={`designs/${selectedDesign.id}/files`} // Adjust path to include the design ID
             initialFiles={files}
             onFilesChange={setFiles} // Handler to update state when files change
+            isOwnDesign={isOwnDesign} // Pass the ownership information
           />
           {isOwnDesign && (
               <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -1062,11 +1064,13 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                   initialImages={build.images}
                   onImagesUpdated={(images) => handleBuildImagesUpdated(build.id, images)}
                   onDelete={(deletedImages) => handleBuildImageDeletions(build.id, deletedImages)}
+                  isOwnDesign={isOwnDesign} // Pass the ownership information
                 />
                 <FileUpload
                   path={`builds/${build.id}/files`}
                   initialFiles={build.files}
                   onFilesChange={(files) => handleBuildFilesUpdated(build.id, files)}
+                  isOwnDesign={isOwnDesign} // Pass the ownership information
                 />
                 {isOwnDesign && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1183,11 +1187,13 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                               initialImages={testImages[test.id] || []}
                               onImagesUpdated={(images) => handleTestImagesUpdated(test.id, images)}
                               onDelete={(deletedImages) => handleTestImageDeletions(test.id, deletedImages)}
+                              isOwnDesign={isOwnDesign} // Pass the ownership information
                             />
                             <FileUpload
                               path={`tests/${test.id}/files`}
                               initialFiles={testFiles[test.id] || []}
                               onFilesChange={(files) => handleTestFilesUpdated(test.id, files)}
+                              isOwnDesign={isOwnDesign} // Pass the ownership information
                             />
                         </div>
                         {isOwnDesign && (
