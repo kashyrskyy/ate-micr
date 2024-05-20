@@ -37,55 +37,58 @@ interface EditProps {
 }
 
 const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, onReturnToDashboard }) => {
+  
+  // -- GENERAL CHECKS -- //
   const { userDetails, loading } = useUser();
-  console.log("Edit page loaded");
-
   const id = selectedDesign.id;
-
-  console.log("Design ID:", id);
-
   // Check if the current user is viewing their own design or another user's design
   const isOwnDesign = selectedDesign.userId === userDetails?.uid;
+  console.log("Edit page loaded");
+  console.log("Design ID:", id);
+  console.log('Editing Design by user:', userDetails);
 
+  // -- DESIGN SECTION STATES -- //
+  const [title, setTitle] = useState('');
   const [description, setDesignDescription] = useState(selectedDesign.description);
   const [date, setDate] = useState(selectedDesign.dateDue || '');
-  const [title, setTitle] = useState('');
+  const [images, setImages] = useState([]);
+  const [files, setFiles] = useState([]);
+  const imageUploadRef = useRef(null);
 
+  // -- BUILD SECTION STATES -- //
   const [isAddingBuild, setIsAddingBuild] = useState(false);
   const [builds, setBuilds] = useState([]);
+  const [editableBuildDescriptions, setEditableBuildDescriptions] = useState({});
+  const [buildImages, setBuildImages] = useState({});
+  const [buildFiles, setBuildFiles] = useState({});
+  const addBuildFormRef = useRef(null);
+  const [visibleBuildDetails, setVisibleBuildDetails] = useState({});
+  // States for editing titles of Builds
+  const [editableBuildTitles, setEditableBuildTitles] = useState({});
+
+  // -- TEST SECTION STATES -- //
   const [testsByBuildId, setTestsByBuildId] = useState({});
   const [addingTestIdForBuild, setAddingTestIdForBuild] = useState(false);
-
-  const [editableBuildDescriptions, setEditableBuildDescriptions] = useState({});
-
   const [editableTestDescriptions, setEditableTestDescriptions] = useState({});
   const [editableTestResults, setEditableTestResults] = useState({});
   const [editableTestConclusions, setEditableTestConclusions] = useState({});
-
-  const [images, setImages] = useState([]);
-  const imageUploadRef = useRef(null);
-
-  const [files, setFiles] = useState([]);
-
-  const [buildImages, setBuildImages] = useState({});
   const [testImages, setTestImages] = useState({});
-
-  const [buildFiles, setBuildFiles] = useState({});
   const [testFiles, setTestFiles] = useState({});
-
-  const addBuildFormRef = useRef(null);
   const addTestFormRef = useRef(null);
+  const [visibleTestDetails, setVisibleTestDetails] = useState({});
+  // States for editing titles of Tests
+  const [editableTestTitles, setEditableTestTitles] = useState({});
+  const [collapsedTestsByBuild, setCollapsedTestsByBuild] = useState({});
 
+  // -- UI NOTIFICATION STATES -- //
   // State for handling Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState('');
   const [dialogConfirmAction, setDialogConfirmAction] = useState(() => {});
-
   // State for Snackbar notifications
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('info'); // 'success', 'error', etc.
-
   // State for tracking unsaved changes
   const [unsavedChanges, setUnsavedChanges] = useState({
     design: false, // You can add more sections as needed
@@ -93,71 +96,158 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     tests: false,
   });
 
-  const [visibleBuildDetails, setVisibleBuildDetails] = useState({});
-  const [visibleTestDetails, setVisibleTestDetails] = useState({});
 
-  // States for editing titles of Builds and Tests
-  const [editableBuildTitles, setEditableBuildTitles] = useState({});
-  const [editableTestTitles, setEditableTestTitles] = useState({});
+  // -- DESIGN SECTION -- //
+  // --
+  const updateDesign = async (e) => {
+    e.preventDefault();
 
-  const [collapsedTestsByBuild, setCollapsedTestsByBuild] = useState({});
+    if (!description || !date) {
+      setDialogContent('All fields are required.');
+      setDialogOpen(true);
+      return;
+    }
 
-  console.log('Editing Design by user:', userDetails);
+    // Delete images if needed
+    console.log("About to check image deletions", imageUploadRef.current);
+    console.log(imageUploadRef.current)
+    console.log(images.some(img => img.deleted))
+    if (imageUploadRef.current && images.some(img => img.deleted)) {
+      console.log("Committing deletions");
+      await imageUploadRef.current.commitDeletions();
+    }
 
-  const handleBuildTitleChange = (buildId, newTitle) => {
-    setEditableBuildTitles(prev => ({ ...prev, [buildId]: newTitle }));
-  };
-  
-  const handleTestTitleChange = (testId, newTitle) => {
-    setEditableTestTitles(prev => ({ ...prev, [testId]: newTitle }));
-  };
-  
-  const saveBuildTitle = async (buildId) => {
-    const newTitle = editableBuildTitles[buildId];
+    // Filter out images marked as deleted (this might be redundant if handled by commitDeletions)
+    const activeImages = images.filter(img => !img.deleted);
+
+      // Commit file deletions first
+    if (files.some(file => file.deleted)) {
+      await commitFileDeletions();
+    }
+
+    const activeFiles = files.filter(file => !file.deleted);
+
+    // Construct the update object dynamically
+    let updateObject = {
+        title,
+        description,
+        dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
+        images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
+        files: activeFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
+        userId: userDetails.uid
+    };
+
     try {
-      // Update Firestore
-      const buildRef = doc(db, "builds", buildId);
-      await setDoc(buildRef, { title: newTitle }, { merge: true });
-      // Update local state if necessary and reset editable state
-      setEditableBuildTitles(prev => {
-        const updated = { ...prev };
-        delete updated[buildId]; // Remove the entry as it's no longer being edited
-        return updated;
-      });
-      refreshBuilds(); // Refresh your builds to reflect the change
-      // Optionally, show a success message
+      await setDoc(doc(db, "designs", id), updateObject, { merge: true });
+      setSnackbarMessage('Your design has been updated.');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
     } catch (error) {
-      console.error("Failed to save build title:", error);
-      // Show an error message to the user
+      console.error("Error updating design:", error);
+      setSnackbarMessage('There was an issue updating your design.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+
+    // After successful update:
+    setUnsavedChanges(prev => ({ ...prev, design: false }));
+  };
+
+  // useEffect hook for initializing form fields
+  useEffect(() => {
+    if (selectedDesign) {
+      setDesignDescription(selectedDesign.description || '');
+      setTitle(selectedDesign.title || '');
+
+      // Fetch image URL from Firestore
+      const fetchData = async () => {
+        const designRef = doc(db, "designs", id);
+        const docSnap = await getDoc(designRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log('Fetched images:', data.images); // Add this line to debug
+          console.log('Fetched files:', data.files); // Add this line to debug
+          setImages(data.images || []);
+          setFiles(data.files || []);
+        }
+      };
+
+      fetchData();
+  
+      // Check if 'dateDue' exists and handle both string and Timestamp cases
+      let dueDateString;
+      if (selectedDesign.dateDue) {
+        if (typeof selectedDesign.dateDue === 'string') {
+          // If 'dateDue' is a string, use it directly
+          dueDateString = selectedDesign.dateDue;
+        } else if (selectedDesign.dateDue.toDate) {
+          // If 'dateDue' is a Firestore Timestamp, convert to Date and format as string
+          dueDateString = selectedDesign.dateDue.toDate().toISOString().split('T')[0];
+        }
+        setDate(dueDateString);
+      } else {
+        setDate(''); // If no 'dateDue', reset the date field
+      }
+    }
+  }, [selectedDesign, id]); // Included 'id' in the dependency array 
+
+  const handleImageDeletions = (deletedImages) => {
+    const remainingImages = images.filter(img => !deletedImages.some(delImg => delImg.path === img.path));
+    console.log("Remaining images after deletion:", remainingImages);
+    setImages(remainingImages);
+    const imageUpdate = remainingImages.map(img => ({ url: img.url, title: img.title, path: img.path }));
+    setDoc(doc(db, "designs", id), { images: imageUpdate }, { merge: true })
+      .then(() => console.log("Firestore successfully updated"))
+      .catch(error => console.error("Failed to update Firestore:", error));
+  };  
+
+  const handleImagesUpdated = (updatedImages) => {
+    if (JSON.stringify(images) !== JSON.stringify(updatedImages)) {
+      setImages(updatedImages);  // Update state with new image data
+      console.log("Updated images received:", updatedImages);
     }
   };  
-  
-  const saveTestTitle = async (testId, buildId) => {
-    const newTitle = editableTestTitles[testId];
-    // Update Firestore
-    const testRef = doc(db, "tests", testId);
-    await setDoc(testRef, { title: newTitle }, { merge: true });
-    // Optionally update local state and reset editable state
-    setEditableTestTitles(prev => {
-      const updated = { ...prev };
-      delete updated[testId]; // Remove the entry as it's no longer being edited
-      return updated;
-    });
-    refreshTestsForBuild(buildId)// Refresh tests for the build that this test belongs to
-  };  
 
-  const handleBuildDescriptionChange = (buildId, value) => {
-    setEditableBuildDescriptions(prev => ({ ...prev, [buildId]: value }));
-    setUnsavedChanges(prev => ({ ...prev, builds: true }));
-  };
+  const commitFileDeletions = async () => {
+    const filesToDelete = files.filter(file => file.deleted);
+    console.log("Files to delete:", filesToDelete);
   
-  const handleTestDescriptionChange = (testId, value) => {
-    console.log(`Updating description for test ID ${testId}:`, value);
-    setEditableTestDescriptions(prev => ({ ...prev, [testId]: value }));
-    setUnsavedChanges(prev => ({ ...prev, tests: true }));
-  };  
+    if (filesToDelete.length > 0) {
+      // Assuming FileUpload uses Firebase Storage, and you have a delete function in FileUpload
+      const storage = getStorage();
+      const deletePromises = filesToDelete.map(file => {
+        const fileRef = ref(storage, file.path);
+        return deleteObject(fileRef);
+      });
+  
+      try {
+        await Promise.all(deletePromises);
+        console.log("Files deleted successfully");
+        // Remove the deleted files from the local state
+        const remainingFiles = files.filter(file => !file.deleted);
+        setFiles(remainingFiles);
+  
+        // Update Firestore to reflect the deletion
+        await updateDoc(doc(db, "designs", selectedDesign.id), {
+          files: remainingFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
+        });
+  
+        setSnackbarMessage("Deleted files have been permanently removed.");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Failed to delete files: ", error);
+        setSnackbarMessage("Failed to delete files.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    }
+  }; 
+  // -- //
 
-  const updateBuildDescription = async (buildId) => {
+
+  // -- BUILDS SECTION -- //
+  const updateBuild = async (buildId) => {
 
     // Call commitBuildFileDeletions to handle file deletions
     // Handle file deletions first
@@ -210,9 +300,207 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
+  }; 
+
+  const handleBuildTitleChange = (buildId, newTitle) => {
+    setEditableBuildTitles(prev => ({ ...prev, [buildId]: newTitle }));
+  };
+
+  const handleBuildDescriptionChange = (buildId, value) => {
+    setEditableBuildDescriptions(prev => ({ ...prev, [buildId]: value }));
+    setUnsavedChanges(prev => ({ ...prev, builds: true }));
+  };
+  
+  const saveBuildTitle = async (buildId) => {
+    const newTitle = editableBuildTitles[buildId];
+    try {
+      // Update Firestore
+      const buildRef = doc(db, "builds", buildId);
+      await setDoc(buildRef, { title: newTitle }, { merge: true });
+      // Update local state if necessary and reset editable state
+      setEditableBuildTitles(prev => {
+        const updated = { ...prev };
+        delete updated[buildId]; // Remove the entry as it's no longer being edited
+        return updated;
+      });
+      refreshBuilds(); // Refresh your builds to reflect the change
+      // Optionally, show a success message
+    } catch (error) {
+      console.error("Failed to save build title:", error);
+      // Show an error message to the user
+    }
   };  
 
-  const updateTestDescription = async (testId, buildId) => {
+  // This function now focuses on refreshing builds only, with detailed console logging
+  const refreshBuilds = async () => {
+    if (!userDetails) {
+      console.log("User details not loaded yet");
+      return;
+    }
+
+    try {
+      console.log("Refreshing builds for user UID:", userDetails?.uid);
+      console.log("Selected design ID for query:", selectedDesign?.id);
+
+      let buildsQuery;
+      if (userDetails.isAdmin) {
+        buildsQuery = query(
+          collection(db, "builds"),
+          where("design_ID", "==", id),
+          orderBy("dateCreated")
+        );
+      } else {
+        buildsQuery = query(
+          collection(db, "builds"),
+          where("design_ID", "==", id),
+          where("userId", "==", userDetails.uid),
+          orderBy("dateCreated")
+        );
+      }
+
+      console.log("Builds query details:", JSON.stringify(buildsQuery, null, 2)); // Detailed query logging
+
+      const buildsSnapshot = await getDocs(buildsQuery);
+      console.log("Builds snapshot details:", JSON.stringify(buildsSnapshot.docs.map(doc => doc.data()), null, 2)); // Detailed snapshot logging
+
+      console.log("Builds query successful, number of builds fetched: ", buildsSnapshot.docs.length);
+    
+      const newBuilds = buildsSnapshot.docs.map(doc => {
+        console.log("Build doc path: ", doc.ref.path); // Log each build document path for tracking
+        return { id: doc.id, ...doc.data() };
+      });
+    
+      setBuilds(newBuilds);
+      console.log("New builds state after refresh:", newBuilds); // Confirming the refreshed state
+    } catch (error) {
+      console.error("Error refreshing builds:", error); // Detailed error logging
+      if (error.code === 'permission-denied') {
+        console.error("Permission denied when trying to refresh builds:", error);
+      } else {
+        console.error("An unexpected error occurred when trying to refresh builds:", error);
+      }
+    }
+  }; 
+
+  const handleBuildImageDeletions = (buildId, deletedImages) => {
+    const buildRef = doc(db, "builds", buildId);
+    const remainingImages = buildImages[buildId].filter(img => !deletedImages.some(delImg => delImg.path === img.path));
+  
+    // Update the local state
+    setBuildImages(prev => ({
+      ...prev,
+      [buildId]: remainingImages
+    }));
+  
+    // Update Firestore
+    const imageUpdate = remainingImages.map(img => ({ url: img.url, title: img.title, path: img.path }));
+    setDoc(buildRef, { images: imageUpdate }, { merge: true })
+      .then(() => {
+        console.log("Firestore successfully updated for build images");
+        setSnackbarMessage('Build Image deletions updated.');
+        setSnackbarSeverity('success');
+      })
+      .catch(error => {
+        console.error("Failed to update build images in Firestore:", error);
+        setSnackbarMessage('Failed to update build image deletions.');
+        setSnackbarSeverity('error');
+      });
+    setSnackbarOpen(true);
+  };  
+
+  const deleteBuildAndTests = async (buildId) => {
+    const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid));
+    const testsSnapshot = await getDocs(testsQuery);
+
+    for (const testDoc of testsSnapshot.docs) {
+        // Correctly reference the document to delete
+        await deleteDoc(doc(db, "tests", testDoc.id));
+    }
+
+    // Correctly reference the build document to delete
+    await deleteDoc(doc(db, "builds", buildId));
+
+    // Refresh the UI accordingly
+    await refreshBuilds();
+    setSnackbarMessage('Build and its tests (if any) deleted successfully.');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };
+
+  const confirmDeleteBuild = (buildId) => {
+    setDialogContent('Are you sure you want to delete this build and all associated tests? This action cannot be undone.');
+    setDialogConfirmAction(() => () => deleteBuildAndTests(buildId));
+    setDialogOpen(true);
+  };
+
+  // Function to handle updates to build images
+  const handleBuildImagesUpdated = (buildId, newImages) => {
+    setBuildImages(prev => ({
+      ...prev,
+      [buildId]: newImages
+    }));
+  };
+
+  const handleBuildFilesUpdated = (buildId, newFiles) => {
+    setBuildFiles(prev => ({
+      ...prev,
+      [buildId]: newFiles
+    }));
+  };
+
+  const commitBuildFileDeletions = async (buildId) => {
+    // if (!Array.isArray(buildFiles[buildId])) {
+    //   console.error(`Expected buildFiles[${buildId}] to be an array, got:`, buildFiles[buildId]);
+    //   return; // Exit the function if it's not an array
+    // }
+
+    const filesToDelete = buildFiles[buildId]?.filter(file => file.deleted) || [];
+    console.log("Build files to delete:", filesToDelete);
+  
+    if (filesToDelete.length > 0) {
+        const storage = getStorage();
+        const deletePromises = filesToDelete.map(file => {
+            const fileRef = ref(storage, file.path);
+            return deleteObject(fileRef);
+        });
+  
+        try {
+            await Promise.all(deletePromises);
+            console.log("Build files deleted successfully");
+  
+            // Remove the deleted files from the local state for this build
+            const remainingFiles = buildFiles[buildId].filter(file => !file.deleted);
+            setBuildFiles(prev => ({
+                ...prev,
+                [buildId]: remainingFiles
+            }));
+  
+            // Update Firestore to reflect the deletion
+            await updateDoc(doc(db, "builds", buildId), {
+                files: remainingFiles.map(file => ({
+                    id: file.id,
+                    url: file.url,
+                    name: file.name,
+                    path: file.path
+                })),
+            });
+  
+            console.log("Firestore successfully updated to remove deleted files");
+            setSnackbarMessage("Deleted build files have been permanently removed.");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+        } catch (error) {
+            console.error("Failed to delete build files: ", error);
+            setSnackbarMessage("Failed to delete build files.");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+        }
+    }
+  }; 
+  // -- //
+
+  // -- TESTS SECTION -- //
+  const updateTest = async (testId, buildId) => {
     
     // Call commitTestFileDeletions to handle file deletions
     try {
@@ -271,7 +559,31 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
+  }; 
+
+  const handleTestTitleChange = (testId, newTitle) => {
+    setEditableTestTitles(prev => ({ ...prev, [testId]: newTitle }));
+  };
+  
+  const saveTestTitle = async (testId, buildId) => {
+    const newTitle = editableTestTitles[testId];
+    // Update Firestore
+    const testRef = doc(db, "tests", testId);
+    await setDoc(testRef, { title: newTitle }, { merge: true });
+    // Optionally update local state and reset editable state
+    setEditableTestTitles(prev => {
+      const updated = { ...prev };
+      delete updated[testId]; // Remove the entry as it's no longer being edited
+      return updated;
+    });
+    refreshTestsForBuild(buildId)// Refresh tests for the build that this test belongs to
   };  
+  
+  const handleTestDescriptionChange = (testId, value) => {
+    console.log(`Updating description for test ID ${testId}:`, value);
+    setEditableTestDescriptions(prev => ({ ...prev, [testId]: value }));
+    setUnsavedChanges(prev => ({ ...prev, tests: true }));
+  };    
 
   const handleTestResultsChange = (testId, value) => {
     console.log(`Updating results for test ID ${testId}:`, value);
@@ -282,45 +594,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
   const handleTestConclusionsChange = (testId, value) => {
     setEditableTestConclusions(prev => ({ ...prev, [testId]: value }));
     setUnsavedChanges(prev => ({ ...prev, tests: true }));
-  };
-
-  // useEffect hook for initializing form fields
-  useEffect(() => {
-    if (selectedDesign) {
-      setDesignDescription(selectedDesign.description || '');
-      setTitle(selectedDesign.title || '');
-
-      // Fetch image URL from Firestore
-      const fetchData = async () => {
-        const designRef = doc(db, "designs", id);
-        const docSnap = await getDoc(designRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          console.log('Fetched images:', data.images); // Add this line to debug
-          console.log('Fetched files:', data.files); // Add this line to debug
-          setImages(data.images || []);
-          setFiles(data.files || []);
-        }
-      };
-
-      fetchData();
-  
-      // Check if 'dateDue' exists and handle both string and Timestamp cases
-      let dueDateString;
-      if (selectedDesign.dateDue) {
-        if (typeof selectedDesign.dateDue === 'string') {
-          // If 'dateDue' is a string, use it directly
-          dueDateString = selectedDesign.dateDue;
-        } else if (selectedDesign.dateDue.toDate) {
-          // If 'dateDue' is a Firestore Timestamp, convert to Date and format as string
-          dueDateString = selectedDesign.dateDue.toDate().toISOString().split('T')[0];
-        }
-        setDate(dueDateString);
-      } else {
-        setDate(''); // If no 'dateDue', reset the date field
-      }
-    }
-  }, [selectedDesign, id]); // Included 'id' in the dependency array  
+  }; 
 
   // UseEffect to fetch tests for all builds initially and whenever builds are refreshed
   useEffect(() => {
@@ -400,58 +674,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     if (!loading && userDetails) {
       fetchBuildsAndTests();
     }
-  }, [loading, userDetails, selectedDesign.id, id]);
-
-  // This function now focuses on refreshing builds only, with detailed console logging
-  const refreshBuilds = async () => {
-    if (!userDetails) {
-      console.log("User details not loaded yet");
-      return;
-    }
-
-    try {
-      console.log("Refreshing builds for user UID:", userDetails?.uid);
-      console.log("Selected design ID for query:", selectedDesign?.id);
-
-      let buildsQuery;
-      if (userDetails.isAdmin) {
-        buildsQuery = query(
-          collection(db, "builds"),
-          where("design_ID", "==", id),
-          orderBy("dateCreated")
-        );
-      } else {
-        buildsQuery = query(
-          collection(db, "builds"),
-          where("design_ID", "==", id),
-          where("userId", "==", userDetails.uid),
-          orderBy("dateCreated")
-        );
-      }
-
-      console.log("Builds query details:", JSON.stringify(buildsQuery, null, 2)); // Detailed query logging
-
-      const buildsSnapshot = await getDocs(buildsQuery);
-      console.log("Builds snapshot details:", JSON.stringify(buildsSnapshot.docs.map(doc => doc.data()), null, 2)); // Detailed snapshot logging
-
-      console.log("Builds query successful, number of builds fetched: ", buildsSnapshot.docs.length);
-    
-      const newBuilds = buildsSnapshot.docs.map(doc => {
-        console.log("Build doc path: ", doc.ref.path); // Log each build document path for tracking
-        return { id: doc.id, ...doc.data() };
-      });
-    
-      setBuilds(newBuilds);
-      console.log("New builds state after refresh:", newBuilds); // Confirming the refreshed state
-    } catch (error) {
-      console.error("Error refreshing builds:", error); // Detailed error logging
-      if (error.code === 'permission-denied') {
-        console.error("Permission denied when trying to refresh builds:", error);
-      } else {
-        console.error("An unexpected error occurred when trying to refresh builds:", error);
-      }
-    }
-  };  
+  }, [loading, userDetails, selectedDesign.id, id]); 
 
   const refreshTestsForBuild = async (buildId) => {
     if (!userDetails) {
@@ -506,56 +729,6 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
       // Optionally set an error state or show a notification
     }
   }; 
-  
-  const toggleCollapseTests = (buildId) => {
-    setCollapsedTestsByBuild(prev => ({
-      ...prev,
-      [buildId]: !prev[buildId]
-    }));
-  };  
-
-  const handleImagesUpdated = (updatedImages) => {
-    if (JSON.stringify(images) !== JSON.stringify(updatedImages)) {
-      setImages(updatedImages);  // Update state with new image data
-      console.log("Updated images received:", updatedImages);
-    }
-  };  
-
-  const handleImageDeletions = (deletedImages) => {
-    const remainingImages = images.filter(img => !deletedImages.some(delImg => delImg.path === img.path));
-    console.log("Remaining images after deletion:", remainingImages);
-    setImages(remainingImages);
-    const imageUpdate = remainingImages.map(img => ({ url: img.url, title: img.title, path: img.path }));
-    setDoc(doc(db, "designs", id), { images: imageUpdate }, { merge: true })
-      .then(() => console.log("Firestore successfully updated"))
-      .catch(error => console.error("Failed to update Firestore:", error));
-  };  
-
-  const handleBuildImageDeletions = (buildId, deletedImages) => {
-    const buildRef = doc(db, "builds", buildId);
-    const remainingImages = buildImages[buildId].filter(img => !deletedImages.some(delImg => delImg.path === img.path));
-  
-    // Update the local state
-    setBuildImages(prev => ({
-      ...prev,
-      [buildId]: remainingImages
-    }));
-  
-    // Update Firestore
-    const imageUpdate = remainingImages.map(img => ({ url: img.url, title: img.title, path: img.path }));
-    setDoc(buildRef, { images: imageUpdate }, { merge: true })
-      .then(() => {
-        console.log("Firestore successfully updated for build images");
-        setSnackbarMessage('Build Image deletions updated.');
-        setSnackbarSeverity('success');
-      })
-      .catch(error => {
-        console.error("Failed to update build images in Firestore:", error);
-        setSnackbarMessage('Failed to update build image deletions.');
-        setSnackbarSeverity('error');
-      });
-    setSnackbarOpen(true);
-  };  
 
   const handleTestImageDeletions = (testId, deletedImages) => {
     const testRef = doc(db, "tests", testId);
@@ -583,68 +756,6 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     setSnackbarOpen(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    if (!description || !date) {
-      setDialogContent('All fields are required.');
-      setDialogOpen(true);
-      return;
-    }
-
-    // Delete images if needed
-    console.log("About to check image deletions", imageUploadRef.current);
-    console.log(imageUploadRef.current)
-    console.log(images.some(img => img.deleted))
-    if (imageUploadRef.current && images.some(img => img.deleted)) {
-      console.log("Committing deletions");
-      await imageUploadRef.current.commitDeletions();
-    }
-
-    // Filter out images marked as deleted (this might be redundant if handled by commitDeletions)
-    const activeImages = images.filter(img => !img.deleted);
-
-      // Commit file deletions first
-    if (files.some(file => file.deleted)) {
-      await commitFileDeletions();
-    }
-
-    const activeFiles = files.filter(file => !file.deleted);
-
-    // Construct the update object dynamically
-    let updateObject = {
-        title,
-        description,
-        dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
-        images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
-        files: activeFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
-        userId: userDetails.uid
-    };
-
-    try {
-      await setDoc(doc(db, "designs", id), updateObject, { merge: true });
-      setSnackbarMessage('Your design has been updated.');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error("Error updating design:", error);
-      setSnackbarMessage('There was an issue updating your design.');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    }
-
-    // After successful update:
-    setUnsavedChanges(prev => ({ ...prev, design: false }));
-  };
-
-  // Function to handle updates to build images
-  const handleBuildImagesUpdated = (buildId, newImages) => {
-    setBuildImages(prev => ({
-      ...prev,
-      [buildId]: newImages
-    }));
-  };
-
   // Function to update images for a specific test
   const handleTestImagesUpdated = (testId, newImages) => {
     setTestImages(prevImages => ({
@@ -660,182 +771,6 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
       [testId]: newFiles
     }));
   };
-
-  const handleBuildFilesUpdated = (buildId, newFiles) => {
-    setBuildFiles(prev => ({
-      ...prev,
-      [buildId]: newFiles
-    }));
-  };
-
-  const promptBeforeLeaving = () => {
-    const unsavedSections = Object.entries(unsavedChanges)
-      .filter(([_, hasUnsaved]) => hasUnsaved)
-      .map(([section]) => section)
-      .join(", ");
-  
-    if (!unsavedSections.length) {
-      onReturnToDashboard();
-      return;
-    }
-  
-    const message = `You have unsaved changes in the following sections: ${unsavedSections}. Are you sure you want to leave?`;
-    setDialogContent(message);
-    setDialogConfirmAction(() => () => {
-      setUnsavedChanges({
-        design: false, 
-        builds: false,
-        tests: false,
-      });
-      onReturnToDashboard();
-    });
-  
-    setDialogOpen(true);
-  };   
-  
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      // Check if any unsaved changes exist
-      const hasUnsavedChanges = Object.values(unsavedChanges).some(value => value);
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-  
-    window.addEventListener('beforeunload', handleBeforeUnload);
-  
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [unsavedChanges]); // Depend on unsavedChanges now instead of isDirty   
-
-  const deleteBuildAndTests = async (buildId) => {
-    const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid));
-    const testsSnapshot = await getDocs(testsQuery);
-
-    for (const testDoc of testsSnapshot.docs) {
-        // Correctly reference the document to delete
-        await deleteDoc(doc(db, "tests", testDoc.id));
-    }
-
-    // Correctly reference the build document to delete
-    await deleteDoc(doc(db, "builds", buildId));
-
-    // Refresh the UI accordingly
-    await refreshBuilds();
-    setSnackbarMessage('Build and its tests (if any) deleted successfully.');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-};
-
-  const deleteTest = async (testId, buildId) => {
-    // Delete the test, assuming we've already ensured it belongs to this user elsewhere
-    await deleteDoc(doc(db, "tests", testId));
-  
-    // Refresh tests for the build to reflect this change in the UI
-    await refreshTestsForBuild(buildId);
-  
-    setSnackbarMessage('Test deleted successfully.');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-  };   
-  
-  const confirmDeleteBuild = (buildId) => {
-    setDialogContent('Are you sure you want to delete this build and all associated tests? This action cannot be undone.');
-    setDialogConfirmAction(() => () => deleteBuildAndTests(buildId));
-    setDialogOpen(true);
-  };
-  
-  const confirmDeleteTest = (testId, buildId) => {
-    setDialogContent('Are you sure you want to delete this test? This action cannot be undone.');
-    setDialogConfirmAction(() => () => deleteTest(testId, buildId));
-    setDialogOpen(true);
-  }; 
-
-  const commitFileDeletions = async () => {
-    const filesToDelete = files.filter(file => file.deleted);
-    console.log("Files to delete:", filesToDelete);
-  
-    if (filesToDelete.length > 0) {
-      // Assuming FileUpload uses Firebase Storage, and you have a delete function in FileUpload
-      const storage = getStorage();
-      const deletePromises = filesToDelete.map(file => {
-        const fileRef = ref(storage, file.path);
-        return deleteObject(fileRef);
-      });
-  
-      try {
-        await Promise.all(deletePromises);
-        console.log("Files deleted successfully");
-        // Remove the deleted files from the local state
-        const remainingFiles = files.filter(file => !file.deleted);
-        setFiles(remainingFiles);
-  
-        // Update Firestore to reflect the deletion
-        await updateDoc(doc(db, "designs", selectedDesign.id), {
-          files: remainingFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
-        });
-  
-        setSnackbarMessage("Deleted files have been permanently removed.");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-      } catch (error) {
-        console.error("Failed to delete files: ", error);
-        setSnackbarMessage("Failed to delete files.");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-      }
-    }
-  };  
-
-  const commitBuildFileDeletions = async (buildId) => {
-    // if (!Array.isArray(buildFiles[buildId])) {
-    //   console.error(`Expected buildFiles[${buildId}] to be an array, got:`, buildFiles[buildId]);
-    //   return; // Exit the function if it's not an array
-    // }
-
-    const filesToDelete = buildFiles[buildId]?.filter(file => file.deleted) || [];
-    console.log("Build files to delete:", filesToDelete);
-  
-    if (filesToDelete.length > 0) {
-        const storage = getStorage();
-        const deletePromises = filesToDelete.map(file => {
-            const fileRef = ref(storage, file.path);
-            return deleteObject(fileRef);
-        });
-  
-        try {
-            await Promise.all(deletePromises);
-            console.log("Build files deleted successfully");
-  
-            // Remove the deleted files from the local state for this build
-            const remainingFiles = buildFiles[buildId].filter(file => !file.deleted);
-            setBuildFiles(prev => ({
-                ...prev,
-                [buildId]: remainingFiles
-            }));
-  
-            // Update Firestore to reflect the deletion
-            await updateDoc(doc(db, "builds", buildId), {
-                files: remainingFiles.map(file => ({
-                    id: file.id,
-                    url: file.url,
-                    name: file.name,
-                    path: file.path
-                })),
-            });
-  
-            console.log("Firestore successfully updated to remove deleted files");
-            setSnackbarMessage("Deleted build files have been permanently removed.");
-            setSnackbarSeverity("success");
-            setSnackbarOpen(true);
-        } catch (error) {
-            console.error("Failed to delete build files: ", error);
-            setSnackbarMessage("Failed to delete build files.");
-            setSnackbarSeverity("error");
-            setSnackbarOpen(true);
-        }
-    }
-  };  
 
   const commitTestFileDeletions = async (testId) => {
   
@@ -874,6 +809,74 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
         }
     }
   };  
+
+  const deleteTest = async (testId, buildId) => {
+    // Delete the test, assuming we've already ensured it belongs to this user elsewhere
+    await deleteDoc(doc(db, "tests", testId));
+  
+    // Refresh tests for the build to reflect this change in the UI
+    await refreshTestsForBuild(buildId);
+  
+    setSnackbarMessage('Test deleted successfully.');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };   
+  
+  const confirmDeleteTest = (testId, buildId) => {
+    setDialogContent('Are you sure you want to delete this test? This action cannot be undone.');
+    setDialogConfirmAction(() => () => deleteTest(testId, buildId));
+    setDialogOpen(true);
+  }; 
+
+  const toggleCollapseTests = (buildId) => {
+    setCollapsedTestsByBuild(prev => ({
+      ...prev,
+      [buildId]: !prev[buildId]
+    }));
+  };  
+  // -- //
+
+  // -- UI NOTIFICATIONS -- //
+  const promptBeforeLeaving = () => {
+    const unsavedSections = Object.entries(unsavedChanges)
+      .filter(([_, hasUnsaved]) => hasUnsaved)
+      .map(([section]) => section)
+      .join(", ");
+  
+    if (!unsavedSections.length) {
+      onReturnToDashboard();
+      return;
+    }
+  
+    const message = `You have unsaved changes in the following sections: ${unsavedSections}. Are you sure you want to leave?`;
+    setDialogContent(message);
+    setDialogConfirmAction(() => () => {
+      setUnsavedChanges({
+        design: false, 
+        builds: false,
+        tests: false,
+      });
+      onReturnToDashboard();
+    });
+  
+    setDialogOpen(true);
+  };   
+  
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Check if any unsaved changes exist
+      const hasUnsavedChanges = Object.values(unsavedChanges).some(value => value);
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+  
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [unsavedChanges]); // Depend on unsavedChanges now instead of isDirty    
+  // -- //
   
   return (
     <div className="small-container">
@@ -887,7 +890,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
         }
       }} className="muted-button margin-top-20">← All Designs</button>
       <div className="design-record">
-        <form onSubmit={handleUpdate}>
+        <form onSubmit={updateDesign}>
           <h1 className="designHeader" style={{ marginBottom: '20px' }}>Design Document</h1>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flexGrow: 8, marginRight: '12px' }}>
@@ -1074,7 +1077,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                 />
                 {isOwnDesign && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button onClick={() => updateBuildDescription(build.id)}>Update</button>
+                        <button onClick={() => updateBuild(build.id)}>Update</button>
                     </div>
                 )}
                 <div>
@@ -1198,7 +1201,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
                         </div>
                         {isOwnDesign && (
                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <button onClick={() => updateTestDescription(test.id, build.id)}>Update</button>
+                                <button onClick={() => updateTest(test.id, build.id)}>Update</button>
                             </div>
                         )}
                       </>
