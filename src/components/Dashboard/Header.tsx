@@ -1,11 +1,9 @@
 // Header.tsx
 import React, { useState, memo } from 'react';
-
 import { useUser } from '../../contexts/UserContext';
-
 import Logout from '../Logout';
-
 import { Typography, Button, Box, Chip, Snackbar, Alert, Tooltip, SnackbarCloseReason } from '@mui/material';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
 interface HeaderProps {
   setIsAdding: React.Dispatch<React.SetStateAction<boolean>>;
@@ -14,6 +12,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
   const { userDetails } = useUser();
   console.log("Header loaded");
+
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
@@ -45,8 +45,18 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
     setOpenSnackbar(false);
   };
 
+  // Handler for navigating back to the home page
+  const handleNavigateHome = () => {
+    navigate('/');
+  };
+
   return (
     <Box sx={{ mt: 3, mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Button variant="text" onClick={handleNavigateHome} sx={{ mr: 2 }}>
+          &larr; Home Page
+        </Button>
+      </Box>
       <Typography variant="h4" component="h1" gutterBottom textAlign="left" sx={{ fontWeight: 'bold'}}>
         My Laboratory Notebook
       </Typography>

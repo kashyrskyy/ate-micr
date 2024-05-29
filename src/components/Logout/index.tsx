@@ -1,6 +1,7 @@
 // Logout/index.tsx
 import React, { useState } from 'react';
 import { getAuth, signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -20,6 +21,7 @@ const Logout = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const navigate = useNavigate();
 
   console.log("Logout loaded")
 
@@ -38,6 +40,7 @@ const Logout = () => {
       setOpenDialog(false);
       setOpenSnackbar(true);
       setSnackbarMessage('Logged out successfully');
+      navigate('/'); // Redirect to the login page after logging out
     }).catch((error) => {
       setOpenDialog(false);
       setOpenSnackbar(true);
