@@ -7,14 +7,15 @@ import Footer from './components/Dashboard/Footer'; // Import the Footer compone
 import CircularProgress from '@mui/material/CircularProgress';
 
 import SelectionPage from './components/SelectionPage';
-import SupplementalMaterials from './components/Supplemental/SupplementalMaterials';
-import AddMaterial from './components/Supplemental/AddMaterialButton';
 import AddMaterialForm from './components/Supplemental/AddMaterialForm'; // Import AddMaterialForm
 import PrivateRoute from './components/PrivateRoute'; // Import PrivateRoute
+import AddMessage from './components/Messages/AddMessage';
+import EditMessage from './components/Messages/EditMessage';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
 const Dashboard = lazy(() => import('./components/Dashboard/index'));
+const SupplementalMaterials = lazy(() => import('./components/Supplemental/SupplementalMaterials'));
 
 const App = () => {
   const { userDetails, loading } = useUser();
@@ -39,6 +40,8 @@ const App = () => {
             <Route path="/laboratory-notebooks" element={<PrivateRoute element={Dashboard} />} />
             <Route path="/supplemental-materials" element={<PrivateRoute element={SupplementalMaterials} />} />
             <Route path="/add-material" element={<PrivateRoute element={AddMaterialForm} />} />
+            <Route path="/add-message" element={<PrivateRoute element={AddMessage} />} />
+            <Route path="/edit-message/:id" element={<PrivateRoute element={EditMessage} />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
