@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Button, List, ListItem, ListItemText, TextField, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
+import DeleteSectionSubsection from './DeleteSectionSubsection'; // Import the new component
 
 interface Subsection {
   id: string;
@@ -17,20 +18,26 @@ interface Section {
 
 interface SidebarProps {
   sections: Section[];
+  selected: { sectionIndex?: number, subsectionIndex?: number, type?: 'header' | 'footer' };
   onAddSection: () => void;
   onAddSubsection: (sectionIndex: number) => void;
-  onSelectSection: (sectionIndex: number, subsectionIndex?: number) => void;
+  onSelectSection: (sectionIndex: number | 'header' | 'footer', subsectionIndex?: number) => void;
   onUpdateSectionTitle: (sectionIndex: number, newTitle: string) => void;
   onUpdateSubsectionTitle: (sectionIndex: number, subsectionIndex: number, newTitle: string) => void;
+  onDeleteSection: (sectionIndex: number) => void; // Add new prop for deleting section
+  onDeleteSubsection: (sectionIndex: number, subsectionIndex: number) => void; // Add new prop for deleting subsection
 }
 
 const SideBar: React.FC<SidebarProps> = ({
   sections,
+  selected,
   onAddSection,
   onAddSubsection,
   onSelectSection,
   onUpdateSectionTitle,
   onUpdateSubsectionTitle,
+  onDeleteSection, // Destructure new prop
+  onDeleteSubsection, // Destructure new prop
 }) => {
   const [editingSectionIndex, setEditingSectionIndex] = useState<number | null>(null);
   const [editingSubsectionIndex, setEditingSubsectionIndex] = useState<{ section: number; subsection: number } | null>(null);
@@ -73,14 +80,28 @@ const SideBar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <Box sx={{ width: '250px', borderRight: '1px solid #ddd', padding: 2 }}>
+    <Box sx={{ width: '450px', borderRight: '1px solid #ddd', padding: 2 }}>
       <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-        Sections
+        Outline
       </Typography>
+      <Button variant="contained" color="primary" onClick={onAddSection} sx={{ mb: 2 }}>
+        + Add Section
+      </Button>
       <List>
+        <ListItem 
+          button 
+          onClick={() => onSelectSection('header')}
+          sx={{ backgroundColor: selected.type === 'header' ? 'lightgray' : 'transparent' }}
+        >
+          <ListItemText primary="Header" />
+        </ListItem>
         {sections.map((section, sectionIndex) => (
           <Box key={section.id}>
-            <ListItem button onClick={() => onSelectSection(sectionIndex)}>
+            <ListItem 
+              button 
+              onClick={() => onSelectSection(sectionIndex)}
+              sx={{ backgroundColor: selected.sectionIndex === sectionIndex && selected.subsectionIndex === undefined ? 'lightgray' : 'transparent' }}
+            >
               {editingSectionIndex === sectionIndex ? (
                 <>
                   <TextField
@@ -99,6 +120,10 @@ const SideBar: React.FC<SidebarProps> = ({
                   <IconButton onClick={() => handleEditSection(sectionIndex, section.title)} size="small">
                     <EditIcon />
                   </IconButton>
+                  <DeleteSectionSubsection // Add delete button for section
+                    onDelete={() => onDeleteSection(sectionIndex)}
+                    itemType="section"
+                  />
                 </>
               )}
               <Button variant="text" onClick={() => onAddSubsection(sectionIndex)} size="small">
@@ -107,7 +132,12 @@ const SideBar: React.FC<SidebarProps> = ({
             </ListItem>
             <List sx={{ pl: 4 }}>
               {section.subsections.map((subsection, subsectionIndex) => (
-                <ListItem key={subsection.id} button onClick={() => onSelectSection(sectionIndex, subsectionIndex)}>
+                <ListItem 
+                  key={subsection.id} 
+                  button 
+                  onClick={() => onSelectSection(sectionIndex, subsectionIndex)}
+                  sx={{ backgroundColor: selected.sectionIndex === sectionIndex && selected.subsectionIndex === subsectionIndex ? 'lightgray' : 'transparent' }}
+                >
                   {editingSubsectionIndex &&
                     editingSubsectionIndex.section === sectionIndex &&
                     editingSubsectionIndex.subsection === subsectionIndex ? (
@@ -128,6 +158,10 @@ const SideBar: React.FC<SidebarProps> = ({
                       <IconButton onClick={() => handleEditSubsection(sectionIndex, subsectionIndex, subsection.title)} size="small">
                         <EditIcon />
                       </IconButton>
+                      <DeleteSectionSubsection // Add delete button for subsection
+                        onDelete={() => onDeleteSubsection(sectionIndex, subsectionIndex)}
+                        itemType="subsection"
+                      />
                     </>
                   )}
                 </ListItem>
@@ -135,10 +169,14 @@ const SideBar: React.FC<SidebarProps> = ({
             </List>
           </Box>
         ))}
+        <ListItem 
+          button 
+          onClick={() => onSelectSection('footer')}
+          sx={{ backgroundColor: selected.type === 'footer' ? 'lightgray' : 'transparent' }}
+        >
+          <ListItemText primary="Footer" />
+        </ListItem>
       </List>
-      <Button variant="contained" color="primary" onClick={onAddSection} sx={{ mt: 2 }}>
-        + Add Section
-      </Button>
     </Box>
   );
 };
