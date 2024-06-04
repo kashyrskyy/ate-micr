@@ -5,10 +5,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 
+interface Link {
+  title: string;
+  url: string;
+}
+
 const EditMessage: React.FC = () => {
   const { id } = useParams();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [links, setLinks] = useState([{ title: '', url: '' }]);
+
   const navigate = useNavigate();
   const db = getFirestore();
 
@@ -21,6 +28,7 @@ const EditMessage: React.FC = () => {
         const data = docSnap.data();
         setTitle(data.title);
         setDescription(data.description);
+        setLinks(data.links || [{ title: '', url: '' }]);
       } else {
         console.log('No such document!');
       }
@@ -35,6 +43,7 @@ const EditMessage: React.FC = () => {
       await updateDoc(messageRef, {
         title,
         description,
+        links,
       });
       navigate('/');
     } catch (error) {
@@ -45,6 +54,16 @@ const EditMessage: React.FC = () => {
   const handleCancel = () => {
     navigate('/');
   };
+
+  const handleLinkChange = (index: number, field: keyof Link, value: string) => {
+    const newLinks = [...links];
+    newLinks[index][field] = value;
+    setLinks(newLinks);
+  };
+
+  const addLinkField = () => {
+    setLinks([...links, { title: '', url: '' }]);
+  };  
 
   return (
     <Container maxWidth="sm">
@@ -74,6 +93,29 @@ const EditMessage: React.FC = () => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          Links
+        </Typography>
+        {links.map((link, index) => (
+          <Box key={index} sx={{ mb: 2 }}>
+            <TextField
+              label={`Link Title ${index + 1}`}
+              fullWidth
+              value={link.title}
+              onChange={(e) => handleLinkChange(index, 'title', e.target.value)}
+              sx={{ mb: 1 }}
+            />
+            <TextField
+              label={`Link URL ${index + 1}`}
+              fullWidth
+              value={link.url}
+              onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+            />
+          </Box>
+        ))}
+        <Button variant="text" onClick={addLinkField} sx={{ mb: 2 }}>
+          + Add another link
+        </Button>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             variant="outlined"

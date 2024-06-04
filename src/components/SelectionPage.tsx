@@ -1,7 +1,7 @@
 // src/components/SelectionPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Card, CardActionArea, CardContent, Grid, Chip, Tooltip, Snackbar, Alert, SnackbarCloseReason, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import { Box, Typography, Link, Card, CardActionArea, CardContent, Grid, Chip, Tooltip, Snackbar, Alert, SnackbarCloseReason, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
 import { useUser } from '../contexts/UserContext';
 import Logout from './Logout';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
@@ -128,7 +128,22 @@ const SelectionPage: React.FC = () => {
                   <TableRow key={message.id} sx={{ backgroundColor: '#FFFDE7' }}>
                     <TableCell>{new Date(message.postedOn.seconds * 1000).toLocaleString()}</TableCell>
                     <TableCell sx={{ fontStyle: 'italic' }}>{message.title}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'pre-wrap' }}>{message.description}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'pre-wrap' }}>
+                      {message.description}
+                      {message.links && message.links.some((link: any) => link.title && link.url) && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Links:</Typography>
+                          {message.links.map((link: any, index: number) => (
+                            link.title && link.url && (
+                              <Box key={index} sx={{ mb: 1 }}>
+                                <Typography variant="body2" component="span">🔗 {link.title}: </Typography>
+                                <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
+                              </Box>
+                            )
+                          ))}
+                        </Box>
+                      )}
+                    </TableCell>
                     {userDetails?.isAdmin && (
                       <TableCell>
                         <IconButton onClick={() => navigate(`/edit-message/${message.id}`)}>
