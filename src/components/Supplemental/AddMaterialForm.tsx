@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Snackbar, Alert, Typography, IconButton, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
-import { v4 as uuidv4 } from 'uuid'; // Import uuid
+import { v4 as uuidv4 } from 'uuid';
 import SideBar from './SideBar';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import BackToAllMaterialsButton from './BackToAllMaterialsButton';
+
+import { Material } from '../../types/Material';
 
 interface Section {
   id: string;
@@ -29,16 +32,23 @@ interface SubSubsection {
   content: string;
 }
 
-const AddMaterialForm: React.FC = () => {
+interface AddMaterialFormProps {
+  materialData?: Material;
+  onSubmit?: (data: Material) => void;
+}
+
+const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmit }) => {
   const navigate = useNavigate();
   const { userDetails } = useUser();
   const db = getFirestore();
 
-  const [header, setHeader] = useState({ title: 'Header', content: '' });
-  const [footer, setFooter] = useState({ title: 'Footer', content: '' });
-  const [sections, setSections] = useState<Section[]>([
+  const [title, setTitle] = useState<string>(materialData?.title || '');
+  const [header, setHeader] = useState(materialData?.header || { title: 'Header', content: '' });
+  const [footer, setFooter] = useState(materialData?.footer || { title: 'Footer', content: '' });
+  const [sections, setSections] = useState<Section[]>(materialData?.sections || [
     { id: uuidv4(), title: 'Section 1', content: '', subsections: [] }
   ]);
+
   const [selectedSection, setSelectedSection] = useState<{ sectionIndex?: number, subsectionIndex?: number, subSubsectionIndex?: number, type?: 'header' | 'footer' }>({ sectionIndex: 0 });
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -60,19 +70,32 @@ const AddMaterialForm: React.FC = () => {
     };
   }, [selectedSection, sections]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, shouldPublish: boolean = false) => {
     e.preventDefault();
-
+  
     try {
-      await addDoc(collection(db, 'materials'), {
-        header,
-        footer,
-        sections,
-        author: userDetails?.uid,
-        timestamp: serverTimestamp(),
-        published: false,
-      });
-      setSnackbarMessage('Material saved successfully');
+      if (materialData) {
+        const docRef = doc(db, 'materials', materialData.id);
+        await updateDoc(docRef, {
+          title,
+          header,
+          footer,
+          sections,
+          published: shouldPublish,
+        });
+        setSnackbarMessage('Material updated successfully');
+      } else {
+        const docRef = await addDoc(collection(db, 'materials'), {
+          title,
+          header,
+          footer,
+          sections,
+          author: userDetails?.uid || '',
+          timestamp: serverTimestamp() as any,
+          published: shouldPublish,
+        });
+        setSnackbarMessage('Material saved successfully');
+      }
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
       navigate('/supplemental-materials');
@@ -81,10 +104,14 @@ const AddMaterialForm: React.FC = () => {
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
     }
-  };
+  };  
 
   const handleCancel = () => {
     navigate('/supplemental-materials');
+  };
+
+  const handlePublish = (e: React.FormEvent) => {
+    handleSubmit(e, true);
   };
 
   const handleAddSection = () => {
@@ -255,6 +282,9 @@ const AddMaterialForm: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', flexGrow: 1, flexDirection: 'column' }}>
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ width: '450px', ml: 2, mt: 2 }}>
+          <BackToAllMaterialsButton />
+        </Box>
         <Box sx={{ display: 'flex', flexGrow: 1 }}>
           <SideBar
             sections={sections}
@@ -271,6 +301,14 @@ const AddMaterialForm: React.FC = () => {
             onDeleteSubSubsection={handleDeleteSubSubsection} // Add this line
           />
           <Box sx={{ flexGrow: 1, padding: 3 }}>
+            <TextField
+              label="Material Title"
+              variant="outlined"
+              fullWidth
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              sx={{ mb: 2 }}
+            />
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>
               <TextField
                 label="Header"
@@ -346,17 +384,11 @@ const AddMaterialForm: React.FC = () => {
               <Button type="button" variant="outlined" color="secondary" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" color="primary">
+              <Button type="submit" variant="contained" color="primary" onClick={(e) => handleSubmit(e, false)}>
                 Save
               </Button>
-              <Button
-                type="button"
-                variant="contained"
-                color="primary"
-                onClick={handleSubmit}
-                sx={{ backgroundColor: 'green' }}
-              >
-                Publish for All
+              <Button type="button" variant="contained" color="primary" onClick={handlePublish} sx={{ backgroundColor: 'green' }}>
+                Publish
               </Button>
             </Box>
           </Box>

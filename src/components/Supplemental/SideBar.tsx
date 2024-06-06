@@ -27,14 +27,15 @@ interface SidebarProps {
   selected: { sectionIndex?: number, subsectionIndex?: number, subSubsectionIndex?: number, type?: 'header' | 'footer' };
   onAddSection: () => void;
   onAddSubsection: (sectionIndex: number) => void;
-  onAddSubSubsection: (sectionIndex: number, subsectionIndex: number) => void; // Add this line
+  onAddSubSubsection: (sectionIndex: number, subsectionIndex: number) => void;
   onSelectSection: (sectionIndex: number | 'header' | 'footer', subsectionIndex?: number, subSubsectionIndex?: number) => void;
   onUpdateSectionTitle: (sectionIndex: number, newTitle: string) => void;
   onUpdateSubsectionTitle: (sectionIndex: number, subsectionIndex: number, newTitle: string) => void;
-  onUpdateSubSubsectionTitle: (sectionIndex: number, subsectionIndex: number, subSubsectionIndex: number, newTitle: string) => void; // Add this line
-  onDeleteSection: (sectionIndex: number) => void; // Add new prop for deleting section
-  onDeleteSubsection: (sectionIndex: number, subsectionIndex: number) => void; // Add new prop for deleting subsection
-  onDeleteSubSubsection: (sectionIndex: number, subsectionIndex: number, subSubsectionIndex: number) => void; // Add this line
+  onUpdateSubSubsectionTitle: (sectionIndex: number, subsectionIndex: number, subSubsectionIndex: number, newTitle: string) => void;
+  onDeleteSection: (sectionIndex: number) => void;
+  onDeleteSubsection: (sectionIndex: number, subsectionIndex: number) => void;
+  onDeleteSubSubsection: (sectionIndex: number, subsectionIndex: number, subSubsectionIndex: number) => void;
+  isViewMode?: boolean; // New prop to disable editing
 }
 
 const SideBar: React.FC<SidebarProps> = ({
@@ -42,18 +43,19 @@ const SideBar: React.FC<SidebarProps> = ({
   selected,
   onAddSection,
   onAddSubsection,
-  onAddSubSubsection, // Add this line
+  onAddSubSubsection,
   onSelectSection,
   onUpdateSectionTitle,
   onUpdateSubsectionTitle,
-  onUpdateSubSubsectionTitle, // Add this line
-  onDeleteSection, // Destructure new prop
-  onDeleteSubsection, // Destructure new prop
-  onDeleteSubSubsection, // Add this line
+  onUpdateSubSubsectionTitle,
+  onDeleteSection,
+  onDeleteSubsection,
+  onDeleteSubSubsection,
+  isViewMode,
 }) => {
   const [editingSectionIndex, setEditingSectionIndex] = useState<number | null>(null);
   const [editingSubsectionIndex, setEditingSubsectionIndex] = useState<{ section: number; subsection: number } | null>(null);
-  const [editingSubSubsectionIndex, setEditingSubSubsectionIndex] = useState<{ section: number; subsection: number; subSubsection: number } | null>(null); // Add this line
+  const [editingSubSubsectionIndex, setEditingSubSubsectionIndex] = useState<{ section: number; subsection: number; subSubsection: number } | null>(null);
   const [newTitle, setNewTitle] = useState<string>('');
 
   const handleEditSection = (index: number, currentTitle: string) => {
@@ -124,9 +126,11 @@ const SideBar: React.FC<SidebarProps> = ({
       <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
         Outline
       </Typography>
-      <Button variant="contained" color="primary" onClick={onAddSection} sx={{ mb: 2 }}>
-        + Add Section
-      </Button>
+      {!isViewMode && (
+        <Button variant="contained" color="primary" onClick={onAddSection} sx={{ mb: 2 }}>
+          + Add Section
+        </Button>
+      )}
       <List>
         <ListItem 
           button 
@@ -149,26 +153,35 @@ const SideBar: React.FC<SidebarProps> = ({
                     onChange={(e) => setNewTitle(e.target.value)}
                     size="small"
                     sx={{ mr: 1 }}
+                    disabled={isViewMode}
                   />
-                  <IconButton onClick={() => handleSaveSection(sectionIndex)} size="small">
-                    <SaveIcon />
-                  </IconButton>
+                  {!isViewMode && (
+                    <IconButton onClick={() => handleSaveSection(sectionIndex)} size="small">
+                      <SaveIcon />
+                    </IconButton>
+                  )}
                 </>
               ) : (
                 <>
                   <ListItemText primary={section.title} />
-                  <IconButton onClick={() => handleEditSection(sectionIndex, section.title)} size="small">
-                    <EditIcon />
-                  </IconButton>
-                  <DeleteSectionSubsection // Add delete button for section
-                    onDelete={() => onDeleteSection(sectionIndex)}
-                    itemType="section"
-                  />
+                  {!isViewMode && (
+                    <>
+                      <IconButton onClick={() => handleEditSection(sectionIndex, section.title)} size="small">
+                        <EditIcon />
+                      </IconButton>
+                      <DeleteSectionSubsection // Add delete button for section
+                        onDelete={() => onDeleteSection(sectionIndex)}
+                        itemType="section"
+                      />
+                    </>
+                  )}
                 </>
               )}
-              <Button variant="text" onClick={() => onAddSubsection(sectionIndex)} size="small">
-                + Add Subsection
-              </Button>
+              {!isViewMode && (
+                <Button variant="text" onClick={() => onAddSubsection(sectionIndex)} size="small">
+                  + Add Subsection
+                </Button>
+              )}
             </ListItem>
             <List sx={{ pl: 4 }}>
               {section.subsections.map((subsection, subsectionIndex) => (
@@ -187,26 +200,35 @@ const SideBar: React.FC<SidebarProps> = ({
                           onChange={(e) => setNewTitle(e.target.value)}
                           size="small"
                           sx={{ mr: 1 }}
+                          disabled={isViewMode}
                         />
-                        <IconButton onClick={() => handleSaveSubsection(sectionIndex, subsectionIndex)} size="small">
-                          <SaveIcon />
-                        </IconButton>
+                        {!isViewMode && (
+                          <IconButton onClick={() => handleSaveSubsection(sectionIndex, subsectionIndex)} size="small">
+                            <SaveIcon />
+                          </IconButton>
+                        )}
                       </>
                     ) : (
                       <>
                         <ListItemText primary={subsection.title} />
-                        <IconButton onClick={() => handleEditSubsection(sectionIndex, subsectionIndex, subsection.title)} size="small">
-                          <EditIcon />
-                        </IconButton>
-                        <DeleteSectionSubsection // Add delete button for subsection
-                          onDelete={() => onDeleteSubsection(sectionIndex, subsectionIndex)}
-                          itemType="subsection"
-                        />
+                        {!isViewMode && (
+                          <>
+                            <IconButton onClick={() => handleEditSubsection(sectionIndex, subsectionIndex, subsection.title)} size="small">
+                              <EditIcon />
+                            </IconButton>
+                            <DeleteSectionSubsection // Add delete button for subsection
+                              onDelete={() => onDeleteSubsection(sectionIndex, subsectionIndex)}
+                              itemType="subsection"
+                            />
+                          </>
+                        )}
                       </>
                     )}
-                    <Button variant="text" onClick={() => onAddSubSubsection(sectionIndex, subsectionIndex)} size="small">
-                      + Add Sub-Subsection
-                    </Button>
+                    {!isViewMode && (
+                      <Button variant="text" onClick={() => onAddSubSubsection(sectionIndex, subsectionIndex)} size="small">
+                        + Add Sub-Subsection
+                      </Button>
+                    )}
                   </ListItem>
                   <List sx={{ pl: 4 }}>
                     {subsection.subSubsections.map((subSubsection, subSubsectionIndex) => (
@@ -226,21 +248,28 @@ const SideBar: React.FC<SidebarProps> = ({
                               onChange={(e) => setNewTitle(e.target.value)}
                               size="small"
                               sx={{ mr: 1 }}
+                              disabled={isViewMode}
                             />
-                            <IconButton onClick={() => handleSaveSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)} size="small">
-                              <SaveIcon />
-                            </IconButton>
+                            {!isViewMode && (
+                              <IconButton onClick={() => handleSaveSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)} size="small">
+                                <SaveIcon />
+                              </IconButton>
+                            )}
                           </>
                         ) : (
                           <>
                             <ListItemText primary={subSubsection.title} />
-                            <IconButton onClick={() => handleEditSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex, subSubsection.title)} size="small">
-                              <EditIcon />
-                            </IconButton>
-                            <DeleteSectionSubsection // Add delete button for sub-subsection
-                              onDelete={() => onDeleteSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)}
-                              itemType="subSubsection"
-                            />
+                            {!isViewMode && (
+                              <>
+                                <IconButton onClick={() => handleEditSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex, subSubsection.title)} size="small">
+                                  <EditIcon />
+                                </IconButton>
+                                <DeleteSectionSubsection // Add delete button for sub-subsection
+                                  onDelete={() => onDeleteSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)}
+                                  itemType="subSubsection"
+                                />
+                              </>
+                            )}
                           </>
                         )}
                       </ListItem>
