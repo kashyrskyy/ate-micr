@@ -5,7 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 interface DeleteSectionSubsectionProps {
   onDelete: () => void;
-  itemType: 'section' | 'subsection';
+  itemType: 'section' | 'subsection' | 'subSubsection'; // Add 'subSubsection'
 }
 
 const DeleteSectionSubsection: React.FC<DeleteSectionSubsectionProps> = ({ onDelete, itemType }) => {
