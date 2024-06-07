@@ -124,7 +124,7 @@ const ViewMaterial: React.FC = () => {
           <Box sx={{ flexGrow: 1, padding: 3 }}>
             <hr /> {/* Horizontal line above the header */}
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>
-              <Typography>{materialData.header.content}</Typography>
+              <Typography dangerouslySetInnerHTML={{ __html: materialData.header.content.replace(/\n/g, '<br />') }} />
             </Box>
             <hr /> {/* Horizontal line below the header */}
             <Typography variant="h3" align="center" gutterBottom>
@@ -143,7 +143,7 @@ const ViewMaterial: React.FC = () => {
                   padding: 2,
                 }}
               >
-                <Typography>{currentContent}</Typography>
+                <Typography dangerouslySetInnerHTML={{ __html: currentContent.replace(/\n/g, '<br />') }} />
               </Box>
             )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -175,7 +175,7 @@ const ViewMaterial: React.FC = () => {
             </Box>
             <hr /> {/* Horizontal line above the footer */}
             <Box sx={{ border: selectedSection.type === 'footer' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mt: 2 }}>
-              <Typography>{materialData.footer.content}</Typography>
+              <Typography dangerouslySetInnerHTML={{ __html: materialData.footer.content.replace(/\n/g, '<br />') }} />
             </Box>
             <hr /> {/* Horizontal line below the footer */}
           </Box>

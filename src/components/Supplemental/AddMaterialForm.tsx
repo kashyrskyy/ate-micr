@@ -1,6 +1,6 @@
 // src/components/Supplemental/AddMaterialForm.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Snackbar, Alert, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, TextField, Button, Snackbar, Alert, Typography, IconButton, Tooltip, TextareaAutosize } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
@@ -310,48 +310,58 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               sx={{ mb: 2 }}
             />
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>
-              <TextField
-                label="Header"
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={4}
+              <TextareaAutosize
+                aria-label="header"
+                minRows={4}
+                placeholder="Header"
+                style={{
+                  width: '100%',
+                  padding: '16.5px 14px',
+                  fontSize: '1rem',
+                  borderRadius: '4px',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  marginBottom: '16px',
+                }}
                 value={header.content}
                 onChange={(e) => handleUpdateHeaderContent(e.target.value)}
-                sx={{ mb: 2 }}
               />
             </Box>
             <Typography variant="h4" align="center" gutterBottom>
               {currentTitle}
             </Typography>
             {selectedSection.type !== 'header' && selectedSection.type !== 'footer' && (
-              <TextField
-                label="Content"
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={10}
+              <TextareaAutosize
+                aria-label="content"
+                minRows={10}
+                placeholder="Content"
+                style={{
+                  width: '100%',
+                  padding: '16.5px 14px',
+                  fontSize: '1rem',
+                  borderRadius: '4px',
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                  marginBottom: '16px',
+                }}
                 value={currentContent}
                 onChange={(e) => handleUpdateContent(selectedSection.sectionIndex!, e.target.value, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
-                sx={{
-                  mb: 2,
-                  border: selectedSection.sectionIndex !== undefined && selectedSection.subsectionIndex === undefined ? '2px solid blue' : selectedSection.subSubsectionIndex !== undefined ? '2px solid red' : selectedSection.subsectionIndex !== undefined ? '2px solid green' : 'none',
-                  borderRadius: 1,
-                  padding: 2,
-                }}
               />
             )}
             <Box sx={{ border: selectedSection.type === 'footer' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mt: 2 }}>
-              <TextField
-                label="Footer"
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={4}
-                value={footer.content}
-                onChange={(e) => handleUpdateFooterContent(e.target.value)}
-                sx={{ mb: 2 }}
-              />
+            <TextareaAutosize
+              aria-label="footer"
+              minRows={4}
+              placeholder="Footer"
+              style={{
+                width: '100%',
+                padding: '16.5px 14px',
+                fontSize: '1rem',
+                borderRadius: '4px',
+                borderColor: 'rgba(0, 0, 0, 0.23)',
+                marginBottom: '16px',
+              }}
+              value={footer.content}
+              onChange={(e) => handleUpdateFooterContent(e.target.value)}
+            />
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Tooltip title="Previous Section/Subsection (Left Arrow)" arrow>
