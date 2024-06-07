@@ -106,21 +106,23 @@ const ViewMaterial: React.FC = () => {
           <BackToAllMaterialsButton />
         </Box>
         <Box sx={{ display: 'flex', flexGrow: 1 }}>
-          <SideBar
-            sections={materialData.sections}
-            selected={selectedSection}
-            onAddSection={() => {}}
-            onAddSubsection={() => {}}
-            onAddSubSubsection={() => {}}
-            onSelectSection={handleSelectSection}
-            onUpdateSectionTitle={() => {}}
-            onUpdateSubsectionTitle={() => {}}
-            onUpdateSubSubsectionTitle={() => {}}
-            onDeleteSection={() => {}}
-            onDeleteSubsection={() => {}}
-            onDeleteSubSubsection={() => {}}
-            isViewMode={true} // New prop to disable editing
-          />
+          <Box sx={{ width: '450px', minWidth: '450px', maxWidth: '450px', borderRight: '1px solid #ddd', padding: 2 }}>
+            <SideBar
+              sections={materialData.sections}
+              selected={selectedSection}
+              onAddSection={() => {}}
+              onAddSubsection={() => {}}
+              onAddSubSubsection={() => {}}
+              onSelectSection={handleSelectSection}
+              onUpdateSectionTitle={() => {}}
+              onUpdateSubsectionTitle={() => {}}
+              onUpdateSubSubsectionTitle={() => {}}
+              onDeleteSection={() => {}}
+              onDeleteSubsection={() => {}}
+              onDeleteSubSubsection={() => {}}
+              isViewMode={true} // New prop to disable editing
+            />
+          </Box>
           <Box sx={{ flexGrow: 1, padding: 3 }}>
             <hr /> {/* Horizontal line above the header */}
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>

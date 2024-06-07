@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import { Box, Typography, Button, List, ListItem, ListItemText, TextField, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
-import DeleteSectionSubsection from './DeleteSectionSubsection'; // Import the new component
+import DeleteSectionSubsection from './DeleteSectionSubsection';
+
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 interface SubSubsection {
   id: string;
@@ -57,6 +60,26 @@ const SideBar: React.FC<SidebarProps> = ({
   const [editingSubsectionIndex, setEditingSubsectionIndex] = useState<{ section: number; subsection: number } | null>(null);
   const [editingSubSubsectionIndex, setEditingSubSubsectionIndex] = useState<{ section: number; subsection: number; subSubsection: number } | null>(null);
   const [newTitle, setNewTitle] = useState<string>('');
+
+  const [openSections, setOpenSections] = useState<boolean[]>(sections.map(() => true));
+  const [openSubsections, setOpenSubsections] = useState<{ [key: number]: boolean[] }>(
+    sections.reduce((acc, section, index) => {
+      acc[index] = section.subsections.map(() => true);
+      return acc;
+    }, {} as { [key: number]: boolean[] })
+  );  
+
+  const handleToggleSection = (index: number) => {
+    const newOpenSections = [...openSections];
+    newOpenSections[index] = !newOpenSections[index];
+    setOpenSections(newOpenSections);
+  };
+  
+  const handleToggleSubsection = (sectionIndex: number, subsectionIndex: number) => {
+    const newOpenSubsections = { ...openSubsections };
+    newOpenSubsections[sectionIndex][subsectionIndex] = !newOpenSubsections[sectionIndex][subsectionIndex];
+    setOpenSubsections(newOpenSubsections);
+  };
 
   const handleEditSection = (index: number, currentTitle: string) => {
     if (editingSectionIndex !== null) {
@@ -177,107 +200,145 @@ const SideBar: React.FC<SidebarProps> = ({
                   )}
                 </>
               )}
+              {section.subsections.length > 0 && (
+                <IconButton 
+                  onClick={() => handleToggleSection(sectionIndex)}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
+                    '&:active': {
+                      backgroundColor: 'transparent',
+                    },
+                    width: '24px', 
+                    height: '24px',
+                  }}
+                >
+                  {openSections[sectionIndex] ? <ExpandLessIcon sx={{ fontSize: '20px' }} /> : <ExpandMoreIcon sx={{ fontSize: '20px' }} />}
+                </IconButton>
+              )}
               {!isViewMode && (
                 <Button variant="text" onClick={() => onAddSubsection(sectionIndex)} size="small">
                   + Add Subsection
                 </Button>
               )}
             </ListItem>
-            <List sx={{ pl: 4 }}>
-              {section.subsections.map((subsection, subsectionIndex) => (
-                <Box key={subsection.id}>
-                  <ListItem 
-                    button 
-                    onClick={() => onSelectSection(sectionIndex, subsectionIndex)}
-                    sx={{ backgroundColor: selected.sectionIndex === sectionIndex && selected.subsectionIndex === subsectionIndex && selected.subSubsectionIndex === undefined ? 'lightgray' : 'transparent' }}
-                  >
-                    {editingSubsectionIndex &&
-                      editingSubsectionIndex.section === sectionIndex &&
-                      editingSubsectionIndex.subsection === subsectionIndex ? (
-                      <>
-                        <TextField
-                          value={newTitle}
-                          onChange={(e) => setNewTitle(e.target.value)}
-                          size="small"
-                          sx={{ mr: 1 }}
-                          disabled={isViewMode}
-                        />
-                        {!isViewMode && (
-                          <IconButton onClick={() => handleSaveSubsection(sectionIndex, subsectionIndex)} size="small">
-                            <SaveIcon />
-                          </IconButton>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <ListItemText primary={subsection.title} />
-                        {!isViewMode && (
-                          <>
-                            <IconButton onClick={() => handleEditSubsection(sectionIndex, subsectionIndex, subsection.title)} size="small">
-                              <EditIcon />
+            {openSections[sectionIndex] && (
+              <List sx={{ pl: 4 }}>
+                {section.subsections.map((subsection, subsectionIndex) => (
+                  <Box key={subsection.id}>
+                    <ListItem 
+                      button 
+                      onClick={() => onSelectSection(sectionIndex, subsectionIndex)}
+                      sx={{ backgroundColor: selected.sectionIndex === sectionIndex && selected.subsectionIndex === subsectionIndex && selected.subSubsectionIndex === undefined ? 'lightgray' : 'transparent' }}
+                    >
+                      {editingSubsectionIndex &&
+                        editingSubsectionIndex.section === sectionIndex &&
+                        editingSubsectionIndex.subsection === subsectionIndex ? (
+                        <>
+                          <TextField
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                            size="small"
+                            sx={{ mr: 1 }}
+                            disabled={isViewMode}
+                          />
+                          {!isViewMode && (
+                            <IconButton onClick={() => handleSaveSubsection(sectionIndex, subsectionIndex)} size="small">
+                              <SaveIcon />
                             </IconButton>
-                            <DeleteSectionSubsection // Add delete button for subsection
-                              onDelete={() => onDeleteSubsection(sectionIndex, subsectionIndex)}
-                              itemType="subsection"
-                            />
-                          </>
-                        )}
-                      </>
-                    )}
-                    {!isViewMode && (
-                      <Button variant="text" onClick={() => onAddSubSubsection(sectionIndex, subsectionIndex)} size="small">
-                        + Add Sub-Subsection
-                      </Button>
-                    )}
-                  </ListItem>
-                  <List sx={{ pl: 4 }}>
-                    {subsection.subSubsections.map((subSubsection, subSubsectionIndex) => (
-                      <ListItem 
-                        key={subSubsection.id} 
-                        button 
-                        onClick={() => onSelectSection(sectionIndex, subsectionIndex, subSubsectionIndex)}
-                        sx={{ backgroundColor: selected.sectionIndex === sectionIndex && selected.subsectionIndex === subsectionIndex && selected.subSubsectionIndex === subSubsectionIndex ? 'lightgray' : 'transparent' }}
-                      >
-                        {editingSubSubsectionIndex &&
-                          editingSubSubsectionIndex.section === sectionIndex &&
-                          editingSubSubsectionIndex.subsection === subsectionIndex &&
-                          editingSubSubsectionIndex.subSubsection === subSubsectionIndex ? (
-                          <>
-                            <TextField
-                              value={newTitle}
-                              onChange={(e) => setNewTitle(e.target.value)}
-                              size="small"
-                              sx={{ mr: 1 }}
-                              disabled={isViewMode}
-                            />
-                            {!isViewMode && (
-                              <IconButton onClick={() => handleSaveSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)} size="small">
-                                <SaveIcon />
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <ListItemText primary={subsection.title} />
+                          {!isViewMode && (
+                            <>
+                              <IconButton onClick={() => handleEditSubsection(sectionIndex, subsectionIndex, subsection.title)} size="small">
+                                <EditIcon />
                               </IconButton>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <ListItemText primary={subSubsection.title} />
-                            {!isViewMode && (
+                              <DeleteSectionSubsection // Add delete button for subsection
+                                onDelete={() => onDeleteSubsection(sectionIndex, subsectionIndex)}
+                                itemType="subsection"
+                              />
+                            </>
+                          )}
+                        </>
+                      )}
+                      {subsection.subSubsections.length > 0 && (
+                        <IconButton 
+                          onClick={() => handleToggleSubsection(sectionIndex, subsectionIndex)}
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: 'transparent',
+                            },
+                            '&:active': {
+                              backgroundColor: 'transparent',
+                            },
+                            width: '24px', 
+                            height: '24px',
+                          }}
+                        >
+                          {openSubsections[sectionIndex][subsectionIndex] ? <ExpandLessIcon sx={{ fontSize: '20px' }} /> : <ExpandMoreIcon sx={{ fontSize: '20px' }} />}
+                        </IconButton>
+                      )}
+                      {!isViewMode && (
+                        <Button variant="text" onClick={() => onAddSubSubsection(sectionIndex, subsectionIndex)} size="small">
+                          + Add Sub-Subsection
+                        </Button>
+                      )}
+                    </ListItem>
+                    {openSubsections[sectionIndex][subsectionIndex] && (
+                      <List sx={{ pl: 4 }}>
+                        {subsection.subSubsections.map((subSubsection, subSubsectionIndex) => (
+                          <ListItem 
+                            key={subSubsection.id} 
+                            button 
+                            onClick={() => onSelectSection(sectionIndex, subsectionIndex, subSubsectionIndex)}
+                            sx={{ backgroundColor: selected.sectionIndex === sectionIndex && selected.subsectionIndex === subsectionIndex && selected.subSubsectionIndex === subSubsectionIndex ? 'lightgray' : 'transparent' }}
+                          >
+                            {editingSubSubsectionIndex &&
+                              editingSubSubsectionIndex.section === sectionIndex &&
+                              editingSubSubsectionIndex.subsection === subsectionIndex &&
+                              editingSubSubsectionIndex.subSubsection === subSubsectionIndex ? (
                               <>
-                                <IconButton onClick={() => handleEditSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex, subSubsection.title)} size="small">
-                                  <EditIcon />
-                                </IconButton>
-                                <DeleteSectionSubsection // Add delete button for sub-subsection
-                                  onDelete={() => onDeleteSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)}
-                                  itemType="subSubsection"
+                                <TextField
+                                  value={newTitle}
+                                  onChange={(e) => setNewTitle(e.target.value)}
+                                  size="small"
+                                  sx={{ mr: 1 }}
+                                  disabled={isViewMode}
                                 />
+                                {!isViewMode && (
+                                  <IconButton onClick={() => handleSaveSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)} size="small">
+                                    <SaveIcon />
+                                  </IconButton>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <ListItemText primary={subSubsection.title} />
+                                {!isViewMode && (
+                                  <>
+                                    <IconButton onClick={() => handleEditSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex, subSubsection.title)} size="small">
+                                      <EditIcon />
+                                    </IconButton>
+                                    <DeleteSectionSubsection // Add delete button for sub-subsection
+                                      onDelete={() => onDeleteSubSubsection(sectionIndex, subsectionIndex, subSubsectionIndex)}
+                                      itemType="subSubsection"
+                                    />
+                                  </>
+                                )}
                               </>
                             )}
-                          </>
-                        )}
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              ))}
-            </List>
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </Box>
+                ))}
+              </List>
+            )}
           </Box>
         ))}
         <ListItem 
