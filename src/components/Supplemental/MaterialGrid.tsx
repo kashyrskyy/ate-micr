@@ -22,7 +22,10 @@ const MaterialGrid: React.FC = () => {
   useEffect(() => {
     if (!userDetails) return;
 
-    const q = query(collection(db, 'materials'), where('author', '==', userDetails.uid));
+    const q = userDetails.isAdmin
+      ? query(collection(db, 'materials'))
+      : query(collection(db, 'materials'), where('published', '==', true));
+
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const materialsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Material[];
       setMaterials(materialsData);
@@ -55,49 +58,53 @@ const MaterialGrid: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ backgroundColor: '#FFF9C4', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mb: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#F57F17' }}>
-          Saved (Unpublished)
-        </Typography>
-      </Box>
-      <Grid container spacing={3}>
-        {unpublishedMaterials.length === 0 ? (
-          <Typography variant="body1" align="center" sx={{ width: '100%' }}>
-            No saved (unpublished) materials found.
-          </Typography>
-        ) : (
-          unpublishedMaterials.map((material) => (
-            <Grid item xs={12} sm={6} md={4} key={material.id}>
-              <Box sx={{ border: '1px solid #ddd', borderRadius: '8px', padding: 2, position: 'relative' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <IconButton onClick={() => navigate(`/view-material/${material.id}`)} aria-label="view">
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Typography variant="h6">{material.title || 'Untitled'}</Typography>
-                </Box>
-                <Typography variant="body2" color="textSecondary">
-                  Date: {material.timestamp.toDate().toLocaleDateString()}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {material.published ? 'Published' : 'Unpublished'}
-                </Typography>
-                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
-                  {userDetails?.isAdmin && (
-                    <>
-                      <IconButton onClick={() => navigate(`/edit-material/${material.id}`)} aria-label="edit">
-                        <EditIcon />
+      {userDetails?.isAdmin && (
+        <>
+          <Box sx={{ backgroundColor: '#FFF9C4', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#F57F17' }}>
+              Saved (Unpublished)
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            {unpublishedMaterials.length === 0 ? (
+              <Typography variant="body1" align="center" sx={{ width: '100%' }}>
+                No saved (unpublished) materials found.
+              </Typography>
+            ) : (
+              unpublishedMaterials.map((material) => (
+                <Grid item xs={12} sm={6} md={4} key={material.id}>
+                  <Box sx={{ border: '1px solid #ddd', borderRadius: '8px', padding: 2, position: 'relative' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <IconButton onClick={() => navigate(`/view-material/${material.id}`)} aria-label="view">
+                        <VisibilityIcon />
                       </IconButton>
-                      <IconButton onClick={() => handleDeleteClick(material.id)} aria-label="delete">
-                        <DeleteIcon />
-                      </IconButton>
-                    </>
-                  )}
-                </Box>
-              </Box>
-            </Grid>
-          ))
-        )}
-      </Grid>
+                      <Typography variant="h6">{material.title || 'Untitled'}</Typography>
+                    </Box>
+                    <Typography variant="body2" color="textSecondary">
+                      Date: {material.timestamp.toDate().toLocaleDateString()}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {material.published ? 'Published' : 'Unpublished'}
+                    </Typography>
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
+                      {userDetails?.isAdmin && (
+                        <>
+                          <IconButton onClick={() => navigate(`/edit-material/${material.id}`)} aria-label="edit">
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton onClick={() => handleDeleteClick(material.id)} aria-label="delete">
+                            <DeleteIcon />
+                          </IconButton>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                </Grid>
+              ))
+            )}
+          </Grid>
+        </>
+      )}
 
       <Box sx={{ backgroundColor: '#C8E6C9', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mt: 4, mb: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2E7D32' }}>
