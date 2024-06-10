@@ -1,6 +1,6 @@
 // src/components/Supplemental/MaterialGrid.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid, CircularProgress, IconButton } from '@mui/material';
+import { Box, Typography, Grid, CircularProgress, IconButton, Chip } from '@mui/material';
 import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
@@ -74,6 +74,15 @@ const MaterialGrid: React.FC = () => {
               unpublishedMaterials.map((material) => (
                 <Grid item xs={12} sm={6} md={4} key={material.id}>
                   <Box sx={{ border: '1px solid #ddd', borderRadius: '8px', padding: 2, position: 'relative' }}>
+                    <Box>
+                      {material.author === userDetails?.uid && (
+                              <Chip 
+                                label="My Material" 
+                                variant="outlined" 
+                                sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#C5E1A5', color: '#2E7D32', ml: 1 }} 
+                              />
+                      )}
+                    </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <IconButton onClick={() => navigate(`/view-material/${material.id}`)} aria-label="view">
                         <VisibilityIcon />
@@ -120,6 +129,15 @@ const MaterialGrid: React.FC = () => {
           publishedMaterials.map((material) => (
             <Grid item xs={12} sm={6} md={4} key={material.id}>
               <Box sx={{ border: '1px solid #ddd', borderRadius: '8px', padding: 2, position: 'relative' }}>
+                <Box>
+                  {material.author === userDetails?.uid && (
+                          <Chip 
+                            label="My Material" 
+                            variant="outlined" 
+                            sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#C5E1A5', color: '#2E7D32', ml: 1 }} 
+                          />
+                  )}
+                </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <IconButton onClick={() => navigate(`/view-material/${material.id}`)} aria-label="view">
                     <VisibilityIcon />
