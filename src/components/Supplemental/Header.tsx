@@ -52,9 +52,16 @@ const Header: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {userDetails?.isAdmin && (
             <Chip 
-              label="Admin" 
+              label="Educator (Admin User)" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+            />
+          )}
+          {!userDetails?.isAdmin && (
+            <Chip 
+              label="Student (Regular User)" 
+              variant="outlined" 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 1 }} 
             />
           )}
           {userDetails && (
