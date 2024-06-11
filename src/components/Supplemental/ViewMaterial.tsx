@@ -152,9 +152,10 @@ const ViewMaterial: React.FC = () => {
                       {selectedSection.subSubsectionIndex !== undefined
                         ? materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.length > 0 && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-                            {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.map((url, index) => (
+                            {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.map((image, index) => (
                               <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
-                                <img src={url} alt={`Sub-subsection ${selectedSection.subSubsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                <img src={image.url} alt={`Sub-subsection ${selectedSection.subSubsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                <Typography>{image.title}</Typography> {/* Display image title */}
                               </Box>
                             ))}
                           </Box>
@@ -162,18 +163,20 @@ const ViewMaterial: React.FC = () => {
                         : selectedSection.subsectionIndex !== undefined
                           ? materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.length > 0 && (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-                              {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.map((url, index) => (
+                              {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.map((image, index) => (
                                 <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
-                                  <img src={url} alt={`Subsection ${selectedSection.subsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                  <img src={image.url} alt={`Subsection ${selectedSection.subsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                  <Typography>{image.title}</Typography> {/* Display image title */}
                                 </Box>
                               ))}
                             </Box>
                           )
                           : materialData.sections[selectedSection.sectionIndex].images.length > 0 && (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-                              {materialData.sections[selectedSection.sectionIndex].images.map((url, index) => (
+                              {materialData.sections[selectedSection.sectionIndex].images.map((image, index) => (
                                 <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
-                                  <img src={url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                  <img src={image.url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                  <Typography>{image.title}</Typography> {/* Display image title */}
                                 </Box>
                               ))}
                             </Box>

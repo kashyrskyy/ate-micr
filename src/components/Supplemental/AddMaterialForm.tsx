@@ -10,33 +10,11 @@ import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import BackToAllMaterialsButton from './BackToAllMaterialsButton';
 
-import { Material } from '../../types/Material';
+import { Material, Section, Subsection, SubSubsection } from '../../types/Material';
 
 import ImageUpload from './ImageUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-
-interface Section {
-  id: string;
-  title: string;
-  content: string;
-  subsections: Subsection[];
-  images: string[];
-}
-
-interface Subsection {
-  id: string;
-  title: string;
-  content: string;
-  subSubsections: SubSubsection[];
-  images: string[];
-}
-
-interface SubSubsection {
-  id: string;
-  title: string;
-  content: string;
-  images: string[];
-}
+import ImageTitle from './ImageTitle';
 
 interface AddMaterialFormProps {
   materialData?: Material;
@@ -140,14 +118,14 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
     setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex: subsection.subSubsections.length - 1 });
   };
 
-  const handleImagesUploaded = (sectionIndex: number, urls: string[], subsectionIndex?: number, subSubsectionIndex?: number) => {
+  const handleImagesUploaded = (sectionIndex: number, images: { url: string; title: string }[], subsectionIndex?: number, subSubsectionIndex?: number) => {
     const newSections = [...sections];
     if (subSubsectionIndex !== undefined) {
-      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images, ...urls];
+      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images, ...images];
     } else if (subsectionIndex !== undefined) {
-      newSections[sectionIndex].subsections[subsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex].images, ...urls];
+      newSections[sectionIndex].subsections[subsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex].images, ...images];
     } else {
-      newSections[sectionIndex].images = [...newSections[sectionIndex].images, ...urls];
+      newSections[sectionIndex].images = [...newSections[sectionIndex].images, ...images];
     }
     setSections(newSections);
   };
@@ -300,11 +278,11 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const handleDeleteImage = (sectionIndex: number, imageUrl: string, subsectionIndex?: number, subSubsectionIndex?: number) => {
     const newSections = [...sections];
     if (subSubsectionIndex !== undefined) {
-      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images = newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images.filter((url) => url !== imageUrl);
+      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images = newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images.filter((img) => img.url !== imageUrl);
     } else if (subsectionIndex !== undefined) {
-      newSections[sectionIndex].subsections[subsectionIndex].images = newSections[sectionIndex].subsections[subsectionIndex].images.filter((url) => url !== imageUrl);
+      newSections[sectionIndex].subsections[subsectionIndex].images = newSections[sectionIndex].subsections[subsectionIndex].images.filter((img) => img.url !== imageUrl);
     } else {
-      newSections[sectionIndex].images = newSections[sectionIndex].images.filter((url) => url !== imageUrl);
+      newSections[sectionIndex].images = newSections[sectionIndex].images.filter((img) => img.url !== imageUrl);
     }
     setSections(newSections);
   };
@@ -389,12 +367,26 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
                   : selectedSection.subsectionIndex !== undefined
                     ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].images
                     : sections[selectedSection.sectionIndex!].images
-                ).map((url, index) => (
+                ).map((image, index) => (
                   <Box key={index} sx={{ position: 'relative', mt: 2 }}>
-                    <img src={url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '50%', marginBottom: '16px' }} />
+                    <img src={image.url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '50%', marginBottom: '16px' }} />
+                    <ImageTitle
+                      imageTitle={image.title}
+                      onTitleChange={(newTitle) => {
+                        const newSections = [...sections];
+                        if (selectedSection.subSubsectionIndex !== undefined) {
+                          newSections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images[index].title = newTitle;
+                        } else if (selectedSection.subsectionIndex !== undefined) {
+                          newSections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].images[index].title = newTitle;
+                        } else {
+                          newSections[selectedSection.sectionIndex!].images[index].title = newTitle;
+                        }
+                        setSections(newSections);
+                      }}
+                    />
                     <IconButton
                       sx={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.7)' }}
-                      onClick={() => handleDeleteImage(selectedSection.sectionIndex!, url, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                      onClick={() => handleDeleteImage(selectedSection.sectionIndex!, image.url, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
                     >
                       <DeleteIcon />
                     </IconButton>

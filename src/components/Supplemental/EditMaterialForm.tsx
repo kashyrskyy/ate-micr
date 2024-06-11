@@ -18,16 +18,16 @@ const EditMaterialForm: React.FC = () => {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const material = { id: docSnap.id, ...docSnap.data() } as Material;
-          // Ensure the sections include images
+          // Ensure the sections include images with title
           material.sections = material.sections.map(section => ({
             ...section,
-            images: section.images || [],
+            images: section.images.map(image => ({ ...image, title: image.title || '' })),
             subsections: section.subsections.map(subsection => ({
               ...subsection,
-              images: subsection.images || [],
+              images: subsection.images.map(image => ({ ...image, title: image.title || '' })),
               subSubsections: subsection.subSubsections.map(subSubsection => ({
                 ...subSubsection,
-                images: subSubsection.images || []
+                images: subSubsection.images.map(image => ({ ...image, title: image.title || '' }))
               }))
             }))
           }));

@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Box, Button, Snackbar, Alert } from '@mui/material';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Resizer from 'react-image-file-resizer';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploadProps {
   sectionId: string;
-  onImagesUploaded: (urls: string[]) => void;
+  onImagesUploaded: (images: { url: string; title: string }[]) => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ sectionId, onImagesUploaded }) => {
@@ -19,13 +20,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ sectionId, onImagesUploaded }
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      const urls: { url: string, path: string }[] = [];
+      const images: { url: string, title: string }[] = [];
 
       for (const file of files) {
         try {
           const compressedImage = await compressImage(file);
           const imageUrl = await uploadImage(compressedImage);
-          urls.push(imageUrl);
+          images.push({ url: imageUrl.url, title: `Image ${uuidv4()}` });
         } catch (error) {
           setSnackbarMessage('Failed to upload images');
           setSnackbarSeverity('error');
@@ -33,7 +34,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ sectionId, onImagesUploaded }
         }
       }
 
-      onImagesUploaded(urls.map(url => url.url));
+      onImagesUploaded(images);
       setSnackbarMessage('Image(s) uploaded successfully');
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
