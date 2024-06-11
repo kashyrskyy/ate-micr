@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { Box, Typography, IconButton, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip, CircularProgress, Link as MuiLink } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { Material } from '../../types/Material';
@@ -98,7 +98,15 @@ const ViewMaterial: React.FC = () => {
             ? materialData.sections[selectedSection.sectionIndex]?.subsections[selectedSection.subsectionIndex!]?.title || ''
             : materialData.sections[selectedSection.sectionIndex]?.title || ''
         : '';
-
+  
+  const currentLinks = selectedSection.sectionIndex !== undefined
+      ? selectedSection.subSubsectionIndex !== undefined
+        ? materialData.sections[selectedSection.sectionIndex]?.subsections[selectedSection.subsectionIndex!]?.subSubsections[selectedSection.subSubsectionIndex]?.links || []
+        : selectedSection.subsectionIndex !== undefined
+            ? materialData.sections[selectedSection.sectionIndex]?.subsections[selectedSection.subsectionIndex!]?.links || []
+            : materialData.sections[selectedSection.sectionIndex]?.links || []
+      : [];
+   
   return (
     <Box sx={{ display: 'flex', flexGrow: 1, flexDirection: 'column' }}>
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
@@ -137,54 +145,70 @@ const ViewMaterial: React.FC = () => {
               {currentTitle}
             </Typography>
             {selectedSection.type !== 'header' && selectedSection.type !== 'footer' && (
-              <Box
-                sx={{
-                  mb: 2,
-                  border: selectedSection.sectionIndex !== undefined && selectedSection.subsectionIndex === undefined ? '2px solid blue' : selectedSection.subSubsectionIndex !== undefined ? '2px solid red' : selectedSection.subsectionIndex !== undefined ? '2px solid green' : 'none',
-                  borderRadius: 1,
-                  padding: 2,
-                }}
-              >
-                <Typography dangerouslySetInnerHTML={{ __html: currentContent.replace(/\n/g, '<br />') }} />
-                <Box>
-                  {selectedSection.sectionIndex !== undefined && (
-                    <>
-                      {selectedSection.subSubsectionIndex !== undefined
-                        ? materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.length > 0 && (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-                            {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.map((image, index) => (
-                              <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
-                                <img src={image.url} alt={`Sub-subsection ${selectedSection.subSubsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
-                                <Typography>{image.title}</Typography> {/* Display image title */}
-                              </Box>
-                            ))}
-                          </Box>
-                        )
-                        : selectedSection.subsectionIndex !== undefined
-                          ? materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.length > 0 && (
+              <>
+                <Box
+                  sx={{
+                    mb: 2,
+                    border: selectedSection.sectionIndex !== undefined && selectedSection.subsectionIndex === undefined ? '2px solid blue' : selectedSection.subSubsectionIndex !== undefined ? '2px solid red' : selectedSection.subsectionIndex !== undefined ? '2px solid green' : 'none',
+                    borderRadius: 1,
+                    padding: 2,
+                  }}
+                >
+                  <Typography dangerouslySetInnerHTML={{ __html: currentContent.replace(/\n/g, '<br />') }} />
+                  <Box>
+                    {selectedSection.sectionIndex !== undefined && (
+                      <>
+                        {selectedSection.subSubsectionIndex !== undefined
+                          ? materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.length > 0 && (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-                              {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.map((image, index) => (
+                              {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images.map((image, index) => (
                                 <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
-                                  <img src={image.url} alt={`Subsection ${selectedSection.subsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                  <img src={image.url} alt={`Sub-subsection ${selectedSection.subSubsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
                                   <Typography>{image.title}</Typography> {/* Display image title */}
                                 </Box>
                               ))}
                             </Box>
                           )
-                          : materialData.sections[selectedSection.sectionIndex].images.length > 0 && (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
-                              {materialData.sections[selectedSection.sectionIndex].images.map((image, index) => (
-                                <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
-                                  <img src={image.url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
-                                  <Typography>{image.title}</Typography> {/* Display image title */}
-                                </Box>
-                              ))}
-                            </Box>
-                          )}
-                    </>
-                  )}
+                          : selectedSection.subsectionIndex !== undefined
+                            ? materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.length > 0 && (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
+                                {materialData.sections[selectedSection.sectionIndex].subsections[selectedSection.subsectionIndex].images.map((image, index) => (
+                                  <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
+                                    <img src={image.url} alt={`Subsection ${selectedSection.subsectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                    <Typography>{image.title}</Typography> {/* Display image title */}
+                                  </Box>
+                                ))}
+                              </Box>
+                            )
+                            : materialData.sections[selectedSection.sectionIndex].images.length > 0 && (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 2 }}>
+                                {materialData.sections[selectedSection.sectionIndex].images.map((image, index) => (
+                                  <Box key={index} sx={{ position: 'relative', mr: 2, mb: 2 }}>
+                                    <img src={image.url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '500px' }} />
+                                    <Typography>{image.title}</Typography> {/* Display image title */}
+                                  </Box>
+                                ))}
+                              </Box>
+                            )}
+                      </>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
+                {currentLinks.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6">Links</Typography>
+                    {currentLinks.map((link, index) => (
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Typography sx={{ flexBasis: '20%' }}>{link.title}</Typography>
+                        <MuiLink sx={{ flexBasis: '40%' }} href={link.url} target="_blank" rel="noopener">
+                          {link.url}
+                        </MuiLink>
+                        <Typography sx={{ flexBasis: '40%' }}>{link.description}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </>
             )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Tooltip title="Previous Section/Subsection (Left Arrow)" arrow>

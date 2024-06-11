@@ -16,6 +16,8 @@ import ImageUpload from './ImageUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageTitle from './ImageTitle';
 
+import LinkManager from './LinkManager'; // Added this line
+
 interface AddMaterialFormProps {
   materialData?: Material;
   onSubmit?: (data: Material) => void;
@@ -30,7 +32,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const [header, setHeader] = useState(materialData?.header || { title: 'Header', content: '' });
   const [footer, setFooter] = useState(materialData?.footer || { title: 'Footer', content: '' });
   const [sections, setSections] = useState<Section[]>(materialData?.sections || [
-    { id: uuidv4(), title: 'Section 1', content: '', subsections: [], images: [] }
+    { id: uuidv4(), title: 'Section 1', content: '', subsections: [], images: [], links: [] }
   ]);
 
   const [selectedSection, setSelectedSection] = useState<{ sectionIndex?: number, subsectionIndex?: number, subSubsectionIndex?: number, type?: 'header' | 'footer' }>({ sectionIndex: 0 });
@@ -99,13 +101,13 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   };
 
   const handleAddSection = () => {
-    setSections([...sections, { id: uuidv4(), title: `Section ${sections.length + 1}`, content: '', subsections: [], images: [] }]);
+    setSections([...sections, { id: uuidv4(), title: `Section ${sections.length + 1}`, content: '', subsections: [], images: [], links: [] }]);
   };
 
   const handleAddSubsection = (sectionIndex: number) => {
     const newSections = [...sections];
     const section = newSections[sectionIndex];
-    section.subsections.push({ id: uuidv4(), title: `Subsection ${section.subsections.length + 1}`, content: '', subSubsections: [], images: [] });
+    section.subsections.push({ id: uuidv4(), title: `Subsection ${section.subsections.length + 1}`, content: '', subSubsections: [], images: [], links: [] });
     setSections(newSections);
     setSelectedSection({ sectionIndex, subsectionIndex: section.subsections.length - 1 });
   };
@@ -113,7 +115,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const handleAddSubSubsection = (sectionIndex: number, subsectionIndex: number) => {
     const newSections = [...sections];
     const subsection = newSections[sectionIndex].subsections[subsectionIndex];
-    subsection.subSubsections.push({ id: uuidv4(), title: `Sub-Subsection ${subsection.subSubsections.length + 1}`, content: '', images: [] });
+    subsection.subSubsections.push({ id: uuidv4(), title: `Sub-Subsection ${subsection.subSubsections.length + 1}`, content: '', images: [], links: [] });
     setSections(newSections);
     setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex: subsection.subSubsections.length - 1 });
   };
@@ -126,6 +128,18 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
       newSections[sectionIndex].subsections[subsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex].images, ...images];
     } else {
       newSections[sectionIndex].images = [...newSections[sectionIndex].images, ...images];
+    }
+    setSections(newSections);
+  };
+
+  const handleLinksChange = (sectionIndex: number, links: { title: string; url: string; description: string }[], subsectionIndex?: number, subSubsectionIndex?: number) => {
+    const newSections = [...sections];
+    if (subSubsectionIndex !== undefined) {
+      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].links = links;
+    } else if (subsectionIndex !== undefined) {
+      newSections[sectionIndex].subsections[subsectionIndex].links = links;
+    } else {
+      newSections[sectionIndex].links = links;
     }
     setSections(newSections);
   };
@@ -392,6 +406,14 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
                     </IconButton>
                   </Box>
                 ))}
+                <LinkManager
+                  links={selectedSection.subSubsectionIndex !== undefined
+                    ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].links
+                    : selectedSection.subsectionIndex !== undefined
+                      ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].links
+                      : sections[selectedSection.sectionIndex!].links}
+                  onLinksChange={(newLinks) => handleLinksChange(selectedSection.sectionIndex!, newLinks, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                />
               </>
             )}
             <Box sx={{ border: selectedSection.type === 'footer' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mt: 2 }}>

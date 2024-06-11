@@ -6,6 +6,7 @@ export interface Section {
   content: string;
   subsections: Subsection[];
   images: { url: string; title: string }[];
+  links: { title: string; url: string; description: string }[]; 
 }
 
 export interface Subsection {
@@ -14,6 +15,7 @@ export interface Subsection {
   content: string;
   subSubsections: SubSubsection[];
   images: { url: string; title: string }[];
+  links: { title: string; url: string; description: string }[];
 }
 
 export interface SubSubsection {
@@ -21,6 +23,7 @@ export interface SubSubsection {
   title: string;
   content: string;
   images: { url: string; title: string }[];
+  links: { title: string; url: string; description: string }[];
 }
 
 export interface Material {
