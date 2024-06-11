@@ -5,6 +5,7 @@ export interface Section {
   title: string;
   content: string;
   subsections: Subsection[];
+  images: string[];
 }
 
 export interface Subsection {
@@ -12,12 +13,14 @@ export interface Subsection {
   title: string;
   content: string;
   subSubsections: SubSubsection[];
+  images: string[];
 }
 
 export interface SubSubsection {
   id: string;
   title: string;
   content: string;
+  images: string[];
 }
 
 export interface Material {

@@ -12,11 +12,15 @@ import BackToAllMaterialsButton from './BackToAllMaterialsButton';
 
 import { Material } from '../../types/Material';
 
+import ImageUpload from './ImageUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
+
 interface Section {
   id: string;
   title: string;
   content: string;
   subsections: Subsection[];
+  images: string[];
 }
 
 interface Subsection {
@@ -24,12 +28,14 @@ interface Subsection {
   title: string;
   content: string;
   subSubsections: SubSubsection[];
+  images: string[];
 }
 
 interface SubSubsection {
   id: string;
   title: string;
   content: string;
+  images: string[];
 }
 
 interface AddMaterialFormProps {
@@ -46,7 +52,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const [header, setHeader] = useState(materialData?.header || { title: 'Header', content: '' });
   const [footer, setFooter] = useState(materialData?.footer || { title: 'Footer', content: '' });
   const [sections, setSections] = useState<Section[]>(materialData?.sections || [
-    { id: uuidv4(), title: 'Section 1', content: '', subsections: [] }
+    { id: uuidv4(), title: 'Section 1', content: '', subsections: [], images: [] }
   ]);
 
   const [selectedSection, setSelectedSection] = useState<{ sectionIndex?: number, subsectionIndex?: number, subSubsectionIndex?: number, type?: 'header' | 'footer' }>({ sectionIndex: 0 });
@@ -115,13 +121,13 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   };
 
   const handleAddSection = () => {
-    setSections([...sections, { id: uuidv4(), title: `Section ${sections.length + 1}`, content: '', subsections: [] }]);
+    setSections([...sections, { id: uuidv4(), title: `Section ${sections.length + 1}`, content: '', subsections: [], images: [] }]);
   };
 
   const handleAddSubsection = (sectionIndex: number) => {
     const newSections = [...sections];
     const section = newSections[sectionIndex];
-    section.subsections.push({ id: uuidv4(), title: `Subsection ${section.subsections.length + 1}`, content: '', subSubsections: [] });
+    section.subsections.push({ id: uuidv4(), title: `Subsection ${section.subsections.length + 1}`, content: '', subSubsections: [], images: [] });
     setSections(newSections);
     setSelectedSection({ sectionIndex, subsectionIndex: section.subsections.length - 1 });
   };
@@ -129,9 +135,21 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const handleAddSubSubsection = (sectionIndex: number, subsectionIndex: number) => {
     const newSections = [...sections];
     const subsection = newSections[sectionIndex].subsections[subsectionIndex];
-    subsection.subSubsections.push({ id: uuidv4(), title: `Sub-Subsection ${subsection.subSubsections.length + 1}`, content: '' });
+    subsection.subSubsections.push({ id: uuidv4(), title: `Sub-Subsection ${subsection.subSubsections.length + 1}`, content: '', images: [] });
     setSections(newSections);
     setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex: subsection.subSubsections.length - 1 });
+  };
+
+  const handleImagesUploaded = (sectionIndex: number, urls: string[], subsectionIndex?: number, subSubsectionIndex?: number) => {
+    const newSections = [...sections];
+    if (subSubsectionIndex !== undefined) {
+      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images, ...urls];
+    } else if (subsectionIndex !== undefined) {
+      newSections[sectionIndex].subsections[subsectionIndex].images = [...newSections[sectionIndex].subsections[subsectionIndex].images, ...urls];
+    } else {
+      newSections[sectionIndex].images = [...newSections[sectionIndex].images, ...urls];
+    }
+    setSections(newSections);
   };
 
   const handleSelectSection = (sectionIndex: number | 'header' | 'footer', subsectionIndex?: number, subSubsectionIndex?: number) => {
@@ -279,6 +297,18 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
             : sections[selectedSection.sectionIndex]?.title || ''
         : '';
 
+  const handleDeleteImage = (sectionIndex: number, imageUrl: string, subsectionIndex?: number, subSubsectionIndex?: number) => {
+    const newSections = [...sections];
+    if (subSubsectionIndex !== undefined) {
+      newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images = newSections[sectionIndex].subsections[subsectionIndex!].subSubsections[subSubsectionIndex].images.filter((url) => url !== imageUrl);
+    } else if (subsectionIndex !== undefined) {
+      newSections[sectionIndex].subsections[subsectionIndex].images = newSections[sectionIndex].subsections[subsectionIndex].images.filter((url) => url !== imageUrl);
+    } else {
+      newSections[sectionIndex].images = newSections[sectionIndex].images.filter((url) => url !== imageUrl);
+    }
+    setSections(newSections);
+  };
+
   return (
     <Box sx={{ display: 'flex', flexGrow: 1, flexDirection: 'column' }}>
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
@@ -330,21 +360,47 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               {currentTitle}
             </Typography>
             {selectedSection.type !== 'header' && selectedSection.type !== 'footer' && (
-              <TextareaAutosize
-                aria-label="content"
-                minRows={10}
-                placeholder="Content"
-                style={{
-                  width: '100%',
-                  padding: '16.5px 14px',
-                  fontSize: '1rem',
-                  borderRadius: '4px',
-                  borderColor: 'rgba(0, 0, 0, 0.23)',
-                  marginBottom: '16px',
-                }}
-                value={currentContent}
-                onChange={(e) => handleUpdateContent(selectedSection.sectionIndex!, e.target.value, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
-              />
+              <>
+                <TextareaAutosize
+                  aria-label="content"
+                  minRows={10}
+                  placeholder="Content"
+                  style={{
+                    width: '100%',
+                    padding: '16.5px 14px',
+                    fontSize: '1rem',
+                    borderRadius: '4px',
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                    marginBottom: '16px',
+                  }}
+                  value={currentContent}
+                  onChange={(e) => handleUpdateContent(selectedSection.sectionIndex!, e.target.value, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                />
+                <ImageUpload
+                  sectionId={selectedSection.subSubsectionIndex !== undefined 
+                    ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].id
+                    : selectedSection.subsectionIndex !== undefined 
+                      ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].id 
+                      : sections[selectedSection.sectionIndex!].id}
+                  onImagesUploaded={(urls) => handleImagesUploaded(selectedSection.sectionIndex!, urls, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                />
+                {(selectedSection.subSubsectionIndex !== undefined
+                  ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images
+                  : selectedSection.subsectionIndex !== undefined
+                    ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].images
+                    : sections[selectedSection.sectionIndex!].images
+                ).map((url, index) => (
+                  <Box key={index} sx={{ position: 'relative', mt: 2 }}>
+                    <img src={url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '50%', marginBottom: '16px' }} />
+                    <IconButton
+                      sx={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.7)' }}
+                      onClick={() => handleDeleteImage(selectedSection.sectionIndex!, url, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                ))}
+              </>
             )}
             <Box sx={{ border: selectedSection.type === 'footer' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mt: 2 }}>
             <TextareaAutosize
