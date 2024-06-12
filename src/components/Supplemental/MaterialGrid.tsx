@@ -1,6 +1,6 @@
 // src/components/Supplemental/MaterialGrid.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid, CircularProgress, IconButton, Chip } from '@mui/material';
+import { Box, Typography, Grid, CircularProgress, IconButton, Chip, Button } from '@mui/material';
 import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
@@ -10,6 +10,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteMaterialDialog from './DeleteMaterialDialog';
 
+import UnpublishButton from './UnpublishButton';
+import UnpublishMaterial from './UnpublishMaterial';
+
 const MaterialGrid: React.FC = () => {
   const { userDetails } = useUser();
   const db = getFirestore();
@@ -17,6 +20,7 @@ const MaterialGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,6 +52,18 @@ const MaterialGrid: React.FC = () => {
   const handleDeleteMaterial = () => {
     setMaterials(materials.filter(material => material.id !== selectedMaterial));
   };
+
+  const handleUnpublishClick = (materialId: string) => {
+    setConfirmUnpublish({ open: true, materialId });
+  };
+  
+  const handleUnpublish = () => {
+    setMaterials(materials.map(material => material.id === confirmUnpublish.materialId ? { ...material, published: false } : material));
+  };
+  
+  const handleCancelUnpublish = () => {
+    setConfirmUnpublish({ open: false, materialId: null });
+  };  
 
   if (loading) {
     return <CircularProgress />;
@@ -159,6 +175,10 @@ const MaterialGrid: React.FC = () => {
                       <IconButton onClick={() => handleDeleteClick(material.id)} aria-label="delete">
                         <DeleteIcon />
                       </IconButton>
+                      <UnpublishButton
+                        materialId={material.id}
+                        onClick={handleUnpublishClick}
+                      />
                     </>
                   )}
                 </Box>
@@ -174,6 +194,15 @@ const MaterialGrid: React.FC = () => {
           open={openDialog}
           onClose={handleCloseDialog}
           onDelete={handleDeleteMaterial}
+        />
+      )}
+
+      {confirmUnpublish.materialId && (
+        <UnpublishMaterial
+          materialId={confirmUnpublish.materialId}
+          open={confirmUnpublish.open}
+          onClose={handleCancelUnpublish}
+          onUnpublish={handleUnpublish}
         />
       )}
     </Box>
