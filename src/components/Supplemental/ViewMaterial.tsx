@@ -9,6 +9,8 @@ import { Material } from '../../types/Material';
 import SideBar from './SideBar';
 import BackToAllMaterialsButton from './BackToAllMaterialsButton';
 
+import ViewLinksTable from './ViewLinksTable';
+
 const ViewMaterial: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const db = getFirestore();
@@ -194,20 +196,7 @@ const ViewMaterial: React.FC = () => {
                     )}
                   </Box>
                 </Box>
-                {currentLinks.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="h6">Links</Typography>
-                    {currentLinks.map((link, index) => (
-                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Typography sx={{ flexBasis: '20%' }}>{link.title}</Typography>
-                        <MuiLink sx={{ flexBasis: '40%' }} href={link.url} target="_blank" rel="noopener">
-                          {link.url}
-                        </MuiLink>
-                        <Typography sx={{ flexBasis: '40%' }}>{link.description}</Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+                <ViewLinksTable links={currentLinks} />
               </>
             )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
