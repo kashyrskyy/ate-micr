@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Box, TextField, Button, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+import LinkIcon from '@mui/icons-material/Link';
+
 interface Link {
   title: string;
   url: string;
@@ -27,8 +29,11 @@ const LinkManager: React.FC<LinkManagerProps> = ({ links, onLinksChange }) => {
 
   return (
     <Box>
-      <Typography variant="h6">Links</Typography>
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+        <LinkIcon sx={{ mr: 1 }} />
+        <Typography variant="h6">Links</Typography>
+      </Box>
+      <Box sx={{ mt: 1 }}>
         {links.map((link, index) => (
           <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <TextField

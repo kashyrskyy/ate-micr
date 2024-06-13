@@ -1,9 +1,11 @@
 // src/components/Supplemental/ImageUpload.tsx
 import React, { useState } from 'react';
-import { Box, Button, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Snackbar, Alert, Typography } from '@mui/material';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Resizer from 'react-image-file-resizer';
 import { v4 as uuidv4 } from 'uuid';
+
+import ImageIcon from '@mui/icons-material/Image';
 
 interface ImageUploadProps {
   sectionId: string;
@@ -81,15 +83,21 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ sectionId, onImagesUploaded }
 
   return (
     <Box>
-      <Button variant="contained" component="label" color="primary">
-        Upload Image(s)
-        <input type="file" hidden accept="image/*" multiple onChange={handleImageChange} />
-      </Button>
-      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)}>
-        <Alert onClose={() => setOpenSnackbar(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+        <ImageIcon sx={{ mr: 1 }} />
+        <Typography variant="h6">Images</Typography>
+      </Box>
+      <Box sx={{ mt: 2 }}>
+        <Button variant="contained" component="label" color="primary">
+          Add Image
+          <input type="file" hidden accept="image/*" multiple onChange={handleImageChange} />
+        </Button>
+        <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)}>
+          <Alert onClose={() => setOpenSnackbar(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+      </Box>
     </Box>
   );
 };

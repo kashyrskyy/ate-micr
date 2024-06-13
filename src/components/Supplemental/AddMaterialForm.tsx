@@ -16,7 +16,10 @@ import ImageUpload from './ImageUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageTitle from './ImageTitle';
 
-import LinkManager from './LinkManager'; // Added this line
+import LinkManager from './LinkManager';
+// import TextEditor from './TextEditor';
+
+import SimpleTextEditor from './SimpleTextEditor';
 
 interface AddMaterialFormProps {
   materialData?: Material;
@@ -332,21 +335,10 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               sx={{ mb: 2 }}
             />
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>
-              <TextareaAutosize
-                aria-label="header"
-                minRows={4}
-                placeholder="Header"
-                style={{
-                  width: '100%',
-                  padding: '16.5px 14px',
-                  fontSize: '1rem',
-                  borderRadius: '4px',
-                  borderColor: 'rgba(0, 0, 0, 0.23)',
-                  marginBottom: '16px',
-                }}
-                value={header.content}
-                onChange={(e) => handleUpdateHeaderContent(e.target.value)}
-              />
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ color: 'gray', textAlign: 'center' }}>Header</Typography>
+              </Box>
+              <SimpleTextEditor content={header.content} onChange={handleUpdateHeaderContent} />
             </Box>
             <Typography variant="h4" align="center" gutterBottom>
               {currentTitle}
@@ -417,21 +409,10 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               </>
             )}
             <Box sx={{ border: selectedSection.type === 'footer' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mt: 2 }}>
-            <TextareaAutosize
-              aria-label="footer"
-              minRows={4}
-              placeholder="Footer"
-              style={{
-                width: '100%',
-                padding: '16.5px 14px',
-                fontSize: '1rem',
-                borderRadius: '4px',
-                borderColor: 'rgba(0, 0, 0, 0.23)',
-                marginBottom: '16px',
-              }}
-              value={footer.content}
-              onChange={(e) => handleUpdateFooterContent(e.target.value)}
-            />
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ color: 'gray', textAlign: 'center' }}>Footer</Typography>
+              </Box>
+              <SimpleTextEditor content={footer.content} onChange={handleUpdateFooterContent} />
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Tooltip title="Previous Section/Subsection (Left Arrow)" arrow>
