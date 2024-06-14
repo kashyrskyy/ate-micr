@@ -13,13 +13,4 @@ export default defineConfig({
     port: 3001,
     host: true,
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom']
-        }
-      }
-    }
-  }
 })
