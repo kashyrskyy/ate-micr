@@ -9,15 +9,15 @@ interface TextEditorProps {
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({ content, onChange }) => {
-    const handleOnReady = (editor: any) => {
-        // Log available toolbar items
-        const toolbarItems = editor.ui.componentFactory.names();
-        console.log('Available toolbar items:', toolbarItems);
+    // const handleOnReady = (editor: any) => {
+    //     // Log available toolbar items
+    //     const toolbarItems = editor.ui.componentFactory.names();
+    //     console.log('Available toolbar items:', toolbarItems);
 
-        // Log loaded plugins
-        const loadedPlugins = editor.plugins._availablePlugins.keys();
-        console.log('Loaded plugins:', Array.from(loadedPlugins));
-        };
+    //     // Log loaded plugins
+    //     const loadedPlugins = editor.plugins._availablePlugins.keys();
+    //     console.log('Loaded plugins:', Array.from(loadedPlugins));
+    //     };
 
   return (
     <CKEditor
@@ -27,7 +27,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, onChange }) => {
         const data = editor.getData();
         onChange(data);
       }}
-      onReady={handleOnReady}
+      // onReady={handleOnReady}
       config={{
         toolbar: [
           'undo', 'redo', '|',

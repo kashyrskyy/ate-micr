@@ -17,7 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ImageTitle from './ImageTitle';
 
 import LinkManager from './LinkManager';
-// import TextEditor from './TextEditor';
+import TextEditor from './TextEditor';
 
 import SimpleTextEditor from './SimpleTextEditor';
 
@@ -345,20 +345,10 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
             </Typography>
             {selectedSection.type !== 'header' && selectedSection.type !== 'footer' && (
               <>
-                <TextareaAutosize
-                  aria-label="content"
-                  minRows={10}
-                  placeholder="Content"
-                  style={{
-                    width: '100%',
-                    padding: '16.5px 14px',
-                    fontSize: '1rem',
-                    borderRadius: '4px',
-                    borderColor: 'rgba(0, 0, 0, 0.23)',
-                    marginBottom: '16px',
-                  }}
-                  value={currentContent}
-                  onChange={(e) => handleUpdateContent(selectedSection.sectionIndex!, e.target.value, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                <TextEditor
+                  key={`${selectedSection.sectionIndex}-${selectedSection.subsectionIndex}-${selectedSection.subSubsectionIndex}`}
+                  content={currentContent}
+                  onChange={(content) => handleUpdateContent(selectedSection.sectionIndex!, content, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
                 />
                 <ImageUpload
                   sectionId={selectedSection.subSubsectionIndex !== undefined 
