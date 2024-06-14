@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import AddMaterialForm from './AddMaterialForm';
 import { Material } from '../../types/Material';
-import CircularProgress from '@mui/material/CircularProgress';
+import { Box, CircularProgress } from '@mui/material';
 
 const EditMaterialForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +45,13 @@ const EditMaterialForm: React.FC = () => {
     }
   };
 
-  if (!materialData) return <CircularProgress />;
+  if (!materialData) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return <AddMaterialForm materialData={materialData} onSubmit={handleUpdateMaterial} />;
 };

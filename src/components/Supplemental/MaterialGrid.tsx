@@ -1,7 +1,7 @@
 // src/components/Supplemental/MaterialGrid.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid, CircularProgress, IconButton, Chip, Button } from '@mui/material';
-import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { Box, Typography, Grid, CircularProgress, IconButton, Chip, Button, Snackbar, Alert } from '@mui/material';
+import { getFirestore, collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { Material } from '../../types/Material';
@@ -21,18 +21,25 @@ const MaterialGrid: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });
+  
+  const [error, setError] = useState<string | null>(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!userDetails) return;
 
     const q = userDetails.isAdmin
-      ? query(collection(db, 'materials'))
-      : query(collection(db, 'materials'), where('published', '==', true));
+      ? query(collection(db, 'materials'), orderBy('timestamp', 'desc')) // Sorting by timestamp
+      : query(collection(db, 'materials'), where('published', '==', true), orderBy('timestamp', 'desc')); // Sorting by timestamp
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const materialsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Material[];
       setMaterials(materialsData);
+      setLoading(false);
+    }, (err) => {
+      console.error(err);
+      setError('Failed to fetch materials');
       setLoading(false);
     });
 
@@ -78,7 +85,7 @@ const MaterialGrid: React.FC = () => {
         <>
           <Box sx={{ backgroundColor: '#FFF9C4', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#F57F17' }}>
-              Saved (Unpublished)
+              Saved
             </Typography>
           </Box>
           <Grid container spacing={3}>
@@ -105,12 +112,14 @@ const MaterialGrid: React.FC = () => {
                       </IconButton>
                       <Typography variant="h6">{material.title || 'Untitled'}</Typography>
                     </Box>
-                    <Typography variant="body2" color="textSecondary">
-                      Date: {material.timestamp.toDate().toLocaleDateString()}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {material.published ? 'Published' : 'Unpublished'}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="textSecondary">
+                        Date: {material.timestamp.toDate().toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Status: {material.published ? 'Published' : 'Unpublished'}
+                      </Typography> 
+                    </Box>
                     <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
                       {userDetails?.isAdmin && (
                         <>
@@ -160,12 +169,14 @@ const MaterialGrid: React.FC = () => {
                   </IconButton>
                   <Typography variant="h6">{material.title || 'Untitled'}</Typography>
                 </Box>
-                <Typography variant="body2" color="textSecondary">
-                  Date: {material.timestamp.toDate().toLocaleDateString()}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {material.published ? 'Published' : 'Unpublished'}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Date: {material.timestamp.toDate().toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Status: {material.published ? 'Published' : 'Unpublished'}
+                  </Typography>
+                </Box>
                 <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
                   {userDetails?.isAdmin && (
                     <>
@@ -204,6 +215,14 @@ const MaterialGrid: React.FC = () => {
           onClose={handleCancelUnpublish}
           onUnpublish={handleUnpublish}
         />
+      )}
+
+      {error && (
+        <Snackbar open={true} autoHideDuration={6000} onClose={() => setError(null)}>
+          <Alert onClose={() => setError(null)} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
       )}
     </Box>
   );
