@@ -3,11 +3,15 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reloading the page...</title>
+    <title>Redirecting...</title>
     <script type="text/javascript">
-      // Script to redirect to the correct route
+      // Correctly handle the base path for GitHub Pages
       var path = window.location.pathname;
-      var redirectUrl = '/ate-micr' + path;
+      var basePath = '/ate-micr';
+      if (!path.startsWith(basePath)) {
+        path = basePath + path;
+      }
+      var redirectUrl = window.location.origin + path;
       window.location.replace(redirectUrl);
     </script>
   </head>
