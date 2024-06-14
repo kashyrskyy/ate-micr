@@ -1,5 +1,5 @@
 // src/components/Supplemental/SideBar.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, List, ListItem, ListItemText, TextField, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -68,6 +68,20 @@ const SideBar: React.FC<SidebarProps> = ({
       return acc;
     }, {} as { [key: number]: boolean[] })
   );  
+
+  useEffect(() => {
+    // Ensure openSections state is in sync with the sections prop
+    setOpenSections(sections.map(() => true));
+  }, [sections]);
+
+  useEffect(() => {
+    // Ensure openSubsections state is in sync with the sections prop
+    const newOpenSubsections = sections.reduce((acc, section, index) => {
+      acc[index] = section.subsections.map(() => true);
+      return acc;
+    }, {} as { [key: number]: boolean[] });
+    setOpenSubsections(newOpenSubsections);
+  }, [sections]);
 
   const handleToggleSection = (index: number) => {
     const newOpenSections = [...openSections];
