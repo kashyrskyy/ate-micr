@@ -42,8 +42,8 @@ const App = () => {
             <Route path="/laboratory-notebooks" element={<PrivateRoute element={Dashboard} />} />
             <Route path="/supplemental-materials" element={<PrivateRoute element={SupplementalMaterials} />} />
             <Route path="/add-material" element={<PrivateRoute element={AddMaterialForm} />} />
-            <Route path="/edit-material/:id" element={<EditMaterialForm />} />
-            <Route path="/view-material/:id" element={<ViewMaterial />} />
+            <Route path="/edit-material/:id" element={<PrivateRoute element={EditMaterialForm} />} />
+            <Route path="/view-material/:id" element={<PrivateRoute element={ViewMaterial} />} />
             <Route path="/add-message" element={<PrivateRoute element={AddMessage} />} />
             <Route path="/edit-message/:id" element={<PrivateRoute element={EditMessage} />} />
             <Route path="*" element={<Navigate to="/" />} />
