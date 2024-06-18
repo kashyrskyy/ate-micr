@@ -3,9 +3,14 @@
 import React from 'react';
 import { Divider, Box, Typography } from '@mui/material';
 
+import ReportBugButton from './ReportBugButton';
+
 function Footer() {
     return (
       <Box component="footer" sx={{ width: '100%', textAlign: 'center', py: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 2 }}>
+            <ReportBugButton />
+        </Box>
         <Divider />
         <Box sx={{ my: 2 }}>
           <img 
