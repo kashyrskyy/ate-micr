@@ -167,7 +167,7 @@ const MaterialGrid: React.FC = () => {
                   <IconButton onClick={() => navigate(`/view-material/${material.id}`)} aria-label="view">
                     <VisibilityIcon />
                   </IconButton>
-                  <Typography variant="h6">{material.title || 'Untitled'}</Typography>
+                  <Typography variant="h6" sx={{ flexGrow: 1, maxWidth: '50%', wordWrap: 'break-word'}}>{material.title || 'Untitled'}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="textSecondary">
