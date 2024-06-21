@@ -63,8 +63,8 @@ const Dashboard = () => {
         id: doc.id,
         title: data.title,
         description: data.description,
-        dateDue: data.dateDue,
         dateCreated: data.dateCreated,
+        dateModified: data.dateModified,
         userId: data.userId,
         images: data.images || [],
         files: data.files || []

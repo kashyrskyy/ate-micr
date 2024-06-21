@@ -60,34 +60,6 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
     return 'N/A';
   };   
 
-  // Function to format the input date (YYYY-MM-DD) to a more readable format
-  const formatInputDate = (inputDate: string | Date | Timestamp | null): string => {
-    // Check if inputDate is undefined or null
-    if (!inputDate) return '';
-  
-    let dateStr = typeof inputDate === 'string' ? inputDate : '';
-  
-    // If inputDate is a Date object, convert to string in YYYY-MM-DD format
-    if (inputDate instanceof Date) {
-      dateStr = inputDate.toISOString().split('T')[0];
-    }
-  
-    // If inputDate is a Firestore Timestamp, convert to Date then to string
-    if ((inputDate as Timestamp).toDate) {
-      dateStr = (inputDate as Timestamp).toDate().toISOString().split('T')[0];
-    }
-  
-    // Now, assuming dateStr is a string in YYYY-MM-DD format, split and format as needed
-    const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
-    const date = new Date(year, month - 1, day);
-    
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };  
-
   return (
     <TableContainer component={Paper}>
       <Table sx={{ '& .MuiTableCell-root': { fontSize: '1rem' }, '& .MuiTableCell-head': { fontSize: '1.2rem', backgroundColor: '#1A76D3', color: "white"} }}>
@@ -96,7 +68,7 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
             <TableCell sx={{ fontWeight: 'bold', width: showUserIdColumn ? '30%' : '40%' }}>Title</TableCell>
             {showUserIdColumn && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>}
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Created</TableCell>
-            <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Due</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Last Edited</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>Edit</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>Delete</TableCell>
           </TableRow>
@@ -112,7 +84,7 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
                   </TableCell>
                   {showUserIdColumn && <TableCell>{design.userId}</TableCell>}
                   <TableCell>{formatDate(design.dateCreated)}</TableCell>
-                  <TableCell>{formatInputDate(design.dateDue)}</TableCell>
+                  <TableCell>{formatDate(design.dateModified)}</TableCell>
                   <TableCell>
                     <Tooltip title="Edit">
                       <span>

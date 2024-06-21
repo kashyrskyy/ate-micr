@@ -29,7 +29,6 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
 
   const [description, setDesignDescription] = useState('');
   
-  const [date, setDate] = useState('');
   const [title, setTitle] = useState('');
 
   const [images, setImages] = useState<Image[]>([]); // This now handles multiple images
@@ -73,7 +72,7 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
       return;
     }
   
-    if (!description || !date) {
+    if (!description) {
       setDialogContent('All fields are required.');
       setDialogOpen(true);
       return;
@@ -93,8 +92,8 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
     const newDesign: NewDesign = {
       title: title,
       description: description,
-      dateDue: Timestamp.fromDate(new Date(date)),
-      dateCreated: serverTimestamp(),
+      dateCreated: serverTimestamp(), // FieldValue during write
+      dateModified: serverTimestamp(), // FieldValue during write
       images: filteredImages, // Pass filtered images
       files: filteredFiles,  // Only include non-deleted files
       userId: userDetails.uid, // Use the user's ID to associate the design with the user
@@ -117,7 +116,6 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
       // Resetting form states here
       setTitle('');
       setDesignDescription('');
-      setDate('');
       setImages([]);
       setFiles([]);  // Reset the files state
     } catch (error) {
@@ -143,17 +141,6 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 style={{ width: '100%' }} // Make sure the input fills the div        
-              />
-            </div>
-            <div style={{ flexGrow: 2 }}>
-              <label className="designTitles" htmlFor="dateDue">Date</label>
-              <input
-                id="date"
-                type="date" // Make sure this is set to 'date'
-                name="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                style={{ width: '100%' }} // Make sure the input fills the div
               />
             </div>
           </div>
