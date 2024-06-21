@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../contexts/UserContext';
 
-import { collection, query, where, getDocs, doc, setDoc, Timestamp, orderBy, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, serverTimestamp, Timestamp, orderBy, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
 
 import { getStorage, ref, deleteObject } from "firebase/storage";
 
@@ -25,7 +25,7 @@ import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import SaveIcon from '@mui/icons-material/Save';
 
-import { Design, Image, FileDetails } from '../../types/types'; // Import the Design, Image, and FileDetails types
+import { Design, timestampToString } from '../../types/types'; // Import the Design type and the utility function
 
 interface EditProps {
   designs: Design[];
@@ -50,7 +50,8 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
   // -- DESIGN SECTION STATES -- //
   const [title, setTitle] = useState('');
   const [description, setDesignDescription] = useState(selectedDesign.description);
-  const [date, setDate] = useState(selectedDesign.dateDue || '');
+  const [dateCreated, setDateCreated] = useState<string | null>(timestampToString(selectedDesign.dateCreated));
+  const [dateModified, setDateModified] = useState<string | null>(timestampToString(selectedDesign.dateModified));
   const [images, setImages] = useState([]);
   const [files, setFiles] = useState([]);
   const imageUploadRef = useRef(null);
@@ -102,7 +103,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
   const updateDesign = async (e) => {
     e.preventDefault();
 
-    if (!description || !date) {
+    if (!description) {
       setDialogContent('All fields are required.');
       setDialogOpen(true);
       return;
@@ -131,7 +132,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     let updateObject = {
         title,
         description,
-        dateDue: Timestamp.fromDate(new Date(date)), // Convert string to Date, then to Firestore Timestamp
+        dateModified: serverTimestamp(),
         images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
         files: activeFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
         userId: userDetails.uid
@@ -142,6 +143,11 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
       setSnackbarMessage('Your design has been updated.');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
+
+      // Manually update the dateModified state
+      const now = Timestamp.now();
+      setDateModified(timestampToString(now));
+
     } catch (error) {
       console.error("Error updating design:", error);
       setSnackbarMessage('There was an issue updating your design.');
@@ -169,25 +175,12 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
           console.log('Fetched files:', data.files); // Add this line to debug
           setImages(data.images || []);
           setFiles(data.files || []);
+          setDateCreated(timestampToString(data.dateCreated)); // Convert Timestamp to readable string
+          setDateModified(timestampToString(data.dateModified)); // Convert Timestamp to readable string
         }
       };
 
       fetchData();
-  
-      // Check if 'dateDue' exists and handle both string and Timestamp cases
-      let dueDateString;
-      if (selectedDesign.dateDue) {
-        if (typeof selectedDesign.dateDue === 'string') {
-          // If 'dateDue' is a string, use it directly
-          dueDateString = selectedDesign.dateDue;
-        } else if (selectedDesign.dateDue.toDate) {
-          // If 'dateDue' is a Firestore Timestamp, convert to Date and format as string
-          dueDateString = selectedDesign.dateDue.toDate().toISOString().split('T')[0];
-        }
-        setDate(dueDateString);
-      } else {
-        setDate(''); // If no 'dateDue', reset the date field
-      }
     }
   }, [selectedDesign, id]); // Included 'id' in the dependency array 
 
@@ -908,17 +901,25 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
               />
             </div>
             <div style={{ flexGrow: 2 }}>
-              <label className="designTitles" htmlFor="dateDue">Date</label>
+              <label className="designTitles" htmlFor="dateCreated">Created</label>
               <input
-                id="dateDue"
-                type="date"
-                name="dateDue"
-                value={date}
-                onChange={e => {
-                  setDate(e.target.value);
-                  setUnsavedChanges(prev => ({ ...prev, design: true }));
-                }}
-                style={{ width: '100%' }} // Make sure the input fills the div
+                id="dateCreated"
+                type="text"
+                name="dateCreated"
+                value={dateCreated || ''}
+                readOnly
+                style={{ width: '100%' }}        
+              />
+            </div>
+            <div style={{ flexGrow: 2, marginLeft: '12px' }}>
+              <label className="designTitles" htmlFor="dateModified">Last Edited</label>
+              <input
+                id="dateModified"
+                type="text"
+                name="dateModified"
+                value={dateModified || ''}
+                readOnly
+                style={{ width: '100%' }}        
               />
             </div>
           </div>
