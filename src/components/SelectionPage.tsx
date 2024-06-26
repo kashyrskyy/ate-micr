@@ -11,7 +11,7 @@ import DeleteMessage from './Messages/DeleteMessage';
 
 const SelectionPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userDetails } = useUser();
+  const { userDetails, isSuperAdmin } = useUser();
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [copied, setCopied] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
@@ -193,6 +193,19 @@ const SelectionPage: React.FC = () => {
                 </CardActionArea>
               </Card>
             </Grid>
+            {isSuperAdmin && (
+              <Grid item xs={12}>
+                <Card>
+                  <CardActionArea onClick={() => navigate('/user-management')}>
+                    <CardContent>
+                      <Typography variant="h5" component="div">
+                        User Permissions
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            )}
           </Grid>
         </Grid>
       </Grid>

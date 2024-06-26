@@ -7,6 +7,7 @@ import '../config/firestore.tsx'; // Ensure Firebase is initialized
 interface UserDetails {
   uid: string;
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
   lastLogin?: any; // You can further specify the type for date/time if needed
 }
 
@@ -15,6 +16,7 @@ interface UserContextType {
   userDetails: UserDetails | null;
   loading: boolean;
   error: Error | null;
+  isSuperAdmin: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -30,6 +32,8 @@ export const useUser = (): UserContextType => {
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
   const [loading, setLoading] = useState(true);
   // Additional state for managing errors
   const [error, setError] = useState<Error | null>(null);
@@ -51,11 +55,14 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
             console.log("User document exists.");
             console.log('User is signed in with UID:', authUser.uid);
             await updateDoc(userRef, { lastLogin: serverTimestamp() });
-            setUserDetails({ ...userDoc.data() as UserDetails, uid: authUser.uid });
+            const data = userDoc.data() as UserDetails;
+            setUserDetails({ ...data, uid: authUser.uid });
+            setIsSuperAdmin(data.isSuperAdmin || false);
           } else {
             console.error("User document does not exist. Creating a new one...");
             await setDoc(userRef, {
               isAdmin: false,
+              isSuperAdmin: false,
               lastLogin: serverTimestamp()
             });
             setUserDetails({
@@ -63,6 +70,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
               isAdmin: false,
               lastLogin: serverTimestamp()
             });
+            setIsSuperAdmin(false);
           }
         } catch (e) {
           console.error("Error managing user document:", e);
@@ -70,6 +78,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         setUserDetails(null); // No user signed in
+        setIsSuperAdmin(false);
       }
       setUser(authUser);
       setLoading(false);
@@ -79,7 +88,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   }, []);  
 
   return (
-    <UserContext.Provider value={{ user, userDetails, loading, error }}>
+    <UserContext.Provider value={{ user, userDetails, loading, error, isSuperAdmin }}>
       {children}
     </UserContext.Provider>
   );

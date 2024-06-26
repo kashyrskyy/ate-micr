@@ -14,13 +14,15 @@ import PrivateRoute from './components/PrivateRoute'; // Import PrivateRoute
 import AddMessage from './components/Messages/AddMessage';
 import EditMessage from './components/Messages/EditMessage';
 
+import UserManagement from './components/UserPermissions/UserManagement'; // Import the new UserManagement component
+
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
 const Dashboard = lazy(() => import('./components/Dashboard/index'));
 const SupplementalMaterials = lazy(() => import('./components/Supplemental/SupplementalMaterials'));
 
 const App = () => {
-  const { userDetails, loading } = useUser();
+  const { userDetails, loading, isSuperAdmin } = useUser();
 
   if (loading) {
     return (
@@ -46,6 +48,7 @@ const App = () => {
             <Route path="/view-material/:id" element={<PrivateRoute element={ViewMaterial} />} />
             <Route path="/add-message" element={<PrivateRoute element={AddMessage} />} />
             <Route path="/edit-message/:id" element={<PrivateRoute element={EditMessage} />} />
+            {isSuperAdmin && <Route path="/user-management" element={<PrivateRoute element={UserManagement} />} />}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
