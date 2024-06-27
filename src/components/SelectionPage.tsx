@@ -60,7 +60,14 @@ const SelectionPage: React.FC = () => {
           Home Page / ATE 2.0 
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {userDetails?.isAdmin && (
+          {isSuperAdmin && (
+            <Chip 
+              label="Super Admin User" 
+              variant="outlined" 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+            />
+          )}
+          {userDetails?.isAdmin && !isSuperAdmin && (
             <Chip 
               label="Educator (Admin User)" 
               variant="outlined" 
