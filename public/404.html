@@ -1,14 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Page not found." />
-    <title>Reloading...</title>
-  </head>
-  <body>
-    <script type="text/javascript">
-      window.location.href = '/ate-micr/';
-    </script>
-  </body>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0; url=/" />
+</head>
+<body>
+  <script>
+    // Check if the URL contains a known path
+    const knownPaths = [
+      '/ate-micr/user-management',
+      '/ate-micr/laboratory-notebooks',
+      '/ate-micr/supplemental-materials',
+      '/ate-micr/add-material',
+      '/ate-micr/edit-material/:id',
+      '/ate-micr/view-material/:id',
+      '/ate-micr/add-message',
+      '/ate-micr/edit-message/:id'
+    ];
+
+    const path = window.location.pathname;
+
+    const matchedPath = knownPaths.find(knownPath => {
+      const pathPattern = new RegExp(`^${knownPath.replace(':id', '[^/]+')}$`);
+      return pathPattern.test(path);
+    });
+
+    if (matchedPath) {
+      // Redirect to the index.html with the full path
+      window.location.replace(`/ate-micr${path}`);
+    } else {
+      // Redirect to home if the path is not known
+      window.location.replace('/ate-micr/');
+    }
+  </script>
+</body>
 </html>
