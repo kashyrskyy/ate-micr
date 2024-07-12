@@ -7,29 +7,30 @@
   <script>
     // Check if the URL contains a known path
     const knownPaths = [
-      '/ate-micr/user-management',
-      '/ate-micr/laboratory-notebooks',
-      '/ate-micr/supplemental-materials',
-      '/ate-micr/add-material',
-      '/ate-micr/edit-material/:id',
-      '/ate-micr/view-material/:id',
-      '/ate-micr/add-message',
-      '/ate-micr/edit-message/:id'
+      '/user-management',
+      '/laboratory-notebooks',
+      '/supplemental-materials',
+      '/add-material',
+      '/edit-material/',
+      '/view-material/',
+      '/add-message',
+      '/edit-message/'
     ];
 
-    const path = window.location.pathname;
+    const basePath = '/ate-micr';
+    const path = window.location.pathname.replace(basePath, '');
 
     const matchedPath = knownPaths.find(knownPath => {
-      const pathPattern = new RegExp(`^${knownPath.replace(':id', '[^/]+')}$`);
+      const pathPattern = new RegExp(`^${knownPath}`);
       return pathPattern.test(path);
     });
 
     if (matchedPath) {
       // Redirect to the index.html with the full path
-      window.location.replace(`/ate-micr${path}`);
+      window.location.replace(`${basePath}${path}`);
     } else {
       // Redirect to home if the path is not known
-      window.location.replace('/ate-micr/');
+      window.location.replace(`${basePath}/`);
     }
   </script>
 </body>
