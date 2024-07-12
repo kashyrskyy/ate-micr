@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
 
+import { useNavigate } from 'react-router-dom';
+
 const UserManagement: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -14,7 +16,17 @@ const UserManagement: React.FC = () => {
   const [newStatus, setNewStatus] = useState(false);
   const db = getFirestore();
 
+  const navigate = useNavigate();
+
+  const handleNavigateHome = () => {
+    navigate('/');
+  };
+
   const fetchUserDetails = async () => {
+    if (!userId) {  // Prevent the fetch operation when userId is empty
+      return;
+    }
+
     setLoading(true);
     setUserExists(false);
     try {
@@ -77,6 +89,11 @@ const UserManagement: React.FC = () => {
 
   return (
     <Box sx={{ padding: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Button variant="text" onClick={handleNavigateHome} sx={{ mr: 2 }}>
+          &larr; Home Page
+        </Button>
+      </Box>
       <Typography variant="h4" component="h1" gutterBottom>
         User Management
       </Typography>
