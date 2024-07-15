@@ -1,6 +1,6 @@
 // App.tsx
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom'; // Use HashRouter
 import { useUser } from './contexts/UserContext';
 import Footer from './components/Dashboard/Footer'; // Import the Footer component
 
@@ -36,7 +36,7 @@ const App = () => {
   console.log("App loaded")
 
   return (
-    <Router basename={import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr' : '/'}>
+    <Router>
       <div className="content">
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></div>}>
           <Routes>
