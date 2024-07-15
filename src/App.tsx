@@ -1,6 +1,6 @@
 // App.tsx
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useUser } from './contexts/UserContext';
 import Footer from './components/Dashboard/Footer'; // Import the Footer component
 
