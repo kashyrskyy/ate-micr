@@ -4,21 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Page not found." />
-    <title>Redirecting...</title>
+    <title>Reloading...</title>
   </head>
   <body>
     <script type="text/javascript">
-      // GitHub Pages 404 redirect workaround
-      const pathname = window.location.pathname.replace('/ate-micr', '');
-      const base = '/ate-micr'; // Your GitHub Pages base path
-      const newUrl = `${base}${pathname}`;
-      
-      // Prevent infinite loop by checking if already on the correct URL
-      if (window.location.pathname !== newUrl) {
-        window.location.replace(newUrl);
-      } else {
-        document.body.innerHTML = 'Page not found. Please check the URL or go back to the <a href="/ate-micr/">home page</a>.';
-      }
+      window.location.href = '/ate-micr/';
     </script>
   </body>
 </html>
