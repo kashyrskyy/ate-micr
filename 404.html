@@ -8,7 +8,10 @@
   </head>
   <body>
     <script type="text/javascript">
-      window.location.href = '/ate-micr/';
+      // GitHub Pages 404 redirect workaround
+      const pathname = window.location.pathname.replace('/ate-micr', '');
+      const base = '/ate-micr'; // Replace with your GitHub Pages base path
+      window.location.href = `${base}${pathname}`;
     </script>
   </body>
 </html>
