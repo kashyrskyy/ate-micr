@@ -177,7 +177,19 @@ const SelectionPage: React.FC = () => {
           <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
             Navigation
           </Typography>
+
           <Grid container spacing={3} justifyContent="center">
+            <Grid item xs={12}>
+              <Card>
+                <CardActionArea onClick={() => navigate('/my-profile')}>
+                  <CardContent>
+                    <Typography variant="h5" component="div">
+                      My Account
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
             <Grid item xs={12}>
               <Card>
                 <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>

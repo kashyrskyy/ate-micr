@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, Paper, Chip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { getFirestore, doc, updateDoc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc, getDoc, collection, getDocs, arrayUnion } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 interface User {
@@ -10,11 +10,11 @@ interface User {
   lastLogin?: {
     toDate: () => Date;
   };
-  class?: string; // Add the optional class field
+  class?: string[]; // Updated to an array of strings
 }
 
-const AssignCourse: React.FC<{ userId: string; userClass?: string }> = ({ userId, userClass }) => {
-  const [selectedCourse, setSelectedCourse] = useState(userClass || '');
+const AssignCourse: React.FC<{ userId: string; userClass?: string[] }> = ({ userId, userClass }) => {
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -31,7 +31,7 @@ const AssignCourse: React.FC<{ userId: string; userClass?: string }> = ({ userId
     setLoading(true);
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { class: selectedCourse });
+      await updateDoc(userRef, { class: arrayUnion(selectedCourse) });
       setMessage(`Course ${selectedCourse} assigned successfully to user ${userId}.`);
     } catch (error) {
       console.error('Error assigning course:', error);
@@ -49,7 +49,7 @@ const AssignCourse: React.FC<{ userId: string; userClass?: string }> = ({ userId
     <>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
-          Current Course:
+          Current Courses: {userClass ? userClass.join(', ') : 'None'}
         </Typography>
         <FormControl sx={{ minWidth: 200, mr: 2 }}>
           <InputLabel>Course</InputLabel>
@@ -83,7 +83,7 @@ const UserManagement: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [userExists, setUserExists] = useState(false);
-  const [userClass, setUserClass] = useState<string | undefined>(undefined);
+  const [userClass, setUserClass] = useState<string[] | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -231,7 +231,7 @@ const UserManagement: React.FC = () => {
               </Typography>
               {user.class && (
                 <Chip 
-                  label={`Course: ${user.class}`} 
+                  label={`Courses: ${user.class.join(', ')}`} // Display courses as a comma-separated list
                   variant="outlined" 
                   sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#c8e6c9', color: '#388e3c', mt: 1 }}
                 />

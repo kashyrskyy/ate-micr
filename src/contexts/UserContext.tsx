@@ -1,19 +1,21 @@
 // src/contexts/UserContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from 'react';
 import { getAuth, onAuthStateChanged, User as FirebaseUser  } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import '../config/firestore.tsx'; // Ensure Firebase is initialized
 
-interface UserDetails {
+export interface UserDetails {
   uid: string;
   isAdmin?: boolean;
   isSuperAdmin?: boolean;
   lastLogin?: any; // You can further specify the type for date/time if needed
+  class?: string[]; // Update this to an array of strings
 }
 
 interface UserContextType {
   user: FirebaseUser | null;
   userDetails: UserDetails | null;
+  setUserDetails: Dispatch<SetStateAction<UserDetails | null>>;
   loading: boolean;
   error: Error | null;
   isSuperAdmin: boolean;
@@ -88,7 +90,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   }, []);  
 
   return (
-    <UserContext.Provider value={{ user, userDetails, loading, error, isSuperAdmin }}>
+    <UserContext.Provider value={{ user, userDetails, setUserDetails, loading, error, isSuperAdmin }}>
       {children}
     </UserContext.Provider>
   );

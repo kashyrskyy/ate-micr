@@ -17,6 +17,7 @@ import PrivateRoute from './components/PrivateRoute';
 import AddMessage from './components/Messages/AddMessage';
 import EditMessage from './components/Messages/EditMessage';
 import UserManagement from './components/UserPermissions/UserManagement';
+import MyProfile from './components/UserAccount/MyProfile';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
@@ -59,6 +60,7 @@ const App = () => {
               <Route path="/" element={userDetails ? <SelectionPage /> : <Login />} />
               <Route path="/laboratory-notebooks" element={<PrivateRoute element={Dashboard} />} />
               <Route path="/supplemental-materials" element={<PrivateRoute element={SupplementalMaterials} />} />
+              <Route path="/my-profile" element={<PrivateRoute element={MyProfile} />} />
               <Route path="/add-material" element={<PrivateRoute element={AddMaterialForm} />} />
               <Route path="/edit-material/:id" element={<PrivateRoute element={EditMaterialForm} />} />
               <Route path="/view-material/:id" element={<PrivateRoute element={ViewMaterial} />} />
