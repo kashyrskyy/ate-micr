@@ -20,6 +20,7 @@ import LinkManager from './LinkManager';
 import TextEditor from './TextEditor';
 
 import SimpleTextEditor from './SimpleTextEditor';
+import CourseDropdown from './CourseDropdown';
 
 interface AddMaterialFormProps {
   materialData?: Material;
@@ -31,6 +32,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const { userDetails } = useUser();
   const db = getFirestore();
 
+  const [course, setCourse] = useState<string>(materialData?.course || '');
   const [title, setTitle] = useState<string>(materialData?.title || '');
   const [header, setHeader] = useState(materialData?.header || { title: 'Header', content: '' });
   const [footer, setFooter] = useState(materialData?.footer || { title: 'Footer', content: '' });
@@ -66,6 +68,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
       if (materialData) {
         const docRef = doc(db, 'materials', materialData.id);
         await updateDoc(docRef, {
+          course,
           title,
           header,
           footer,
@@ -75,6 +78,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
         setSnackbarMessage('Material updated successfully');
       } else {
         const docRef = await addDoc(collection(db, 'materials'), {
+          course,
           title,
           header,
           footer,
@@ -334,6 +338,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               onChange={(e) => setTitle(e.target.value)}
               sx={{ mb: 2 }}
             />
+            <CourseDropdown value={course} onChange={setCourse} />
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Typography variant="h6" sx={{ color: 'gray', textAlign: 'center' }}>Header</Typography>

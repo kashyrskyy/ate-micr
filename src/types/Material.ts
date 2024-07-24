@@ -28,6 +28,7 @@ export interface SubSubsection {
 
 export interface Material {
   id: string;
+  course: string;
   title: string;  // Add this line
   header: { title: string; content: string };
   footer: { title: string; content: string };

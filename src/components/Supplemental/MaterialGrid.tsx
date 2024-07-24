@@ -13,13 +13,18 @@ import DeleteMaterialDialog from './DeleteMaterialDialog';
 import UnpublishButton from './UnpublishButton';
 import UnpublishMaterial from './UnpublishMaterial';
 
+import CourseSelector from './CourseSelector';
+
 const MaterialGrid: React.FC = () => {
   const { userDetails } = useUser();
   const db = getFirestore();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
+
+  const [selectedCourse, setSelectedCourse] = useState('Public-Source');
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  
   const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });
   
   const [error, setError] = useState<string | null>(null);
@@ -29,9 +34,11 @@ const MaterialGrid: React.FC = () => {
   useEffect(() => {
     if (!userDetails) return;
 
+    setLoading(true);
+
     const q = userDetails.isAdmin
-      ? query(collection(db, 'materials'), orderBy('timestamp', 'desc')) // Sorting by timestamp
-      : query(collection(db, 'materials'), where('published', '==', true), orderBy('timestamp', 'desc')); // Sorting by timestamp
+      ? query(collection(db, 'materials'), where('course', '==', selectedCourse), orderBy('timestamp', 'desc'))
+      : query(collection(db, 'materials'), where('course', '==', selectedCourse), where('published', '==', true), orderBy('timestamp', 'desc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const materialsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Material[];
@@ -44,7 +51,7 @@ const MaterialGrid: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [db, userDetails]);
+  }, [db, userDetails, selectedCourse]);
 
   const handleDeleteClick = (id: string) => {
     setSelectedMaterial(id);
@@ -81,6 +88,13 @@ const MaterialGrid: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
+      <CourseSelector 
+        selectedCourse={selectedCourse} 
+        onCourseChange={(course) => {
+          setLoading(true);
+          setSelectedCourse(course);
+        }} 
+      />
       {userDetails?.isAdmin && (
         <>
           <Box sx={{ backgroundColor: '#FFF9C4', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mb: 2 }}>
@@ -131,6 +145,11 @@ const MaterialGrid: React.FC = () => {
                           </IconButton>
                         </>
                       )}
+                    </Box>
+                    <Box sx={{ backgroundColor: '#E0F7FA', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mt: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#00796B', fontWeight: 'bold' }}>
+                          {material.course || 'N/A'}
+                        </Typography>
                     </Box>
                   </Box>
                 </Grid>
@@ -192,6 +211,11 @@ const MaterialGrid: React.FC = () => {
                       />
                     </>
                   )}
+                </Box>
+                <Box sx={{ backgroundColor: '#E0F7FA', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mt: 2 }}>
+                    <Typography variant="body2" sx={{ color: '#00796B', fontWeight: 'bold' }}>
+                      {material.course || 'N/A'}
+                    </Typography>
                 </Box>
               </Box>
             </Grid>
