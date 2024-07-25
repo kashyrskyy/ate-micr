@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Snackbar, Alert, Typography, IconButton, Tooltip, TextareaAutosize } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
 import { v4 as uuidv4 } from 'uuid';
 import SideBar from './SideBar';
@@ -21,6 +21,7 @@ import TextEditor from './TextEditor';
 
 import SimpleTextEditor from './SimpleTextEditor';
 import CourseDropdown from './CourseDropdown';
+import DateTimePickerComponent from './DateTimePickerComponent';
 
 interface AddMaterialFormProps {
   materialData?: Material;
@@ -45,6 +46,9 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'error' | 'success'>('success');
 
+  const [scheduledTimestamp, setScheduledTimestamp] = useState<Date | null>(materialData?.scheduledTimestamp?.toDate() || null);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowLeft') {
@@ -61,7 +65,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
     };
   }, [selectedSection, sections]);
 
-  const handleSubmit = async (e: React.FormEvent, shouldPublish: boolean = false) => {
+  const handleSubmit = async (e: React.FormEvent, shouldPublish: boolean = false, scheduleTimestamp?: Date | null) => {
     e.preventDefault();
   
     try {
@@ -74,6 +78,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
           footer,
           sections,
           published: shouldPublish,
+          scheduledTimestamp: scheduleTimestamp ? Timestamp.fromDate(scheduleTimestamp) : null,
         });
         setSnackbarMessage('Material updated successfully');
       } else {
@@ -86,6 +91,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
           author: userDetails?.uid || '',
           timestamp: serverTimestamp() as any,
           published: shouldPublish,
+          scheduledTimestamp: scheduleTimestamp ? Timestamp.fromDate(scheduleTimestamp) : null,
         });
         setSnackbarMessage('Material saved successfully');
       }
@@ -105,6 +111,14 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
 
   const handlePublish = (e: React.FormEvent) => {
     handleSubmit(e, true);
+  };
+
+  const handleSchedulePublish = (e: React.FormEvent) => {
+    if (showDatePicker && scheduledTimestamp) {
+      handleSubmit(e, false, scheduledTimestamp);
+    } else {
+      setShowDatePicker(true);
+    }
   };
 
   const handleAddSection = () => {
@@ -339,6 +353,11 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               sx={{ mb: 2 }}
             />
             <CourseDropdown value={course} onChange={setCourse} />
+            {scheduledTimestamp && (
+              <Typography variant="body1" gutterBottom>
+                Scheduled Publish Date & Time: {scheduledTimestamp.toLocaleString()}
+              </Typography>
+            )}
             <Box sx={{ border: selectedSection.type === 'header' ? '2px solid blue' : 'none', borderRadius: 1, padding: 2, mb: 2 }}>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Typography variant="h6" sx={{ color: 'gray', textAlign: 'center' }}>Header</Typography>
@@ -446,6 +465,17 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
               <Button type="button" variant="contained" color="primary" onClick={handlePublish} sx={{ backgroundColor: 'green' }}>
                 Publish
               </Button>
+              <div>
+                {showDatePicker && (
+                  <DateTimePickerComponent
+                    value={scheduledTimestamp}
+                    onChange={setScheduledTimestamp}
+                  />
+                )}
+                <Button type="button" variant="contained" color="primary" onClick={handleSchedulePublish} sx={{ backgroundColor: 'blue' }}>
+                  {showDatePicker ? 'Schedule Publish' : 'Schedule Publish'}
+                </Button>
+              </div>
             </Box>
           </Box>
         </Box>

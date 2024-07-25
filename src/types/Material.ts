@@ -29,11 +29,12 @@ export interface SubSubsection {
 export interface Material {
   id: string;
   course: string;
-  title: string;  // Add this line
+  title: string;
   header: { title: string; content: string };
   footer: { title: string; content: string };
   sections: Section[];
   author: string;
   timestamp: Timestamp;
   published: boolean;
+  scheduledTimestamp?: Timestamp;
 }
