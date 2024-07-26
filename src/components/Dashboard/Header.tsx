@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
-  const { userDetails } = useUser();
+  const { userDetails, isSuperAdmin } = useUser();
   console.log("Header loaded");
 
   const navigate = useNavigate(); // Initialize useNavigate hook
@@ -62,11 +62,25 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
       </Typography>
       {userDetails && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}> 
-          {userDetails.isAdmin && (
+          {isSuperAdmin && (
             <Chip 
-              label="Admin" 
+              label="Super-Admin" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+            />
+          )}
+          {userDetails?.isAdmin && !isSuperAdmin && (
+            <Chip 
+              label="Educator" 
+              variant="outlined" 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+            />
+          )}
+          {!userDetails?.isAdmin && (
+            <Chip 
+              label="Student" 
+              variant="outlined" 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 1 }} 
             />
           )}
           <Tooltip title={copied ? "Copied!" : "Click to Copy"} enterDelay={300} leaveDelay={200}>

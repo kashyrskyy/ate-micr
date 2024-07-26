@@ -62,21 +62,21 @@ const SelectionPage: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {isSuperAdmin && (
             <Chip 
-              label="Super Admin User" 
+              label="Super-Admin" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
             />
           )}
           {userDetails?.isAdmin && !isSuperAdmin && (
             <Chip 
-              label="Educator (Admin User)" 
+              label="Educator" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
             />
           )}
           {!userDetails?.isAdmin && (
             <Chip 
-              label="Student (Regular User)" 
+              label="Student" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 1 }} 
             />

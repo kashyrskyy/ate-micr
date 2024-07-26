@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Logout from '../Logout';
 
 const Header: React.FC = () => {
-  const { userDetails } = useUser();
+  const { userDetails, isSuperAdmin } = useUser();
   const navigate = useNavigate();
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -50,16 +50,23 @@ const Header: React.FC = () => {
           Supplemental Materials
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {userDetails?.isAdmin && (
+          {isSuperAdmin && (
             <Chip 
-              label="Educator (Admin User)" 
+              label="Super-Admin" 
+              variant="outlined" 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+            />
+          )}
+          {userDetails?.isAdmin && !isSuperAdmin && (
+            <Chip 
+              label="Educator" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
             />
           )}
           {!userDetails?.isAdmin && (
             <Chip 
-              label="Student (Regular User)" 
+              label="Student" 
               variant="outlined" 
               sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 1 }} 
             />
