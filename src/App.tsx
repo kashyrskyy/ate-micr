@@ -18,6 +18,7 @@ import AddMessage from './components/Messages/AddMessage';
 import EditMessage from './components/Messages/EditMessage';
 import UserManagement from './components/UserPermissions/UserManagement';
 import MyProfile from './components/UserAccount/MyProfile';
+import CourseManagement from './components/CourseManagement/CourseManagement';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
@@ -67,6 +68,7 @@ const App = () => {
               <Route path="/add-message" element={<PrivateRoute element={AddMessage} />} />
               <Route path="/edit-message/:id" element={<PrivateRoute element={EditMessage} />} />
               {isSuperAdmin && <Route path="/user-management" element={<PrivateRoute element={UserManagement} />} />}
+              <Route path="/course-management" element={<PrivateRoute element={CourseManagement} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
