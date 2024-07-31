@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, Paper, Chip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, Paper, Chip, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { getFirestore, doc, updateDoc, getDoc, collection, getDocs, arrayUnion } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
@@ -92,6 +92,7 @@ const UserManagement: React.FC = () => {
   const [superAdmins, setSuperAdmins] = useState<User[]>([]);
   const [admins, setAdmins] = useState<User[]>([]);
   const [nonAdmins, setNonAdmins] = useState<User[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState(''); // Added state for selected course
   const db = getFirestore();
 
   const navigate = useNavigate();
@@ -196,10 +197,21 @@ const UserManagement: React.FC = () => {
     setOpenDialog(false);
   };
 
+  const handleCourseChange = (event: SelectChangeEvent<string>) => {
+    setSelectedCourse(event.target.value as string);
+  };  
+
+  const filteredUsers = (users: User[]) => {
+    if (selectedCourse) { // Filtering logic based on selected course
+      return users.filter(user => user.class && user.class.includes(selectedCourse));
+    }
+    return users;
+  };
+
   const renderUsersGrid = (users: User[]) => (
     <Box sx={{ mb: 4 }}>
       <Grid container spacing={2}>
-        {users.map(user => (
+        {filteredUsers(users).map(user => ( // Using filteredUsers to display filtered list
           <Grid item xs={12} sm={6} md={3} key={user.id}>
             <Paper elevation={2} sx={{ padding: 2 }}>
               {user.isSuperAdmin && (
@@ -290,6 +302,17 @@ const UserManagement: React.FC = () => {
       <Typography variant="h5" component="h2" gutterBottom>
         Current Users
       </Typography>
+      <FormControl fullWidth sx={{ mb: 3, width: '25%' }}>
+        <InputLabel>Filter by Course</InputLabel> {/* Added course filter UI */}
+        <Select
+          value={selectedCourse}
+          onChange={handleCourseChange}
+        >
+          <MenuItem value="">All Courses</MenuItem>
+          <MenuItem value="MICRO230">MICRO230</MenuItem>
+          <MenuItem value="MICRO240">MICRO240</MenuItem>
+        </Select>
+      </FormControl>
       {renderUsersGrid(superAdmins)}
       {renderUsersGrid(admins)}
       {renderUsersGrid(nonAdmins)}
