@@ -3,6 +3,8 @@ import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, 
 import { getFirestore, doc, updateDoc, getDoc, collection, getDocs, arrayUnion } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
+import UserTable from './UserTable'; // Import the UserTable component
+
 interface User {
   id: string;
   isAdmin: boolean;
@@ -208,53 +210,6 @@ const UserManagement: React.FC = () => {
     return users;
   };
 
-  const renderUsersGrid = (users: User[]) => (
-    <Box sx={{ mb: 4 }}>
-      <Grid container spacing={2}>
-        {filteredUsers(users).map(user => ( // Using filteredUsers to display filtered list
-          <Grid item xs={12} sm={6} md={3} key={user.id}>
-            <Paper elevation={2} sx={{ padding: 2 }}>
-              {user.isSuperAdmin && (
-                <Chip 
-                  label="Super Admin" 
-                  variant="outlined" 
-                  sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mb: 1 }} 
-                />
-              )}
-              {user.isAdmin && !user.isSuperAdmin && (
-                <Chip 
-                  label="Educator (Admin)" 
-                  variant="outlined" 
-                  sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffecb3', color: '#e65100', mb: 1 }} 
-                />
-              )}
-              {!user.isAdmin && (
-                <Chip 
-                  label="Student (Regular)" 
-                  variant="outlined" 
-                  sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mb: 1 }} 
-                />
-              )}
-              <Typography variant="body1">
-                ID: {user.id}
-              </Typography>
-              <Typography variant="body2">
-                Last Login: {user.lastLogin ? user.lastLogin.toDate().toLocaleString() : 'No data available'}
-              </Typography>
-              {user.class && (
-                <Chip 
-                  label={`Courses: ${user.class.join(', ')}`} // Display courses as a comma-separated list
-                  variant="outlined" 
-                  sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#c8e6c9', color: '#388e3c', mt: 1 }}
-                />
-              )}
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  );
-
   return (
     <Box sx={{ padding: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -313,9 +268,7 @@ const UserManagement: React.FC = () => {
           <MenuItem value="MICRO240">MICRO240</MenuItem>
         </Select>
       </FormControl>
-      {renderUsersGrid(superAdmins)}
-      {renderUsersGrid(admins)}
-      {renderUsersGrid(nonAdmins)}
+      <UserTable users={filteredUsers([...superAdmins, ...admins, ...nonAdmins])} />
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
