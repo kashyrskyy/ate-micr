@@ -4,6 +4,7 @@ import { getFirestore, collection, query, where, getDocs } from 'firebase/firest
 import { useUser } from '../../contexts/UserContext';
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import CourseStudentManagement from './CourseStudentManagement';
 
 const CourseManagement: React.FC = () => {
   const { userDetails } = useUser();
@@ -41,6 +42,27 @@ const CourseManagement: React.FC = () => {
   const handleCourseChange = (course: string) => {
     setSelectedCourse(course);
   };
+
+  // New function to refresh the student list
+  const refreshStudents = async () => {
+    if (userDetails) {
+      const studentsQuery = query(
+        collection(db, 'users'),
+        where('class', 'array-contains', selectedCourse),
+        where('isAdmin', '==', false)
+      );
+
+      const studentsSnapshot = await getDocs(studentsQuery);
+      const studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      setStudents(studentsList);
+    }
+  };
+
+  // New effect to refresh students when the course changes
+  useEffect(() => {
+    refreshStudents();
+  }, [selectedCourse, db]);
 
   const filteredStudents = students.filter(student => student.class.includes(selectedCourse));
 
@@ -94,6 +116,7 @@ const CourseManagement: React.FC = () => {
           </Table>
         </TableContainer>
       )}
+      <CourseStudentManagement selectedCourse={selectedCourse} onStudentChange={refreshStudents} />
     </Box>
   );
 };
