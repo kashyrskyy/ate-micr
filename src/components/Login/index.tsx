@@ -1,7 +1,7 @@
 // Login/index.tsx
 import React, { useState } from 'react';
 import { getAuth, signInWithPopup, GoogleAuthProvider, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
-import { Button, Typography, Container, Box, Snackbar, Alert, TextField, Checkbox, FormControlLabel, Tooltip,  Divider, Grid } from '@mui/material';
+import { Button, Typography, Container, Box, Snackbar, Alert, Checkbox, FormControlLabel, Tooltip,  Divider, Grid } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 
 import { useTheme } from '@mui/material/styles';
@@ -16,30 +16,12 @@ const Login = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'error' | 'info' | 'success' | 'warning'>('success');
 
-  const [passcode, setPasscode] = useState('');
-  const [isPasscodeValid, setIsPasscodeValid] = useState(false);
-
   const [keepSignedIn, setKeepSignedIn] = useState(true);
-
-  const VALID_PASSCODE = import.meta.env.VITE_VALID_PASSCODE;
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
-
-  const validatePasscode = (input: string): void => {
-    if (input === VALID_PASSCODE) {
-      setIsPasscodeValid(true);
-      setSnackbarMessage("Passcode Entered Correctly.");
-      setSnackbarSeverity('success');
-      setOpenSnackbar(true);
-    } else {
-      setSnackbarMessage("Invalid passcode. Please try again.");
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -92,51 +74,25 @@ const Login = () => {
           </Grid>
         )}
         <Grid item xs={12} md={6} sx={{ textAlign: 'center' }}>
-          {!isPasscodeValid && (
-            <form onSubmit={(e) => {
-              e.preventDefault(); // Prevent the default form submission
-              validatePasscode(passcode);
-            }}>
-              <TextField 
-                fullWidth 
-                label="Enter Passcode" 
-                variant="outlined" 
-                value={passcode} 
-                onChange={(e) => setPasscode(e.target.value)} 
-                sx={{ mb: 2 }}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Welcome! Please sign in to get started.
+            </Typography>
+            <Button 
+              variant="contained" 
+              startIcon={<GoogleIcon />} 
+              onClick={handleGoogleSignIn} 
+              sx={{ textTransform: 'none', fontSize: '1rem', minWidth: '250px', boxShadow: 'none', '&:hover': { backgroundColor: '#357ae8', boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', transform: 'scale(1.05)' }, transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out' }}
+            >
+              Sign In with Google
+            </Button>
+            <Tooltip title="Keep you signed in on this device. Do not use on public or shared computers." placement="right">
+              <FormControlLabel
+                control={<Checkbox checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} />}
+                label="Keep me signed in"
               />
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Button 
-                  type="submit" 
-                  variant="contained" 
-                  sx={{ mt: 2, textTransform: 'none', minWidth: '250px', boxShadow: 'none', '&:hover': { boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', transform: 'scale(1.05)' }, transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out' }}
-                >
-                  Continue
-                </Button>
-              </Box>
-            </form>
-          )}
-          {isPasscodeValid && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <Typography variant="h6" component="h2" gutterBottom>
-                Welcome! Please sign in to get started.
-              </Typography>
-              <Button 
-                variant="contained" 
-                startIcon={<GoogleIcon />} 
-                onClick={handleGoogleSignIn} 
-                sx={{ textTransform: 'none', fontSize: '1rem', minWidth: '250px', boxShadow: 'none', '&:hover': { backgroundColor: '#357ae8', boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', transform: 'scale(1.05)' }, transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out' }}
-              >
-                Sign In with Google
-              </Button>
-              <Tooltip title="Keep you signed in on this device. Do not use on public or shared computers." placement="right">
-                <FormControlLabel
-                  control={<Checkbox checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} />}
-                  label="Keep me signed in"
-                />
-              </Tooltip>
-            </Box>
-          )}
+            </Tooltip>
+          </Box>
         </Grid>
       </Grid>
       <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)}>
