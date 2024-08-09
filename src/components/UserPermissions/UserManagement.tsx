@@ -91,9 +91,7 @@ const UserManagement: React.FC = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [newStatus, setNewStatus] = useState(false);
-  const [superAdmins, setSuperAdmins] = useState<User[]>([]);
-  const [admins, setAdmins] = useState<User[]>([]);
-  const [nonAdmins, setNonAdmins] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>([]); // Single state for all users
   const [selectedCourse, setSelectedCourse] = useState(''); // Added state for selected course
   const db = getFirestore();
 
@@ -102,44 +100,6 @@ const UserManagement: React.FC = () => {
   const handleNavigateHome = () => {
     navigate('/');
   };
-
-  useEffect(() => {
-    let isMounted = true; // flag to check if component is still mounted
-  
-    const fetchUserDetails = async () => {
-      if (!userId) {  // Prevent the fetch operation when userId is empty
-        return;
-      }
-  
-      setLoading(true);
-      setUserExists(false);
-      try {
-        const userRef = doc(db, 'users', userId);
-        const userDoc = await getDoc(userRef);
-  
-        if (userDoc.exists()) {
-          const userData = userDoc.data() as User;
-          setIsAdmin(userData.isAdmin);
-          setUserClass(userData.class);
-          setUserExists(true);
-        } else {
-          setMessage('User not found.');
-          setOpenSnackbar(true);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        setMessage('Error fetching user.');
-        setOpenSnackbar(true);
-      }
-      setLoading(false);
-    };
-    
-    fetchUserDetails();
-  
-    return () => {
-      isMounted = false; // Set it to false when the component unmounts
-    };
-  }, [userId, db]); // Dependency array
 
   const fetchUserDetails = async () => {
     if (!userId) {  // Prevent the fetch operation when userId is empty
@@ -174,24 +134,11 @@ const UserManagement: React.FC = () => {
     try {
       const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
-      const superAdminsList: User[] = [];
-      const adminsList: User[] = [];
-      const nonAdminsList: User[] = [];
-
-      usersSnapshot.forEach(doc => {
-        const userData = { id: doc.id, ...doc.data() } as User;
-        if (userData.isSuperAdmin) {
-          superAdminsList.push(userData);
-        } else if (userData.isAdmin) {
-          adminsList.push(userData);
-        } else {
-          nonAdminsList.push(userData);
-        }
-      });
-
-      setSuperAdmins(superAdminsList);
-      setAdmins(adminsList);
-      setNonAdmins(nonAdminsList);
+      const usersData = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }) as User);
+      setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error);
       setMessage('Error fetching users.');
@@ -210,13 +157,24 @@ const UserManagement: React.FC = () => {
       await updateDoc(userRef, { isAdmin: newStatus });
       setMessage(`User ${newStatus ? 'granted' : 'revoked'} admin privileges successfully.`);
       setIsAdmin(newStatus);  // Update the local state immediately
+  
+      // Update user list locally instead of re-fetching from the database
+      const updatedUsers = users.map((user) => {
+        if (user.id === userId) {
+          return { ...user, isAdmin: newStatus }; // Update only the isAdmin status
+        }
+        return user;
+      });
+
+      setUsers(updatedUsers); // Set the updated users array to state
+
     } catch (error) {
       console.error('Error updating user:', error);
       setMessage('Error updating user.');
     }
     setOpenSnackbar(true);
     setOpenDialog(false);
-  };
+  };  
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -311,7 +269,7 @@ const UserManagement: React.FC = () => {
           <MenuItem value="MICRO240">MICRO240</MenuItem>
         </Select>
       </FormControl>
-      <UserTable users={filteredUsers([...superAdmins, ...admins, ...nonAdmins])} />
+      <UserTable users={filteredUsers(users)} />
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
