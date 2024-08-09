@@ -24,11 +24,19 @@ const MyProfile: React.FC = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       const querySnapshot = await getDocs(collection(db, 'courses'));
-      const coursesList = querySnapshot.docs.map(doc => doc.data() as { name: string, passcode: string });
+      // Use let instead of const
+      let coursesList = querySnapshot.docs.map(doc => doc.data() as { name: string, passcode: string });
+  
+      // Filter out "Public-Source" course for non-admin users
+      if (!userDetails?.isAdmin) {
+        coursesList = coursesList.filter(course => course.name !== 'Public-Source');
+      }
+  
       setCourses(coursesList);
     };
+  
     fetchCourses();
-  }, [db]);
+  }, [db, userDetails]); // Added userDetails as a dependency
 
   const handleCourseChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setCourse(event.target.value);
