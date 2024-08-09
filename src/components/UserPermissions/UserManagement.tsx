@@ -103,6 +103,44 @@ const UserManagement: React.FC = () => {
     navigate('/');
   };
 
+  useEffect(() => {
+    let isMounted = true; // flag to check if component is still mounted
+  
+    const fetchUserDetails = async () => {
+      if (!userId) {  // Prevent the fetch operation when userId is empty
+        return;
+      }
+  
+      setLoading(true);
+      setUserExists(false);
+      try {
+        const userRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userRef);
+  
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as User;
+          setIsAdmin(userData.isAdmin);
+          setUserClass(userData.class);
+          setUserExists(true);
+        } else {
+          setMessage('User not found.');
+          setOpenSnackbar(true);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        setMessage('Error fetching user.');
+        setOpenSnackbar(true);
+      }
+      setLoading(false);
+    };
+    
+    fetchUserDetails();
+  
+    return () => {
+      isMounted = false; // Set it to false when the component unmounts
+    };
+  }, [userId, db]); // Dependency array
+
   const fetchUserDetails = async () => {
     if (!userId) {  // Prevent the fetch operation when userId is empty
       return;
@@ -232,7 +270,12 @@ const UserManagement: React.FC = () => {
             fullWidth
             required
             margin="normal"
-            onBlur={fetchUserDetails}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                fetchUserDetails();
+                e.preventDefault(); // Prevents the default action of the enter key
+              }
+            }}
             sx={{ minWidth: '300px' }}  // Set a minimum width for the input box
           />
           {loading ? (
