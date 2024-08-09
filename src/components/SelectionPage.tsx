@@ -107,7 +107,7 @@ const SelectionPage: React.FC = () => {
         <Grid item xs={12} md={8}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }}>
-              Educator Messages
+              Messages
             </Typography>
           </Box>
           {userDetails?.isAdmin && (
