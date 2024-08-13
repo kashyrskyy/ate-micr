@@ -18,6 +18,9 @@ function Footer() {
             alt="Logo" 
             style={{ maxWidth: '500px', maxHeight: '400px', width: 'auto', height: 'auto' }} 
           />
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            The Institute for Future Intelligence (IFI) and Kapi'olani Community College (KCC) is funded in part by the National Science Foundation grant DUE 2300976.
+          </Typography>
           <Typography variant="body2">
             © 2024 Institute for Future Intelligence and Kapiʻolani Community College Antibody Engineering & Research Projects
           </Typography>
