@@ -5,6 +5,7 @@ import { useUser } from '../../contexts/UserContext';
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CourseStudentManagement from './CourseStudentManagement';
+import ExportToCSV from './ExportToCSV'; // Import the ExportToCSV component
 
 const CourseManagement: React.FC = () => {
   const { userDetails } = useUser();
@@ -43,7 +44,6 @@ const CourseManagement: React.FC = () => {
     setSelectedCourse(course);
   };
 
-  // New function to refresh the student list
   const refreshStudents = async () => {
     if (userDetails) {
       const studentsQuery = query(
@@ -59,7 +59,6 @@ const CourseManagement: React.FC = () => {
     }
   };
 
-  // New effect to refresh students when the course changes
   useEffect(() => {
     refreshStudents();
   }, [selectedCourse, db]);
@@ -95,26 +94,29 @@ const CourseManagement: React.FC = () => {
       {filteredStudents.length === 0 ? (
         <Typography>No students enrolled in {selectedCourse}.</Typography>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>User ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Courses</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Last Login</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredStudents.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.id}</TableCell>
-                  <TableCell>{student.class.join(', ')}</TableCell>
-                  <TableCell>{student.lastLogin ? new Date(student.lastLogin.seconds * 1000).toLocaleString() : 'No data available'}</TableCell>
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>User ID</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Courses</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Last Login</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filteredStudents.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>{student.id}</TableCell>
+                    <TableCell>{student.class.join(', ')}</TableCell>
+                    <TableCell>{student.lastLogin ? new Date(student.lastLogin.seconds * 1000).toLocaleString() : 'No data available'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <ExportToCSV students={filteredStudents} selectedCourse={selectedCourse} />
+        </>
       )}
       <CourseStudentManagement selectedCourse={selectedCourse} onStudentChange={refreshStudents} />
     </Box>
