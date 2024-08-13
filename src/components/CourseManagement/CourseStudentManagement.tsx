@@ -1,8 +1,8 @@
 // src/components/CourseStudentManagement.tsx
 
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { getFirestore, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { getFirestore, doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 
 interface CourseStudentManagementProps {
   selectedCourse: string;
@@ -14,7 +14,7 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [action, setAction] = useState('add');
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   const db = getFirestore();
 
@@ -28,15 +28,39 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
     setLoading(true);
     try {
       const userRef = doc(db, 'users', studentId);
+      const userDoc = await getDoc(userRef);
 
-      if (action === 'add') {
-        await updateDoc(userRef, { class: arrayUnion(selectedCourse) });
-        setMessage(`Student ${studentId} added to course ${selectedCourse}.`);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const enrolledCourses = userData.class || [];
+
+        if (enrolledCourses.includes(selectedCourse)) {
+          // Open the confirmation dialog
+          setConfirmDialogOpen(true);
+        } else {
+          setMessage(`Student ${studentId} is not enrolled in course ${selectedCourse}, cannot remove.`);
+          setOpenSnackbar(true);
+        }
       } else {
-        await updateDoc(userRef, { class: arrayRemove(selectedCourse) });
-        setMessage(`Student ${studentId} removed from course ${selectedCourse}.`);
+        setMessage(`Student ${studentId} does not exist.`);
+        setOpenSnackbar(true);
       }
+    } catch (error) {
+      console.error('Error checking student course:', error);
+      setMessage('Error checking student course.');
+      setOpenSnackbar(true);
+    }
+    setLoading(false);
+  };
 
+  const confirmRemoval = async () => {
+    setLoading(true);
+    try {
+      const userRef = doc(db, 'users', studentId);
+      // Remove the student from the selected course
+      await updateDoc(userRef, { class: arrayRemove(selectedCourse) });
+      setMessage(`Student ${studentId} removed from course ${selectedCourse}.`);
+      setStudentId(''); // Clear the Student ID input field
       onStudentChange(); // Refresh the student list
     } catch (error) {
       console.error('Error updating student course:', error);
@@ -44,16 +68,21 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
     }
     setLoading(false);
     setOpenSnackbar(true);
+    setConfirmDialogOpen(false); // Close the confirmation dialog
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
 
+  const handleCancelRemoval = () => {
+    setConfirmDialogOpen(false);
+  };
+
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h6" component="h2">
-        Manage Students in {selectedCourse}
+        Remove Students from {selectedCourse}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <TextField
@@ -65,23 +94,13 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
           margin="normal"
           sx={{ mr: 2 }}
         />
-        <FormControl sx={{ minWidth: 120, mr: 2 }}>
-          <InputLabel>Action</InputLabel>
-          <Select
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-          >
-            <MenuItem value="add">Add</MenuItem>
-            <MenuItem value="remove">Remove</MenuItem>
-          </Select>
-        </FormControl>
         <Button
           variant="contained"
           color="primary"
           onClick={handleStudentUpdate}
           disabled={loading}
         >
-          {loading ? <CircularProgress size={24} /> : 'Update'}
+          {loading ? <CircularProgress size={24} /> : 'Remove'}
         </Button>
       </Box>
       <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
@@ -89,6 +108,29 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
           {message}
         </Alert>
       </Snackbar>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={handleCancelRemoval}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+      >
+        <DialogTitle id="confirm-dialog-title">Confirm Removal</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="confirm-dialog-description">
+            Are you sure you want to remove the student from the course? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelRemoval} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={confirmRemoval} color="secondary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
