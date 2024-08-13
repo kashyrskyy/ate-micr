@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Typography, Link, Box, IconButton, Grid } from '@mui/material';
+import React, { useState } from 'react';
+import { Card, Typography, Link, Box, IconButton, Grid, Button } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteMessage from './DeleteMessage';
 
@@ -19,9 +19,26 @@ interface Props {
 }
 
 const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, handleDeleteMessage }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const messagesPerPage = 3;
+
+  const indexOfLastMessage = (currentPage + 1) * messagesPerPage;
+  const indexOfFirstMessage = indexOfLastMessage - messagesPerPage;
+  const currentMessages = messages.slice(indexOfFirstMessage, indexOfLastMessage);
+
+  const totalPages = Math.ceil(messages.length / messagesPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage(currentPage + 1);
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(currentPage - 1);
+  };
+
   return (
     <Box>
-      {messages.map((message) => (
+      {currentMessages.map((message) => (
         <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
           <Grid container justifyContent="space-between" alignItems="flex-start">
             <Grid item>
@@ -61,6 +78,21 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
           </Box>
         </Card>
       ))}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+        <Button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 0}
+          sx={{ mr: 1 }}
+        >
+          Previous
+        </Button>
+        <Button
+          onClick={handleNextPage}
+          disabled={currentPage >= totalPages - 1}
+        >
+          Next
+        </Button>
+      </Box>
     </Box>
   );
 };
