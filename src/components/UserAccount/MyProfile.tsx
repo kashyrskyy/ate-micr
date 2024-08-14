@@ -22,6 +22,10 @@ const MyProfile: React.FC = () => {
     navigate('/');
   };
 
+  const handleNavigateToRequestPermissions = () => {
+    navigate('/request-educator-permissions');
+  };
+
   useEffect(() => {
     const fetchCourses = async () => {
       const querySnapshot = await getDocs(collection(db, 'courses'));
@@ -162,9 +166,9 @@ const MyProfile: React.FC = () => {
         />
         {isAdvancedOpen && (
           <Box sx={{ mt: 2 }}>
-            <Link href="#/request-educator-permissions" target="_blank">
+            <Button variant="text" onClick={handleNavigateToRequestPermissions}>
               Request Educator Permissions
-            </Link>
+            </Button>
           </Box>
         )}
       </Box>
