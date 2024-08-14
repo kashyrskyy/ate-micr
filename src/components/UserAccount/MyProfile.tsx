@@ -1,6 +1,6 @@
 // src/components/UserAccount/MyProfile.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, MenuItem, Snackbar, Alert, Grid } from '@mui/material';
+import { Box, Typography, TextField, Button, MenuItem, Snackbar, Alert, Grid, Switch, FormControlLabel, Link } from '@mui/material';
 import { useUser, UserDetails } from '../../contexts/UserContext';
 import { getFirestore, doc, updateDoc, collection, getDocs, arrayUnion, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ const MyProfile: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('success');
   const [courses, setCourses] = useState<{ name: string, passcode: string }[]>([]);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const db = getFirestore();
 
   const navigate = useNavigate();
@@ -86,6 +87,10 @@ const MyProfile: React.FC = () => {
     setOpenSnackbar(false);
   };
 
+  const handleToggleAdvanced = () => {
+    setIsAdvancedOpen(!isAdvancedOpen);
+  };
+
   const getAccountStatus = () => {
     if (userDetails?.isSuperAdmin) return 'Super Admin';
     if (userDetails?.isAdmin) return 'Educator';
@@ -148,6 +153,22 @@ const MyProfile: React.FC = () => {
           </Button>
         </Grid>
       </Grid>
+
+      {/* Advanced Section */}
+      <Box sx={{ mt: 4 }}>
+        <FormControlLabel
+          control={<Switch checked={isAdvancedOpen} onChange={handleToggleAdvanced} />}
+          label="Advanced"
+        />
+        {isAdvancedOpen && (
+          <Box sx={{ mt: 2 }}>
+            <Link href="#/request-educator-permissions" target="_blank">
+              Request Educator Permissions
+            </Link>
+          </Box>
+        )}
+      </Box>
+
       <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}
