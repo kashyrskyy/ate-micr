@@ -5,6 +5,8 @@ import { useUser, UserDetails } from '../../contexts/UserContext';
 import { getFirestore, doc, updateDoc, collection, getDocs, arrayUnion, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
+import RetrieveCoursePasscode from './RetrieveCoursePasscode';
+
 const MyProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useUser();
   const [course, setCourse] = useState('');
@@ -165,11 +167,14 @@ const MyProfile: React.FC = () => {
           label="Advanced"
         />
         {isAdvancedOpen && (
-          <Box sx={{ mt: 2 }}>
-            <Button variant="text" onClick={handleNavigateToRequestPermissions}>
-              Request Educator Permissions
-            </Button>
-          </Box>
+          <>
+            <Box sx={{ mt: 2 }}>
+              <Button variant="text" onClick={handleNavigateToRequestPermissions}>
+                Request Educator Permissions
+              </Button>
+            </Box>
+            {userDetails?.isAdmin && <RetrieveCoursePasscode />}
+          </>
         )}
       </Box>
 
