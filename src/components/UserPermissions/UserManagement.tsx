@@ -4,6 +4,7 @@ import { getFirestore, doc, updateDoc, getDoc, collection, getDocs, arrayUnion }
 import { useNavigate } from 'react-router-dom';
 
 import UserTable from './UserTable'; // Import the UserTable component
+import DeleteUser from './DeleteUser'; // Import the DeleteUser component
 
 interface User {
   id: string;
@@ -206,6 +207,18 @@ const UserManagement: React.FC = () => {
     return users;
   };
 
+  const handleUserDeleted = (success: boolean) => {
+    if (success) {
+      setMessage('User account deleted successfully.');
+      setUserExists(false);
+      setUserId(''); // Reset userId to clear the form
+      fetchAllUsers(); // Optionally, refetch the users to update the list
+    } else {
+      setMessage('Error deleting user account.');
+    }
+    setOpenSnackbar(true);
+  };
+
   return (
     <Box sx={{ padding: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -217,7 +230,7 @@ const UserManagement: React.FC = () => {
         User Management
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Use this page to view and manage user permissions. Enter the User ID to grant or revoke admin privileges.
+        Use this page to view and manage user permissions. Enter the User ID to grant or revoke admin privileges, or delete user account.
       </Typography>
       <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
         <form onSubmit={handleSubmit}>
@@ -250,6 +263,7 @@ const UserManagement: React.FC = () => {
                   </Button>
                 </Box>
                 <AssignCourse userId={userId} userClass={userClass} />
+                <DeleteUser userId={userId} onUserDeleted={handleUserDeleted} />
               </Paper>
             )
           )}

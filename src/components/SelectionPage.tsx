@@ -179,7 +179,7 @@ const SelectionPage: React.FC = () => {
                   <CardActionArea onClick={() => navigate('/user-management')}>
                     <CardContent>
                       <Typography variant="h5" component="div">
-                        User Permissions
+                        User Management
                       </Typography>
                     </CardContent>
                   </CardActionArea>
