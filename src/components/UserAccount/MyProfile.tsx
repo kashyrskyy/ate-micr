@@ -1,24 +1,23 @@
 // src/components/UserAccount/MyProfile.tsx
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, MenuItem, Snackbar, Alert, Grid, Switch, FormControlLabel, Link } from '@mui/material';
-import { useUser, UserDetails } from '../../contexts/UserContext';
-import { getFirestore, doc, updateDoc, collection, getDocs, arrayUnion, getDoc } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { Box, Typography, Button, Switch, FormControlLabel, Snackbar, Alert } from '@mui/material';
+import { UserDetails, useUser } from '../../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
+import AddCourseForm from './AddCourseForm';
 import RetrieveCoursePasscode from './RetrieveCoursePasscode';
 
 const MyProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useUser();
-  const [course, setCourse] = useState('');
-  const [passcode, setPasscode] = useState('');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('success');
-  const [courses, setCourses] = useState<{ name: string, passcode: string }[]>([]);
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const db = getFirestore();
 
   const navigate = useNavigate();
+  const db = getFirestore();
 
   const handleNavigateHome = () => {
     navigate('/');
@@ -28,69 +27,25 @@ const MyProfile: React.FC = () => {
     navigate('/request-educator-permissions');
   };
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      const querySnapshot = await getDocs(collection(db, 'courses'));
-      // Use let instead of const
-      let coursesList = querySnapshot.docs.map(doc => doc.data() as { name: string, passcode: string });
-  
-      // Filter out "Public-Source" course for non-admin users
-      if (!userDetails?.isAdmin) {
-        coursesList = coursesList.filter(course => course.name !== 'Public-Source');
-      }
-  
-      setCourses(coursesList);
-    };
-  
-    fetchCourses();
-  }, [db, userDetails]); // Added userDetails as a dependency
-
-  const handleCourseChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCourse(event.target.value);
-  };
-
-  const handlePasscodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPasscode(event.target.value);
-  };
-
-  const handleAddCourse = async () => {
-    const selectedCourse = courses.find(c => c.name === course);
-    if (selectedCourse && selectedCourse.passcode === passcode) {
-      try {
-        if (userDetails) {
-          const userCourses = userDetails.class || [];
-          if (userCourses.includes(course)) {
-            setSnackbarMessage(`Course access for ${course} already added to your account!`);
-            setSnackbarSeverity('info');
-          } else {
-            const userDoc = doc(db, 'users', userDetails.uid);
-            await updateDoc(userDoc, {
-              class: arrayUnion(course),
-            });
-            // Fetch updated user details
-            const updatedUserDoc = await getDoc(userDoc);
-            if (updatedUserDoc.exists()) {
-              const updatedUserData = updatedUserDoc.data() as UserDetails;
-              setUserDetails({ ...updatedUserData, uid: userDetails.uid });
-            }
-            setSnackbarMessage(`Course access for ${course} added to your account successfully!`);
-            setSnackbarSeverity('success');
-          }
-        }
-      } catch (error) {
-        console.error('Error updating document: ', error);
-        setSnackbarMessage('Error adding course access to your account.');
-        setSnackbarSeverity('error');
-      }
-    } else {
-      setSnackbarMessage('Invalid passcode. Course not added.');
-      setSnackbarSeverity('error');
-    }
+  const handleCourseAdded = (message: string, severity: 'success' | 'error' | 'info') => {
+    // Action 1: Show a confirmation message or modal (using Snackbar component)
     setOpenSnackbar(true);
-  };
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+    // Action 2: Refresh the list of courses (assuming you have a function to fetch user details)
+    if (severity === 'success' && userDetails) {
+      const fetchUpdatedUserDetails = async () => {
+        const userDoc = doc(db, 'users', userDetails.uid);
+        const updatedUserDoc = await getDoc(userDoc);
+        if (updatedUserDoc.exists()) {
+          const updatedUserData = updatedUserDoc.data() as UserDetails;
+          setUserDetails({ ...updatedUserData, uid: userDetails.uid });
+        }
+      };
+
+      fetchUpdatedUserDetails();
+    }
   };
 
   const handleToggleAdvanced = () => {
@@ -101,6 +56,10 @@ const MyProfile: React.FC = () => {
     if (userDetails?.isSuperAdmin) return 'Super Admin';
     if (userDetails?.isAdmin) return 'Educator';
     return 'Student';
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
   };
 
   return (
@@ -129,36 +88,8 @@ const MyProfile: React.FC = () => {
       <Typography variant="body1" sx={{ mb: 2 }}>
         Use the area below to add a course access to your account.
       </Typography>
-      <Grid container spacing={2} sx={{ maxWidth: '50%' }}>
-        <Grid item xs={5}>
-          <TextField
-            select
-            label="Select Course"
-            value={course}
-            onChange={handleCourseChange}
-            fullWidth
-            sx={{ mb: 2 }}
-          >
-            {courses.map((course) => (
-              <MenuItem key={course.name} value={course.name}>{course.name}</MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid item xs={5}>
-          <TextField
-            label="Enter Passcode"
-            value={passcode}
-            onChange={handlePasscodeChange}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-        </Grid>
-        <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Button variant="contained" onClick={handleAddCourse}>
-            Add Course
-          </Button>
-        </Grid>
-      </Grid>
+
+      <AddCourseForm onCourseAdded={handleCourseAdded} />
 
       {/* Advanced Section */}
       <Box sx={{ mt: 4 }}>
