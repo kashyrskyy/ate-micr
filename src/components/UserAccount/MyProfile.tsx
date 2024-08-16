@@ -24,7 +24,14 @@ const MyProfile: React.FC = () => {
   };
 
   const handleNavigateToRequestPermissions = () => {
-    navigate('/request-educator-permissions');
+    // If the user is an admin, make the button unclickable
+    if (!userDetails?.isAdmin) {
+      navigate('/request-educator-permissions');
+    }
+  };
+
+  const handleNavigateToRequestNewCourse = () => {
+    navigate('/request-new-course');
   };
 
   const handleCourseAdded = (message: string, severity: 'success' | 'error' | 'info') => {
@@ -100,11 +107,30 @@ const MyProfile: React.FC = () => {
         {isAdvancedOpen && (
           <>
             <Box sx={{ mt: 2 }}>
-              <Button variant="text" onClick={handleNavigateToRequestPermissions}>
-                Request Educator Permissions
+              <Button
+                variant="text"
+                onClick={handleNavigateToRequestPermissions}
+                disabled={userDetails?.isAdmin}
+              >
+                {userDetails?.isAdmin ? (
+                  <Typography>
+                    <span style={{ color: 'green' }}>✔ Educator Account Approved</span>
+                  </Typography>
+                ) : (
+                  'Request Educator Permissions'
+                )}
               </Button>
             </Box>
-            {userDetails?.isAdmin && <RetrieveCoursePasscode />}
+            {userDetails?.isAdmin && (
+              <>
+                <Box sx={{ mt: 2 }}>
+                  <Button variant="text" onClick={handleNavigateToRequestNewCourse}>
+                    Request Creating a New Course
+                  </Button>
+                </Box>
+                <RetrieveCoursePasscode />
+              </>
+            )}
           </>
         )}
       </Box>

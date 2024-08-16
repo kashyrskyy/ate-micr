@@ -21,6 +21,7 @@ import MyProfile from './components/UserAccount/MyProfile';
 import CourseManagement from './components/CourseManagement/CourseManagement';
 import RequestEducatorPermissionsForm from './components/UserAccount/RequestEducatorPermissionsForm';
 import EducatorRequestsAdminPage from './components/EducatorRequests/EducatorRequestsAdminPage';
+import RequestNewCourseForm from './components/UserAccount/RequestNewCourseForm';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
@@ -73,6 +74,7 @@ const App = () => {
               <Route path="/course-management" element={<PrivateRoute element={CourseManagement} />} />
               <Route path="/request-educator-permissions" element={<PrivateRoute element={RequestEducatorPermissionsForm} />} />
               <Route path="/educator-requests" element={<PrivateRoute element={EducatorRequestsAdminPage} />} />
+              <Route path="/request-new-course" element={<RequestNewCourseForm />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
