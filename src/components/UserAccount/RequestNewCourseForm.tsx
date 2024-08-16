@@ -1,6 +1,7 @@
 // src/components/UserAccount/RequestNewCourseForm.tsx
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
@@ -12,9 +13,10 @@ const RequestNewCourseForm: React.FC = () => {
   const [courseDescription, setCourseDescription] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
 
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogContent, setDialogContent] = useState('');
   const db = getFirestore();
   const navigate = useNavigate();
 
@@ -24,11 +26,13 @@ const RequestNewCourseForm: React.FC = () => {
 
   const handleRequestNewCourse = async () => {
     if (!courseName || !courseDescription) {
-      setSnackbarMessage('Please fill in all required fields.');
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
+      setDialogTitle('Error');
+      setDialogContent('Please fill in all required fields.');
+      setDialogOpen(true);
       return;
     }
+
+    setLoading(true);
 
     try {
       const requestDoc = {
@@ -40,21 +44,33 @@ const RequestNewCourseForm: React.FC = () => {
         timestamp: new Date(),
       };
       await addDoc(collection(db, 'courseRequests'), requestDoc);
-      setSnackbarMessage('Your course request has been submitted for review.');
-      setSnackbarSeverity('success');
+      
+      setDialogTitle('Success');
+      setDialogContent('Your course request has been submitted for review.');
+
+      // Clear form fields
       setCourseName('');
       setCourseDescription('');
       setAdditionalInfo('');
+
+      // Show success message and then navigate back to My Account
+      setDialogOpen(true);
+      setTimeout(() => {
+        navigate('/my-profile');
+      }, 2000);
+
     } catch (error) {
       console.error('Error submitting course request: ', error);
-      setSnackbarMessage('Error submitting your course request. Please try again.');
-      setSnackbarSeverity('error');
+      setDialogTitle('Error');
+      setDialogContent('Error submitting your course request. Please try again.');
+      setDialogOpen(true);
+    } finally {
+      setLoading(false);
     }
-    setOpenSnackbar(true);
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
   };
 
   const handleNavigateBack = () => {
@@ -91,6 +107,7 @@ const RequestNewCourseForm: React.FC = () => {
           variant="outlined"
           sx={{ mb: 2 }}
           required
+          disabled={loading}
         />
         <TextField
           label="Course Description"
@@ -102,6 +119,7 @@ const RequestNewCourseForm: React.FC = () => {
           rows={4}
           sx={{ mb: 2 }}
           required
+          disabled={loading}
         />
         <TextField
           label="Additional Information"
@@ -113,30 +131,41 @@ const RequestNewCourseForm: React.FC = () => {
           rows={4}
           sx={{ mb: 3 }}
           helperText="Provide any additional information (optional)."
+          disabled={loading}
         />
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleRequestNewCourse} 
-          sx={{ 
-            display: 'block', 
-            mx: 'auto', 
-            mb: 2, 
-            py: 1.5, 
-            px: 4, 
-            fontWeight: 'bold', 
-            fontSize: '16px', 
-            textTransform: 'uppercase' 
-          }}
-        >
-          Submit Request
-        </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleRequestNewCourse} 
+            sx={{ 
+              py: 1.5, 
+              px: 4, 
+              fontWeight: 'bold', 
+              fontSize: '16px', 
+              textTransform: 'uppercase' 
+            }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit Request'}
+          </Button>
+        </Box>
 
-        <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-          <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+        <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircleIcon sx={{ color: 'green', fontSize: 50, marginRight: 1 }} />
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ textAlign: 'center' }}>
+              {dialogContent}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="primary" autoFocus>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );

@@ -1,12 +1,15 @@
 // src/components/UserAccount/RequestEducatorPermissionsForm.tsx
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext'; // Import your UserContext
 import { useNavigate } from 'react-router-dom';
 
 const RequestEducatorPermissionsForm: React.FC = () => {
   const { userDetails } = useUser(); // Get the user details, including the user ID
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [institution, setInstitution] = useState('');
@@ -14,9 +17,12 @@ const RequestEducatorPermissionsForm: React.FC = () => {
   const [courseName, setCourseName] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+  const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogContent, setDialogContent] = useState('');
+
   const db = getFirestore();
   const navigate = useNavigate();
 
@@ -26,11 +32,13 @@ const RequestEducatorPermissionsForm: React.FC = () => {
 
   const handleRequestPermissions = async () => {
     if (!firstName || !lastName || !institution || !email || !courseName || !courseDescription) {
-      setSnackbarMessage('Please fill in all required fields.');
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
+      setDialogTitle('Error');
+      setDialogContent('Please fill in all required fields.');
+      setDialogOpen(true);
       return;
     }
+
+    setLoading(true);
 
     try {
       const requestDoc = {
@@ -46,8 +54,11 @@ const RequestEducatorPermissionsForm: React.FC = () => {
         timestamp: new Date(),
       };
       await addDoc(collection(db, 'educatorRequests'), requestDoc);
-      setSnackbarMessage('Your request has been submitted for review.');
-      setSnackbarSeverity('success');
+
+      setDialogTitle('Success');
+      setDialogContent('Your request has been submitted for review.');
+
+      // Clear form fields
       setFirstName('');
       setLastName('');
       setInstitution('');
@@ -55,16 +66,25 @@ const RequestEducatorPermissionsForm: React.FC = () => {
       setCourseName('');
       setCourseDescription('');
       setAdditionalInfo('');
+
+      // Show success message and then navigate back to My Account
+      setDialogOpen(true);
+      setTimeout(() => {
+        navigate('/my-profile');
+      }, 2000);
+
     } catch (error) {
       console.error('Error submitting request: ', error);
-      setSnackbarMessage('Error submitting your request. Please try again.');
-      setSnackbarSeverity('error');
+      setDialogTitle('Error');
+      setDialogContent('Error submitting your request. Please try again.');
+      setDialogOpen(true);
+    } finally {
+      setLoading(false);
     }
-    setOpenSnackbar(true);
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
   };
 
   const handleNavigateBack = () => {
@@ -101,6 +121,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           variant="outlined"
           sx={{ mb: 2 }}
           required
+          disabled={loading}
         />
         <TextField
           label="Last Name"
@@ -110,6 +131,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           variant="outlined"
           sx={{ mb: 2 }}
           required
+          disabled={loading}
         />
         <TextField
           label="Institution Affiliation"
@@ -119,6 +141,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           variant="outlined"
           sx={{ mb: 2 }}
           required
+          disabled={loading}
         />
         <TextField
           label="Institutional Email"
@@ -130,6 +153,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           sx={{ mb: 2 }}
           helperText="Please use your institutional email to confirm your affiliation."
           required
+          disabled={loading}
         />
         <TextField
           label="Course Name"
@@ -141,6 +165,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           sx={{ mb: 2 }}
           helperText="Specify the course you intend to use in this application."
           required
+          disabled={loading}
         />
         <TextField
           label="Course Description"
@@ -153,6 +178,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           rows={4}
           sx={{ mb: 2 }}
           required
+          disabled={loading}
         />
         <TextField
           label="Additional Information"
@@ -164,6 +190,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           rows={4}
           sx={{ mb: 3 }}
           helperText="Provide any additional information (optional)."
+          disabled={loading}
         />
         <Button 
           variant="contained" 
@@ -179,18 +206,29 @@ const RequestEducatorPermissionsForm: React.FC = () => {
             fontSize: '16px', 
             textTransform: 'uppercase' 
           }}
+          disabled={loading}
         >
-          Submit Request
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit Request'}
         </Button>
         <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
           For any questions, please contact <a href="mailto:andriy@intofuture.org">andriy@intofuture.org</a>.
         </Typography>
 
-        <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-          <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
+        <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircleIcon sx={{ color: 'green', fontSize: 50, marginRight: 1 }} />
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ textAlign: 'center' }}>
+              {dialogContent}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="primary" autoFocus>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );
