@@ -10,6 +10,7 @@ import RetrieveCoursePasscode from './RetrieveCoursePasscode';
 
 const MyProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useUser();
+  const [isEnrollOpen, setIsEnrollOpen] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -55,6 +56,10 @@ const MyProfile: React.FC = () => {
     }
   };
 
+  const handleToggleEnroll = () => {
+    setIsEnrollOpen(!isEnrollOpen);
+  };
+
   const handleToggleAdvanced = () => {
     setIsAdvancedOpen(!isAdvancedOpen);
   };
@@ -92,11 +97,24 @@ const MyProfile: React.FC = () => {
           </Typography>
         </>
       )}
-      <Typography variant="body1" sx={{ mb: 2 }}>
-        Use the area below to add a course access to your account.
-      </Typography>
 
-      <AddCourseForm onCourseAdded={handleCourseAdded} />
+      {/* Enroll in a Course Section - Hidden for educators */}
+      {!userDetails?.isAdmin && (
+        <Box sx={{ mt: 4 }}>
+          <FormControlLabel
+            control={<Switch checked={isEnrollOpen} onChange={handleToggleEnroll} />}
+            label="Enroll in a Course"
+          />
+          {isEnrollOpen && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Use the area below to add a course access to your account.
+              </Typography>
+              <AddCourseForm onCourseAdded={handleCourseAdded} />
+            </Box>
+          )}
+        </Box>
+      )}
 
       {/* Advanced Section */}
       <Box sx={{ mt: 4 }}>
