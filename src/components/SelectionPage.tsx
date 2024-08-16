@@ -174,30 +174,41 @@ const SelectionPage: React.FC = () => {
               </Card>
             </Grid>
             {isSuperAdmin && (
-              <Grid item xs={12}>
-                <Card>
-                  <CardActionArea onClick={() => navigate('/user-management')}>
-                    <CardContent>
-                      <Typography variant="h5" component="div">
-                        User Management
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            )}
-            {isSuperAdmin && (
-              <Grid item xs={12}>
-                <Card>
-                  <CardActionArea onClick={() => navigate('/educator-requests')}>
-                    <CardContent>
-                      <Typography variant="h5" component="div">
-                        Educator Requests
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
+              <>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardActionArea onClick={() => navigate('/user-management')}>
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          User Management
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardActionArea onClick={() => navigate('/educator-requests')}>
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          Educator Requests
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardActionArea onClick={() => navigate('/course-requests')}>
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          Course Requests
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+              </>
             )}
             {userDetails?.isAdmin && (
               <Grid item xs={12}>
