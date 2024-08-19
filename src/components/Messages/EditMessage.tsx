@@ -1,9 +1,10 @@
 // src/components/Messages/EditMessage.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, Button, TextField, Typography, Container, TextareaAutosize } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, TextareaAutosize, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
+import { useUser } from '../../contexts/UserContext';
 
 interface Link {
   title: string;
@@ -15,9 +16,11 @@ const EditMessage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [links, setLinks] = useState([{ title: '', url: '' }]);
+  const [selectedCourse, setSelectedCourse] = useState<string>(''); // For single course selection
 
   const navigate = useNavigate();
   const db = getFirestore();
+  const { userDetails } = useUser(); // Fetch user details from context
 
   useEffect(() => {
     const fetchMessage = async () => {
@@ -29,6 +32,7 @@ const EditMessage: React.FC = () => {
         setTitle(data.title);
         setDescription(data.description);
         setLinks(data.links || [{ title: '', url: '' }]);
+        setSelectedCourse(data.course || '');
       } else {
         console.log('No such document!');
       }
@@ -44,6 +48,7 @@ const EditMessage: React.FC = () => {
         title,
         description,
         links,
+        course: selectedCourse, // Save selected course
       });
       navigate('/');
     } catch (error) {
@@ -68,9 +73,27 @@ const EditMessage: React.FC = () => {
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Edit Message
         </Typography>
+        {/* Course Selection */}
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel id="select-course-label">Course</InputLabel>
+          <Select
+            labelId="select-course-label"
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value as string)}
+            label="Course"
+          >
+            {userDetails?.class?.map((course: string) => (
+              <MenuItem key={course} value={course}>
+                {course}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
         <TextField
           label="Title"
           fullWidth

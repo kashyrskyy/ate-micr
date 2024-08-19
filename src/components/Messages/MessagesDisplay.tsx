@@ -1,6 +1,6 @@
 // src/components/Messages/MessagesDisplay.tsx
 import React, { useState } from 'react';
-import { Card, Typography, Link, Box, IconButton, Grid, Button, Paper } from '@mui/material';
+import { Card, Typography, Link, Box, IconButton, Grid, Button, Paper, Chip } from '@mui/material';
 
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteMessage from './DeleteMessage';
@@ -14,6 +14,7 @@ export interface Message {
   title: string;
   description: string;
   links: { title: string; url: string }[];
+  course: string; // Single course property
   isPinned?: boolean;
 }
 
@@ -29,8 +30,12 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   const [currentPage, setCurrentPage] = useState(0);
   const messagesPerPage = 3;
 
-  const pinnedMessages = messages.filter(message => message.isPinned);
-  const unpinnedMessages = messages.filter(message => !message.isPinned);
+  const filteredMessages = messages.filter(message => 
+    userDetails?.class?.includes(message.course) || message.course === 'Public-Source'
+  );  
+
+  const pinnedMessages = filteredMessages.filter(message => message.isPinned);
+  const unpinnedMessages = filteredMessages.filter(message => !message.isPinned);  
 
   const indexOfLastMessage = (currentPage + 1) * messagesPerPage;
   const indexOfFirstMessage = indexOfLastMessage - messagesPerPage;
@@ -60,6 +65,12 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
             <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
               <Grid container justifyContent="space-between" alignItems="flex-start">
                 <Grid item>
+                  <Chip 
+                    label={message.course}
+                    color="primary"
+                    variant="outlined"
+                    sx={{ mb: 1, borderRadius: '16px' }}
+                  />
                   <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                     Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
                   </Typography>
@@ -104,6 +115,12 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
         <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
           <Grid container justifyContent="space-between" alignItems="flex-start">
             <Grid item>
+              <Chip 
+                label={message.course}
+                color="primary"
+                variant="outlined"
+                sx={{ mb: 1, borderRadius: '16px' }}
+              />
               <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                 Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
               </Typography>
