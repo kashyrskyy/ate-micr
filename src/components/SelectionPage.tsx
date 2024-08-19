@@ -131,6 +131,7 @@ const SelectionPage: React.FC = () => {
             userDetails={userDetails}
             navigate={navigate}
             handleDeleteMessage={handleDeleteMessage}
+            setMessages={setMessages}
           />
         </Grid>
         

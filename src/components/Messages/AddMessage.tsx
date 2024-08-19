@@ -25,6 +25,7 @@ const AddMessage: React.FC = () => {
         description,
         links,
         postedOn: serverTimestamp(),
+        isPinned: false, // Default to false when adding a new message
       });
       navigate('/');
     } catch (error) {
