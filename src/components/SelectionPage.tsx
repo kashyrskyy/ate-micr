@@ -139,7 +139,6 @@ const SelectionPage: React.FC = () => {
           <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
             Navigation
           </Typography>
-
           <Grid container spacing={3} justifyContent="center">
             <Grid item xs={12}>
               <Card>
@@ -152,17 +151,34 @@ const SelectionPage: React.FC = () => {
                 </CardActionArea>
               </Card>
             </Grid>
+
             <Grid item xs={12}>
               <Card>
-                <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      My Laboratory Notebook
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
+                {userDetails && !userDetails.isAdmin && (!userDetails.class || !userDetails.class.some(course => course !== "Public-Source")) ? (
+                  <Tooltip title="The Laboratory Notebook is accessible to users enrolled in an academic course. Please enroll in a course via 'My Account' by following the instructions provided by your academic instructor.">
+                    <span>
+                      <CardActionArea disabled>
+                        <CardContent>
+                          <Typography variant="h5" component="div" sx={{ color: '#9e9e9e', opacity: 0.5 }}>
+                            My Laboratory Notebook
+                            <span style={{ marginLeft: 8 }}>🔒</span>
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>
+                    <CardContent>
+                      <Typography variant="h5" component="div">
+                        My Laboratory Notebook
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                )}
               </Card>
             </Grid>
+
             <Grid item xs={12}>
               <Card>
                 <CardActionArea onClick={() => navigate('/supplemental-materials')}>
