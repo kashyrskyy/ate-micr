@@ -136,11 +136,11 @@ const SelectionPage: React.FC = () => {
         </Grid>
         
         <Grid item xs={12} md={4}>
-          <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
-            Navigation
-          </Typography>
           <Grid container spacing={3} justifyContent="center">
             <Grid item xs={12}>
+              <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
+                General Menu
+              </Typography>
               <Card>
                 <CardActionArea onClick={() => navigate('/my-profile')}>
                   <CardContent>
@@ -190,9 +190,32 @@ const SelectionPage: React.FC = () => {
                 </CardActionArea>
               </Card>
             </Grid>
+            
+            {userDetails?.isAdmin && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
+                    + Educator
+                  </Typography>
+                  <Card>
+                    <CardActionArea onClick={() => navigate('/course-management')}>
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          Course Management
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+              </>
+            )}
+
             {isSuperAdmin && (
               <>
                 <Grid item xs={12}>
+                  <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
+                    + Super-Admin
+                  </Typography>
                   <Card>
                     <CardActionArea onClick={() => navigate('/user-management')}>
                       <CardContent>
@@ -226,19 +249,6 @@ const SelectionPage: React.FC = () => {
                   </Card>
                 </Grid>
               </>
-            )}
-            {userDetails?.isAdmin && (
-              <Grid item xs={12}>
-                <Card>
-                  <CardActionArea onClick={() => navigate('/course-management')}>
-                    <CardContent>
-                      <Typography variant="h5" component="div">
-                        Course Management
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
             )}
           </Grid>
         </Grid>
