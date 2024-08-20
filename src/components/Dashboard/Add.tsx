@@ -1,6 +1,6 @@
 // Add.tsx
-import React, { useState, useMemo, useRef } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert, SnackbarCloseReason } from '@mui/material';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert, SnackbarCloseReason, MenuItem, Select } from '@mui/material';
 
 import { useUser } from '../../contexts/UserContext';
 
@@ -28,6 +28,7 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
   console.log("Add Design loaded");
 
   const [description, setDesignDescription] = useState('');
+  const [course, setCourse] = useState(''); // New state for course selection
   
   const [title, setTitle] = useState('');
 
@@ -59,6 +60,14 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
     }
     setSnackbarOpen(false);
   };
+
+  // Set default course when component mounts
+  useEffect(() => {
+    if (userDetails?.class) {
+      const nonPublicCourses = userDetails.class.filter((course: string) => course !== "Public-Source");
+      setCourse(nonPublicCourses[0] || ""); // Default to first non-public course, if none, set to an empty string
+    }
+  }, [userDetails?.class]);
   
   const saveDesign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,6 +101,7 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
     const newDesign: NewDesign = {
       title: title,
       description: description,
+      course: course, // Include course in the design data
       dateCreated: serverTimestamp(), // FieldValue during write
       dateModified: serverTimestamp(), // FieldValue during write
       images: filteredImages, // Pass filtered images
@@ -144,6 +154,22 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
               />
             </div>
           </div>
+
+          {/* Course Selection Dropdown */}
+          <label className="designTitles" htmlFor="course">Course</label>
+          <Select
+            id="course"
+            value={course}
+            onChange={e => setCourse(e.target.value)}
+            fullWidth
+          >
+            {(userDetails?.class || [])
+              .filter((course: string) => course !== "Public-Source") // Filter out "Public-Source"
+              .map((course: string) => (
+                <MenuItem key={course} value={course}>{course}</MenuItem>
+              ))}
+          </Select>
+
           <label className="designTitles" htmlFor="description">Description</label>
           <ul>
               <li>Objective: What is the goal for this design?</li>

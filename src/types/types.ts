@@ -4,6 +4,7 @@ import { Timestamp, FieldValue } from 'firebase/firestore';
 export interface NewDesign {
     title: string;
     description: string;
+    course: string;
     dateCreated: FieldValue | Timestamp;
     dateModified: FieldValue | Timestamp;
     userId: string;
@@ -15,6 +16,7 @@ export interface Design {
   isAdmin?: boolean;
   id: string;
   title: string;
+  course: string;
   description: string;
   dateCreated: FieldValue | Timestamp | null;
   dateModified: FieldValue | Timestamp | null;

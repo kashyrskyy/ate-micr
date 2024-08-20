@@ -63,6 +63,7 @@ const Dashboard = () => {
         id: doc.id,
         title: data.title,
         description: data.description,
+        course: data.course, // Ensure course is included
         dateCreated: data.dateCreated,
         dateModified: data.dateModified,
         userId: data.userId,

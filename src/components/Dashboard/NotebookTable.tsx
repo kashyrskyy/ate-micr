@@ -66,6 +66,7 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
         <TableHead>
           <TableRow sx={{ height: '60px' }}> 
             <TableCell sx={{ fontWeight: 'bold', width: showUserIdColumn ? '30%' : '40%' }}>Title</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>Course</TableCell>
             {showUserIdColumn && <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>User ID</TableCell>}
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Created</TableCell>
             <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>Last Edited</TableCell>
@@ -82,6 +83,7 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
                   <TableCell>
                     <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
                   </TableCell>
+                  <TableCell>{design.course || 'N/A'}</TableCell> {/* Display course */}
                   {showUserIdColumn && <TableCell>{design.userId}</TableCell>}
                   <TableCell>{formatDate(design.dateCreated)}</TableCell>
                   <TableCell>{formatDate(design.dateModified)}</TableCell>

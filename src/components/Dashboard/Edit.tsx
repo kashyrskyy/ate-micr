@@ -15,7 +15,7 @@ import ImageUpload from './ImageUpload';
 import TextEditor from './TextEditor'; 
 import FileUpload from './FileUpload'; 
 
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert,  MenuItem, Select } from '@mui/material';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -50,6 +50,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
   // -- DESIGN SECTION STATES -- //
   const [title, setTitle] = useState('');
   const [description, setDesignDescription] = useState(selectedDesign.description);
+  const [course, setCourse] = useState(selectedDesign.course || ''); // State for course selection
   const [dateCreated, setDateCreated] = useState<string | null>(timestampToString(selectedDesign.dateCreated));
   const [dateModified, setDateModified] = useState<string | null>(timestampToString(selectedDesign.dateModified));
   const [images, setImages] = useState([]);
@@ -132,6 +133,7 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
     let updateObject = {
         title,
         description,
+        course, // Include course in update
         dateModified: serverTimestamp(),
         images: activeImages.map(img => ({ url: img.url, title: img.title, path: img.path })),
         files: activeFiles.map(file => ({ id: file.id, url: file.url, name: file.name, path: file.path })),
@@ -162,8 +164,10 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
   // useEffect hook for initializing form fields
   useEffect(() => {
     if (selectedDesign) {
+      // Set title, description, and course directly from selectedDesign
       setDesignDescription(selectedDesign.description || '');
       setTitle(selectedDesign.title || '');
+      setCourse(selectedDesign.course || '');
 
       // Fetch image URL from Firestore
       const fetchData = async () => {
@@ -923,6 +927,21 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
               />
             </div>
           </div>
+
+          {/* Course Dropdown */}
+          <label className="designTitles" htmlFor="course">Course</label>
+          <Select
+            id="course"
+            value={course}
+            onChange={e => {
+              setCourse(e.target.value);
+              setUnsavedChanges(prev => ({ ...prev, design: true }));
+            }}
+            fullWidth
+          >
+            <MenuItem value={course}>{course}</MenuItem>
+          </Select>
+          
           <label className="designTitles" htmlFor="description">Description</label>
           <ul>
               <li>Objective: What is the goal for this design?</li>
