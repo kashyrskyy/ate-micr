@@ -8,6 +8,9 @@ import DeleteMessage from './DeleteMessage';
 import PinMessage from './PinMessage';
 import PushPinIcon from '@mui/icons-material/PushPin';
 
+import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
 export interface Message {
   id: string;
   postedOn: { seconds: number };
@@ -63,6 +66,72 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
           </Box>
           {pinnedMessages.map((message) => (
             <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
+              <Accordion>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls={`panel-${message.id}-content`}
+                  id={`panel-${message.id}-header`}
+                >
+                  <Grid container justifyContent="space-between" alignItems="flex-start">
+                    <Grid item>
+                      <Chip 
+                        label={message.course}
+                        color="primary"
+                        variant="outlined"
+                        sx={{ mb: 1, borderRadius: '16px' }}
+                      />
+                      <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                        Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', fontStyle: 'italic' }}>
+                        Subject: {message.title}
+                      </Typography>
+                    </Grid>
+                    {userDetails?.isAdmin && (
+                      <Grid item>
+                        <PinMessage message={message} messages={messages} setMessages={setMessages} />
+                        <IconButton onClick={() => navigate(`/edit-message/${message.id}`)} sx={{ marginRight: 1 }}>
+                          <EditIcon />
+                        </IconButton>
+                        <DeleteMessage messageId={message.id} onDelete={handleDeleteMessage} />
+                      </Grid>
+                    )}
+                  </Grid>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
+                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {message.description}
+                    </Typography>
+                    {message.links && message.links.some((link) => link.title && link.url) && (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Links:</Typography>
+                        {message.links.map((link, index) => (
+                          link.title && link.url && (
+                            <Box key={index} sx={{ mt: 1 }}>
+                              <Typography variant="body2" component="span">🔗 {link.title}: </Typography>
+                              <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
+                            </Box>
+                          )
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            </Card>
+          ))}
+        </Paper>
+      )}
+
+      {currentMessages.map((message) => (
+        <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls={`panel-${message.id}-content`}
+              id={`panel-${message.id}-header`}
+            >
               <Grid container justifyContent="space-between" alignItems="flex-start">
                 <Grid item>
                   <Chip 
@@ -88,6 +157,8 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                   </Grid>
                 )}
               </Grid>
+            </AccordionSummary>
+            <AccordionDetails>
               <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
                 <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                   {message.description}
@@ -106,56 +177,8 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                   </Box>
                 )}
               </Box>
-            </Card>
-          ))}
-        </Paper>
-      )}
-
-      {currentMessages.map((message) => (
-        <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
-          <Grid container justifyContent="space-between" alignItems="flex-start">
-            <Grid item>
-              <Chip 
-                label={message.course}
-                color="primary"
-                variant="outlined"
-                sx={{ mb: 1, borderRadius: '16px' }}
-              />
-              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', fontStyle: 'italic' }}>
-                Subject: {message.title}
-              </Typography>
-            </Grid>
-            {userDetails?.isAdmin && (
-              <Grid item>
-                <PinMessage message={message} messages={messages} setMessages={setMessages} />
-                <IconButton onClick={() => navigate(`/edit-message/${message.id}`)} sx={{ marginRight: 1 }}>
-                  <EditIcon />
-                </IconButton>
-                <DeleteMessage messageId={message.id} onDelete={handleDeleteMessage} />
-              </Grid>
-            )}
-          </Grid>
-          <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-              {message.description}
-            </Typography>
-            {message.links && message.links.some((link) => link.title && link.url) && (
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Links:</Typography>
-                {message.links.map((link, index) => (
-                  link.title && link.url && (
-                    <Box key={index} sx={{ mt: 1 }}>
-                      <Typography variant="body2" component="span">🔗 {link.title}: </Typography>
-                      <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
-                    </Box>
-                  )
-                ))}
-              </Box>
-            )}
-          </Box>
+            </AccordionDetails>
+          </Accordion>
         </Card>
       ))}
 
