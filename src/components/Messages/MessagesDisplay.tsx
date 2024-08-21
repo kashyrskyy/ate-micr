@@ -55,17 +55,17 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   };
 
   return (
-    <Box>
+    <Box className="messages-display-container"> {/* Naming the main container box */}
       {pinnedMessages.length > 0 && (
         <Paper elevation={3} sx={{ mb: 3, p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box className="pinned-section">
             <PushPinIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h6" className="pinned-title">
               Pinned
             </Typography>
           </Box>
           {pinnedMessages.map((message) => (
-            <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
+            <Card key={message.id} className="messages-card">
               <Accordion>
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
@@ -78,12 +78,12 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                         label={message.course}
                         color="primary"
                         variant="outlined"
-                        sx={{ mb: 1, borderRadius: '16px' }}
+                        className="message-chip"
                       />
-                      <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                      <Typography variant="subtitle2" className="message-posted-on">
                         Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
                       </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', fontStyle: 'italic' }}>
+                      <Typography variant="h6" className="message-title">
                         Subject: {message.title}
                       </Typography>
                     </Grid>
@@ -100,16 +100,16 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                 </AccordionSummary>
                 <AccordionDetails>
                   <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Typography variant="body1" className="message-description">
                       {message.description}
                     </Typography>
                     {message.links && message.links.some((link) => link.title && link.url) && (
                       <Box sx={{ mt: 1 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Links:</Typography>
+                        <Typography variant="subtitle2" className="message-links-title">Links:</Typography>
                         {message.links.map((link, index) => (
                           link.title && link.url && (
                             <Box key={index} sx={{ mt: 1 }}>
-                              <Typography variant="body2" component="span">🔗 {link.title}: </Typography>
+                              <Typography variant="body2" component="span" className="message-link">🔗 {link.title}: </Typography>
                               <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
                             </Box>
                           )
@@ -125,7 +125,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
       )}
 
       {currentMessages.map((message) => (
-        <Card key={message.id} sx={{ mb: 2, backgroundColor: '#FFFDE7', padding: '20px' }}>
+        <Card key={message.id} className="messages-card">
           <Accordion>
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
@@ -138,12 +138,12 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                     label={message.course}
                     color="primary"
                     variant="outlined"
-                    sx={{ mb: 1, borderRadius: '16px' }}
+                    className="message-chip"
                   />
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                  <Typography variant="subtitle2" className="message-posted-on">
                     Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', fontStyle: 'italic' }}>
+                  <Typography variant="h6" className="message-title">
                     Subject: {message.title}
                   </Typography>
                 </Grid>
@@ -160,16 +160,16 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
             </AccordionSummary>
             <AccordionDetails>
               <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                <Typography variant="body1" className="message-description">
                   {message.description}
                 </Typography>
                 {message.links && message.links.some((link) => link.title && link.url) && (
                   <Box sx={{ mt: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Links:</Typography>
+                    <Typography variant="subtitle2" className="message-links-title">Links:</Typography>
                     {message.links.map((link, index) => (
                       link.title && link.url && (
                         <Box key={index} sx={{ mt: 1 }}>
-                          <Typography variant="body2" component="span">🔗 {link.title}: </Typography>
+                          <Typography variant="body2" component="span" className="message-link">🔗 {link.title}: </Typography>
                           <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
                         </Box>
                       )
@@ -182,17 +182,18 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
         </Card>
       ))}
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+      <Box className="pagination-container"> {/* Naming the pagination container box */}
         <Button
           onClick={handlePreviousPage}
           disabled={currentPage === 0}
-          sx={{ mr: 1 }}
+          className="pagination-button"
         >
           Previous
         </Button>
         <Button
           onClick={handleNextPage}
           disabled={currentPage >= totalPages - 1}
+          className="pagination-button"
         >
           Next
         </Button>
