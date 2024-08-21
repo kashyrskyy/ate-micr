@@ -65,7 +65,7 @@ const Login = () => {
         <Grid item xs={12} md={6} sx={{ textAlign: 'center' }}>
           <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}ate-logo.png`} alt="ATE Logo" style={{ width: 150, marginBottom: 20 }} />
           <Typography variant={isMobile ? 'h5' : 'h4'} component="h1" gutterBottom>
-            ATE 2.0: MICR 230
+            NexLAB
           </Typography>
         </Grid>
         {!isMobile && (
@@ -84,7 +84,7 @@ const Login = () => {
               onClick={handleGoogleSignIn} 
               sx={{ textTransform: 'none', fontSize: '1rem', minWidth: '250px', boxShadow: 'none', '&:hover': { backgroundColor: '#357ae8', boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', transform: 'scale(1.05)' }, transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out' }}
             >
-              Sign In with Google
+              Google Authentication
             </Button>
             <Tooltip title="Keep you signed in on this device. Do not use on public or shared computers." placement="right">
               <FormControlLabel
