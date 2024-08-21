@@ -1491,15 +1491,48 @@ button.ql-equals {
   margin-top: 16px;
 }
 
-.menu-item-typography {
-  font-size: 1.25rem;
-  font-weight: bold;
+.menu-container .menu-item-typography {
+  font-family: "Staatliches", sans-serif;
+  font-weight: 400;
+  font-style: normal;
   margin: 0;
 }
 
-.general-menu-title {
+.menu-container .general-menu-title {
+  font-family: "Staatliches", sans-serif;
   font-weight: bold;
   margin-bottom: 16px;
+}
+
+/* For the "Inbox" text using Staatliches font */
+.messages-container .inbox-text {
+  font-family: 'Staatliches', sans-serif;
+  font-weight: bold; /* Apply bold if needed */
+  font-size: 1.5rem; /* Adjust the size as desired */
+  color: #333; /* Adjust the color as needed */
+}
+
+/* Box style for the header with NexLAB title */
+.header-box {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+/* Box style for the right side with user details and logout */
+.header-box .user-info-box {
+  display: flex;
+  align-items: center;
+}
+
+/* NexLAB title using the Nabla font */
+.header-box .nexlab-title {
+  font-family: 'Nabla', sans-serif;
+  font-size: 4rem;
+  font-weight: 900;
+  color: #1a237e;
+  letter-spacing: 0.05em;
 }
 
 /*

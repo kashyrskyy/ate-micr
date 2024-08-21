@@ -59,11 +59,11 @@ const SelectionPage: React.FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-          Home Page / ATE 2.0 
+      <Box className="header-box">
+        <Typography variant="h4" component="h1" className="nexlab-title">
+          NexLAB
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box className="user-info-box">
           {isSuperAdmin && (
             <Chip 
               label="Super-Admin" 
@@ -131,7 +131,7 @@ const SelectionPage: React.FC = () => {
                         <CardActionArea disabled>
                           <CardContent>
                             <Typography className="menu-item-typography" variant="h6" component="div" sx={{ color: '#9e9e9e', opacity: 0.5 }}>
-                              My Laboratory Notebook
+                              Laboratory Notebook
                               <span style={{ marginLeft: 8 }}>🔒</span>
                             </Typography>
                           </CardContent>
@@ -142,7 +142,7 @@ const SelectionPage: React.FC = () => {
                     <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>
                       <CardContent>
                         <Typography className="menu-item-typography" variant="h6" component="div">
-                          My Laboratory Notebook
+                          Laboratory Notebook
                         </Typography>
                       </CardContent>
                     </CardActionArea>
@@ -165,7 +165,7 @@ const SelectionPage: React.FC = () => {
               {userDetails?.isAdmin && (
                 <>
                   <Grid item xs={12}>
-                    <Typography className="general-menu-title" variant="h6" align="left" component="h2">
+                    <Typography className="general-menu-title" variant="h6" align="center" component="h2">
                       Educator
                     </Typography>
                     <Card className="menu-item">
@@ -184,7 +184,7 @@ const SelectionPage: React.FC = () => {
               {isSuperAdmin && (
                 <>
                   <Grid item xs={12}>
-                    <Typography className="general-menu-title" variant="h6" align="left" component="h2">
+                    <Typography className="general-menu-title" variant="h6" align="center" component="h2">
                       Super-Admin
                     </Typography>
                     <Card className="menu-item">
@@ -231,7 +231,7 @@ const SelectionPage: React.FC = () => {
               {/* Left side: Inbox text with icon */}
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <MailOutlineIcon sx={{ mr: 1 }} /> {/* Margin right for spacing between icon and text */}
-                <Typography variant="h5" component="h4" sx={{ fontWeight: 'bold' }}>
+                <Typography variant="h5" component="h4" className="inbox-text">
                   Inbox
                 </Typography>
               </Box>
