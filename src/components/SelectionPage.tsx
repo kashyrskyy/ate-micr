@@ -1,7 +1,12 @@
 // src/components/SelectionPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Link, Card, CardActionArea, CardContent, Grid, Chip, Tooltip, Snackbar, Alert, SnackbarCloseReason, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from '@mui/material';
+import {
+  Box, Typography, Card, CardActionArea, CardContent, Grid, Chip, Tooltip,
+  Snackbar, Alert, SnackbarCloseReason, Button
+} from '@mui/material';
+import MailOutlineIcon from '@mui/icons-material/MailOutline'; // Import the mail icon
+
 import { useUser } from '../contexts/UserContext';
 import Logout from './Logout';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
@@ -101,156 +106,161 @@ const SelectionPage: React.FC = () => {
           <Logout />
         </Box>
       </Box>
-      
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }}>
-              Messages
-            </Typography>
-          </Box>
-          {userDetails?.isAdmin && (
-            <Box sx={{ mb: 2 }}>
-              <Button
-                variant="contained"
-                onClick={() => navigate('/add-message')}
-                sx={{
-                  backgroundColor: '#FFF9C4',
-                  color: '#6D4C41',
-                  '&:hover': {
-                    backgroundColor: '#FFF176',
-                  },
-                }}
-              >
-                + Add Message
-              </Button>
-            </Box>
-          )}
-          <MessagesDisplay
-            messages={messages}
-            userDetails={userDetails}
-            navigate={navigate}
-            handleDeleteMessage={handleDeleteMessage}
-            setMessages={setMessages}
-          />
-        </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Grid container spacing={3} justifyContent="center">
-            <Grid item xs={12}>
-              <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
-                General Menu
-              </Typography>
-              <Card>
-                <CardActionArea onClick={() => navigate('/my-profile')}>
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      My Account
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
 
-            <Grid item xs={12}>
-              <Card>
-                {userDetails && !userDetails.isAdmin && (!userDetails.class || !userDetails.class.some(course => course !== "Public-Source")) ? (
-                  <Tooltip title="The Laboratory Notebook is accessible to users enrolled in an academic course. Please enroll in a course via 'My Account' by following the instructions provided by your academic instructor.">
-                    <span>
-                      <CardActionArea disabled>
-                        <CardContent>
-                          <Typography variant="h5" component="div" sx={{ color: '#9e9e9e', opacity: 0.5 }}>
-                            My Laboratory Notebook
-                            <span style={{ marginLeft: 8 }}>🔒</span>
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={3}> {/* Left side menu */}
+          <Box className="menu-container">
+            <Grid container spacing={2} justifyContent="center">
+              <Grid item xs={12}>
+                <Card className="menu-item">
+                  <CardActionArea onClick={() => navigate('/my-profile')}>
                     <CardContent>
-                      <Typography variant="h5" component="div">
-                        My Laboratory Notebook
+                      <Typography className="menu-item-typography" variant="h6" component="div">
+                        My Account
                       </Typography>
                     </CardContent>
                   </CardActionArea>
-                )}
-              </Card>
-            </Grid>
+                </Card>
+              </Grid>
 
-            <Grid item xs={12}>
-              <Card>
-                <CardActionArea onClick={() => navigate('/supplemental-materials')}>
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      Course Materials
+              <Grid item xs={12}>
+                <Card className="menu-item">
+                  {userDetails && !userDetails.isAdmin && (!userDetails.class || !userDetails.class.some(course => course !== "Public-Source")) ? (
+                    <Tooltip title="The Laboratory Notebook is accessible to users enrolled in an academic course. Please enroll in a course via 'My Account' by following the instructions provided by your academic instructor.">
+                      <span>
+                        <CardActionArea disabled>
+                          <CardContent>
+                            <Typography className="menu-item-typography" variant="h6" component="div" sx={{ color: '#9e9e9e', opacity: 0.5 }}>
+                              My Laboratory Notebook
+                              <span style={{ marginLeft: 8 }}>🔒</span>
+                            </Typography>
+                          </CardContent>
+                        </CardActionArea>
+                      </span>
+                    </Tooltip>
+                  ) : (
+                    <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>
+                      <CardContent>
+                        <Typography className="menu-item-typography" variant="h6" component="div">
+                          My Laboratory Notebook
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  )}
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Card className="menu-item">
+                  <CardActionArea onClick={() => navigate('/supplemental-materials')}>
+                    <CardContent>
+                      <Typography className="menu-item-typography" variant="h6" component="div">
+                        Course Materials
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+              
+              {userDetails?.isAdmin && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography className="general-menu-title" variant="h6" align="left" component="h2">
+                      Educator
                     </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-            
-            {userDetails?.isAdmin && (
-              <>
-                <Grid item xs={12}>
-                  <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
-                    + Educator
-                  </Typography>
-                  <Card>
-                    <CardActionArea onClick={() => navigate('/course-management')}>
-                      <CardContent>
-                        <Typography variant="h5" component="div">
-                          Course Management
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-              </>
-            )}
+                    <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/course-management')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            Course Management
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                </>
+              )}
 
-            {isSuperAdmin && (
-              <>
-                <Grid item xs={12}>
-                  <Typography variant="h6" align="left" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline' }} gutterBottom>
-                    + Super-Admin
-                  </Typography>
-                  <Card>
-                    <CardActionArea onClick={() => navigate('/user-management')}>
-                      <CardContent>
-                        <Typography variant="h5" component="div">
-                          User Management
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-                <Grid item xs={12}>
-                  <Card>
-                    <CardActionArea onClick={() => navigate('/educator-requests')}>
-                      <CardContent>
-                        <Typography variant="h5" component="div">
-                          Educator Requests
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-                <Grid item xs={12}>
-                  <Card>
-                    <CardActionArea onClick={() => navigate('/course-requests')}>
-                      <CardContent>
-                        <Typography variant="h5" component="div">
-                          Course Requests
-                        </Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-              </>
-            )}
-          </Grid>
+              {isSuperAdmin && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography className="general-menu-title" variant="h6" align="left" component="h2">
+                      Super-Admin
+                    </Typography>
+                    <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/user-management')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            User Management
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/educator-requests')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            Educator Requests
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/course-requests')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            Course Requests
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                </>
+              )}
+            </Grid>
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={9}> {/* Main content area */}
+          <Box className="messages-container"> {/* Wrap the messages in a container box */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              {/* Left side: Inbox text with icon */}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <MailOutlineIcon sx={{ mr: 1 }} /> {/* Margin right for spacing between icon and text */}
+                <Typography variant="h5" component="h4" sx={{ fontWeight: 'bold' }}>
+                  Inbox
+                </Typography>
+              </Box>
+
+              {/* Right side: + Add Message button */}
+              {userDetails?.isAdmin && (
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/add-message')}
+                  sx={{
+                    backgroundColor: '#FFF9C4',
+                    color: '#6D4C41',
+                    '&:hover': {
+                      backgroundColor: '#FFF176',
+                    },
+                  }}
+                >
+                  + Add Message
+                </Button>
+              )}
+            </Box>
+            <MessagesDisplay
+              messages={messages}
+              userDetails={userDetails}
+              navigate={navigate}
+              handleDeleteMessage={handleDeleteMessage}
+              setMessages={setMessages}
+            />
+          </Box>
         </Grid>
       </Grid>
       
