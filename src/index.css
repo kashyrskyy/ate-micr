@@ -1518,10 +1518,24 @@ button.ql-equals {
   justify-content: space-between;
   margin-bottom: 2rem;
   align-items: center;
+  background-color: #12372A; /* Set the background color */
+  padding: 16px; /* Optional: Add some padding */
+  border-radius: 8px; /* Optional: Add border radius for rounded corners */
 }
 
 /* Box style for the right side with user details and logout */
 .header-box .user-info-box {
+  display: flex;
+  align-items: center;
+  font-family: 'Gabarito', sans-serif;
+}
+
+/* Style for Chips to match the Logout button */
+.header-box .user-info-box .MuiChip-root {
+  height: 40px; /* Set consistent height */
+  padding: 0 16px; /* Consistent padding */
+  font-size: 1.25rem; /* Adjust font size */
+  border-radius: 15px; /* Match the border radius of the Logout button */
   display: flex;
   align-items: center;
 }
@@ -1531,8 +1545,24 @@ button.ql-equals {
   font-family: 'Nabla', sans-serif;
   font-size: 4rem;
   font-weight: 900;
-  color: #1a237e;
+  color: #FBFADA;
   letter-spacing: 0.05em;
+  margin-right: 20px; /* Add some space between title and divider */
+}
+
+.header-box .divider {
+  height: 40px;
+  border-left: 2px solid #FBFADA;
+  margin-right: 20px; /* Adjust spacing as needed */
+}
+
+/* Subtitle next to NexLAB title using Gabarito font */
+.header-box .subtitle {
+  font-family: 'Gabarito', sans-serif;
+  font-size: 1rem; /* Adjust the font size as needed */
+  color: #FBFADA;
+  line-height: 1.5; /* Adjust for spacing between lines */
+  max-width: 300px; /* Adjust as needed for better text wrapping */
 }
 
 /*

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, Card, CardActionArea, CardContent, Grid, Chip, Tooltip,
-  Snackbar, Alert, SnackbarCloseReason, Button
+  Snackbar, Alert, SnackbarCloseReason, Button, Divider
 } from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutline'; // Import the mail icon
 
@@ -60,29 +60,36 @@ const SelectionPage: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Box className="header-box">
-        <Typography variant="h4" component="h1" className="nexlab-title">
-          NexLAB
-        </Typography>
-        <Box className="user-info-box">
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h4" component="h1" className="nexlab-title">
+            NexLAB
+          </Typography>
+          <Box className="divider" /> {/* Vertical divider */}
+          <Typography variant="body1" component="p" className="subtitle">
+            Next-Generation Experiments and <br />
+            Learning for Advanced Biotech
+          </Typography>
+        </Box>
+        <Box className="user-info-box" sx={{ display: 'flex', alignItems: 'center' }}>
           {isSuperAdmin && (
             <Chip 
               label="Super-Admin" 
               variant="outlined" 
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 2, fontFamily: 'Staatliches, sans-serif', fontSize: '20px'}} 
             />
           )}
           {userDetails?.isAdmin && !isSuperAdmin && (
             <Chip 
               label="Educator" 
               variant="outlined" 
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 1 }} 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 2, fontFamily: 'Staatliches, sans-serif', fontSize: '20px'}} 
             />
           )}
           {!userDetails?.isAdmin && (
             <Chip 
               label="Student" 
               variant="outlined" 
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 1 }} 
+              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 2, fontFamily: 'Staatliches, sans-serif', fontSize: '20px'}} 
             />
           )}
           {userDetails && (
@@ -93,12 +100,14 @@ const SelectionPage: React.FC = () => {
                 onClick={handleCopyUserId}
                 sx={{
                   borderRadius: '15px',
+                  fontSize: '20px',
                   fontWeight: 'bold',
                   background: '#e0f2f1',
                   color: '#00695c',
                   cursor: 'pointer',
                   transition: 'background-color 0.3s',
                   mr: 2,
+                  fontFamily: 'Staatliches, sans-serif',
                 }}
               />
             </Tooltip>
@@ -165,6 +174,7 @@ const SelectionPage: React.FC = () => {
               {userDetails?.isAdmin && (
                 <>
                   <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} /> {/* Divider between Course Materials and Educator */}
                     <Typography className="general-menu-title" variant="h6" align="center" component="h2">
                       Educator
                     </Typography>
@@ -184,6 +194,7 @@ const SelectionPage: React.FC = () => {
               {isSuperAdmin && (
                 <>
                   <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} /> {/* Divider between Course Materials and Educator */}
                     <Typography className="general-menu-title" variant="h6" align="center" component="h2">
                       Super-Admin
                     </Typography>

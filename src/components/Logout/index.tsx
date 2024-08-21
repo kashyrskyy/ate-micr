@@ -55,17 +55,18 @@ const Logout = () => {
         onClick={handleClickOpen}
         sx={{ 
           fontSize: '1rem',
-          mt: 2, 
+          fontFamily: 'Staatliches, sans-serif',
           textTransform: 'none',
-          minWidth: '100px', // Adjust the width as needed to fit your design
-          color: 'currentColor', // Ensures the font color stays the same
-          borderColor: 'rgba(255, 0, 0, 0.5)', // Lighter red border for the default state
+          minWidth: '120px', // Adjusted the width to make the button slightly larger
+          color: '#FBFADA', // Updated text color to match your UI
+          borderColor: '#FBFADA', // Border color to match your UI
+          borderRadius: '15px', // Adding border radius for rounded corners
+          backgroundColor: 'transparent', // No background color by default
           boxShadow: 'none', // No box-shadow initially
           '&:hover': {
-            borderColor: 'rgba(255, 0, 0, 0.7)', // Slightly darker red border on hover
-            backgroundColor: 'rgba(255, 0, 0, 0.1)', // Light red background on hover
+            borderColor: '#FFFFFF', // Slightly lighter border on hover
+            backgroundColor: 'rgba(251, 250, 218, 0.2)', // Light background on hover
             boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
-            color: 'currentColor', // Ensure the text color remains the same
             transform: 'scale(1.05)', // Transform effect on hover
           },
           transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, background-color 0.3s ease-in-out',
