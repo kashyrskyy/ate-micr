@@ -1,23 +1,19 @@
 // src/components/SelectionPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box, Typography, Card, CardActionArea, CardContent, Grid, Chip, Tooltip,
-  Snackbar, Alert, SnackbarCloseReason, Button, Divider
-} from '@mui/material';
+import { Box, Grid, Card, CardActionArea, CardContent, Typography, Tooltip, Button, Divider, Snackbar, Alert, SnackbarCloseReason } from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutline'; // Import the mail icon
 
-import { useUser } from '../contexts/UserContext';
-import Logout from './Logout';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
+
 import MessagesDisplay from './Messages/MessagesDisplay';
+import { useUser } from '../contexts/UserContext';
 
 const SelectionPage: React.FC = () => {
   const navigate = useNavigate();
   const { userDetails, isSuperAdmin } = useUser();
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const db = getFirestore();
 
@@ -30,21 +26,6 @@ const SelectionPage: React.FC = () => {
     };
     fetchMessages();
   }, [db]);
-
-  const handleCopyUserId = () => {
-    if (userDetails?.uid) {
-      navigator.clipboard.writeText(userDetails.uid)
-        .then(() => {
-          setOpenSnackbar(true);
-          setCopied(true);
-        })
-        .catch(err => {
-          console.error('Could not copy text: ', err);
-        });
-    } else {
-      console.error('User details are null or undefined');
-    }
-  };
 
   const handleCloseSnackbar = (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
@@ -59,63 +40,6 @@ const SelectionPage: React.FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
-      <Box className="header-box">
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="h4" component="h1" className="nexlab-title">
-            NexLAB
-          </Typography>
-          <Box className="divider" /> {/* Vertical divider */}
-          <Typography variant="body1" component="p" className="subtitle">
-            Next-Generation Experiments and <br />
-            Learning for Advanced Biotech
-          </Typography>
-        </Box>
-        <Box className="user-info-box" sx={{ display: 'flex', alignItems: 'center' }}>
-          {isSuperAdmin && (
-            <Chip 
-              label="Super-Admin" 
-              variant="outlined" 
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 2, fontFamily: 'Staatliches, sans-serif', fontSize: '20px'}} 
-            />
-          )}
-          {userDetails?.isAdmin && !isSuperAdmin && (
-            <Chip 
-              label="Educator" 
-              variant="outlined" 
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#ffcdd2', color: '#c62828', mr: 2, fontFamily: 'Staatliches, sans-serif', fontSize: '20px'}} 
-            />
-          )}
-          {!userDetails?.isAdmin && (
-            <Chip 
-              label="Student" 
-              variant="outlined" 
-              sx={{ borderRadius: '15px', fontWeight: 'bold', background: '#bbdefb', color: '#1e88e5', mr: 2, fontFamily: 'Staatliches, sans-serif', fontSize: '20px'}} 
-            />
-          )}
-          {userDetails && (
-            <Tooltip title={copied ? "Copied!" : "Click to Copy"} enterDelay={300} leaveDelay={200}>
-              <Chip
-                label={`User ID: ${userDetails.uid}`}
-                variant="outlined"
-                onClick={handleCopyUserId}
-                sx={{
-                  borderRadius: '15px',
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  background: '#e0f2f1',
-                  color: '#00695c',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s',
-                  mr: 2,
-                  fontFamily: 'Staatliches, sans-serif',
-                }}
-              />
-            </Tooltip>
-          )}
-          <Logout />
-        </Box>
-      </Box>
-
       <Grid container spacing={3}>
         <Grid item xs={12} md={3}> {/* Left side menu */}
           <Box className="menu-container">

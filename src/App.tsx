@@ -8,6 +8,7 @@ import { ThemeProvider, CssBaseline, CircularProgress, createTheme } from '@mui/
 
 // Import custom components
 import DeviceVersion from './components/DeviceVersion';
+import Header from './components/Header';
 import Footer from './components/Dashboard/Footer';
 import SelectionPage from './components/SelectionPage';
 import AddMaterialForm from './components/Supplemental/AddMaterialForm';
@@ -59,6 +60,8 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        {/* Conditionally render the Header based on whether the user is logged in */}
+        {userDetails && <Header />}
         <div className="content">
           <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></div>}>
             <Routes>
