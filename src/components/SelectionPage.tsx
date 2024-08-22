@@ -177,10 +177,12 @@ const SelectionPage: React.FC = () => {
                   variant="contained"
                   onClick={() => navigate('/add-message')}
                   sx={{
-                    backgroundColor: '#FFF9C4',
-                    color: '#6D4C41',
+                    backgroundColor: '#ADBC9F',
+                    color: '#FBFADA',
+                    fontFamily: 'Staatliches, sans-serif',
+                    fontSize: '1.25rem',
                     '&:hover': {
-                      backgroundColor: '#FFF176',
+                      backgroundColor: '#12372A',
                     },
                   }}
                 >

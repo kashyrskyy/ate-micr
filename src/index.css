@@ -1567,7 +1567,7 @@ button.ql-equals {
 
 /* Overall MessagesDisplay container */
 .messages-display-container {
-  background-color: #F5F5F5; /* Background for the entire container */
+  background-color: #ADBC9F; /* Background for the entire container */
   padding: 16px;
   border-radius: 15px;
 }
@@ -1581,7 +1581,7 @@ button.ql-equals {
 
 /* Card Styling */
 .messages-display-container .messages-card {
-  background-color: #FBFADA; /* Light cream color */
+  background-color: #F5F5F5; /* Light cream color */
   padding: 20px;
   border-radius: 15px;
   margin-bottom: 16px;
@@ -1648,6 +1648,7 @@ button.ql-equals {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
+  color: #FBFADA; /* Light cream text for chip */
 }
 
 .pinned-section .pinned-title {
