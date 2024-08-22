@@ -1661,6 +1661,44 @@ button.ql-equals {
   color: #12372A; /* Dark green for pinned title */
 }
 
+/* Report a Bug, Footer, and Device Version */
+
+.report-bug-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 16px; /* Equivalent to px: 2 */
+}
+
+.report-bug-container .report-bug-button {
+  margin: 8px 0; /* Equivalent to my: 1 */
+  padding: 8px 16px; /* Equivalent to px and py */
+  min-width: 150px;
+  height: 50px; /* Explicit height */
+  background-color: #FBFADA; /* Inside color */
+  border: 2px solid #436850; /* Outline color */
+  color: #436850; /* Text color */
+  text-transform: none;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-family: 'Staatliches', sans-serif; /* Apply Staatliches font */
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for background and color changes */
+  box-shadow: none; /* Remove shadow */
+}
+
+.report-bug-container .report-bug-button:hover {
+  background-color: #436850; /* Hover inside color */
+  color: #FBFADA; /* Hover text color */
+  border-color: #436850; /* Keep outline color on hover */
+}
+
+.report-bug-container .report-bug-button:active,
+.report-bug-container .report-bug-button:focus {
+  background-color: #436850; /* Active and focus inside color */
+  color: #FBFADA; /* Active and focus text color */
+  border-color: #436850; /* Keep outline color on active and focus */
+}
+
 /*
  * Navigation
  */

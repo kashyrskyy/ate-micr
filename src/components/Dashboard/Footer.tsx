@@ -8,7 +8,7 @@ import ReportBugButton from './ReportBugButton';
 function Footer() {
     return (
       <Box component="footer" sx={{ width: '100%', textAlign: 'center', py: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', px: 2 }}>
+        <Box className="report-bug-container">
             <ReportBugButton />
         </Box>
         <Divider />
