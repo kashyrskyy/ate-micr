@@ -1881,6 +1881,77 @@ button.ql-equals {
   color: #FBFADA; /* Maintain text color */
 }
 
+/* REQUEST FORMS */
+
+/* Apply the Gabarito font to the entire form container */
+.request-form-container {
+  font-family: 'Gabarito', sans-serif;
+}
+
+/* Ensure that the Gabarito font is applied to all text elements within the form */
+.request-form-container * {
+  font-family: 'Gabarito', sans-serif;
+}
+
+/* Apply additional styling to form fields and labels */
+.request-form-container .MuiFormLabel-root,
+.request-form-container .MuiOutlinedInput-root,
+.request-form-container .MuiButton-root,
+.request-form-container .MuiTypography-root {
+  font-family: 'Gabarito', sans-serif;
+}
+
+/* Styling for the form outline container */
+.request-form-outline {
+  margin-top: 16px; /* Equivalent to mt: 2 */
+  margin-left: auto; /* Equivalent to mx: 'auto' */
+  margin-right: auto; /* Equivalent to mx: 'auto' */
+  max-width: 600px;
+  padding: 24px; /* Equivalent to p: 3 */
+  background-color: #f9f9f9;
+  border-radius: 8px; /* Equivalent to borderRadius: 2 */
+}
+
+/* Specific styling for the form title */
+.request-form-outline .request-form-title {
+  font-family: 'Staatliches', sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 24px; /* Equivalent to mb: 3 */
+  text-align: center;
+}
+
+/* Styling for the back home button */
+.request-form-container .back-home-button {
+  font-family: 'Gabarito', sans-serif;
+  font-size: 1.25rem;
+  color: #0A6847;
+  text-transform: none;
+  border: 0px solid #f5f5f5;
+}
+
+/* Style the Submit button with hover effects */
+.request-form-container .submit-button {
+  font-family: 'Staatliches', sans-serif;
+  font-size: 1.2rem;
+  margin-top: 16px; /* Equivalent to mt: 2 */
+  margin-bottom: 32px; /* Equivalent to mb: 4 */
+  text-transform: none;
+  min-width: 150px;
+  background-color: #ADBC9F; /* Match the color palette */
+  color: #FBFADA;
+  box-shadow: none; /* No box-shadow initially */
+  border: 0px solid transparent;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.request-form-container .submit-button:hover {
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
+  transform: scale(1.05); /* Scale effect on hover */
+  background-color: #12372A; /* Darker shade on hover */
+  color: #FBFADA; /* Maintain text color */
+}
+
 /*
  * Navigation
  */

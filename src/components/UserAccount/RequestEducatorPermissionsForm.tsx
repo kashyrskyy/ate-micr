@@ -1,6 +1,6 @@
 // src/components/UserAccount/RequestEducatorPermissionsForm.tsx
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
+import { Box, Typography, Grid, OutlinedInput, FormLabel, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
@@ -92,125 +92,140 @@ const RequestEducatorPermissionsForm: React.FC = () => {
   };
 
   return (
-    <Box sx={{ padding: 3 }}>
+    <Box className="request-form-container" sx={{ padding: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Button variant="text" onClick={handleNavigateBack} sx={{ mr: 2 }}>
+        <Button variant="text" onClick={handleNavigateBack} className="back-home-button">
           &larr; My Account
         </Button>
       </Box>
 
       <Box 
-        sx={{ 
-          mt: 2, 
-          mx: 'auto', 
-          maxWidth: 600, 
-          p: 3, 
-          backgroundColor: '#f9f9f9', 
-          borderRadius: 2, 
-          boxShadow: 1 
-        }}
+        className="request-form-outline"
       >
-        <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', mb: 3, textAlign: 'center' }}>
+        <Typography variant="h5" component="h1" className="request-form-title">
           Request Educator Permissions
         </Typography>
-        <TextField
-          label="First Name"
-          value={firstName}
-          onChange={handleInputChange(setFirstName)}
-          fullWidth
-          variant="outlined"
-          sx={{ mb: 2 }}
-          required
-          disabled={loading}
-        />
-        <TextField
-          label="Last Name"
-          value={lastName}
-          onChange={handleInputChange(setLastName)}
-          fullWidth
-          variant="outlined"
-          sx={{ mb: 2 }}
-          required
-          disabled={loading}
-        />
-        <TextField
-          label="Institution Affiliation"
-          value={institution}
-          onChange={handleInputChange(setInstitution)}
-          fullWidth
-          variant="outlined"
-          sx={{ mb: 2 }}
-          required
-          disabled={loading}
-        />
-        <TextField
-          label="Institutional Email"
-          placeholder="name@institution.edu"
-          value={email}
-          onChange={handleInputChange(setEmail)}
-          fullWidth
-          variant="outlined"
-          sx={{ mb: 2 }}
-          helperText="Please use your institutional email to confirm your affiliation."
-          required
-          disabled={loading}
-        />
-        <TextField
-          label="Course Number"
-          value={courseNumber}
-          onChange={handleInputChange(setCourseNumber)}
-          fullWidth
-          variant="outlined"
-          sx={{ mb: 2 }}
-          helperText="Enter the course number (e.g., BIOL301)."
-          required
-          disabled={loading}
-        />
-        <TextField
-          label="Course Title"
-          value={courseTitle}
-          onChange={handleInputChange(setCourseTitle)}
-          fullWidth
-          variant="outlined"
-          sx={{ mb: 2 }}
-          helperText="Enter the course title (e.g., Advanced Techniques in Biotechnology)."
-          required
-          disabled={loading}
-        />
-        <TextField
-          label="Course Description"
-          value={courseDescription}
-          onChange={handleInputChange(setCourseDescription)}
-          fullWidth
-          variant="outlined"
-          multiline
-          rows={4}
-          sx={{ mb: 2 }}
-          helperText="Provide a brief description of the course (e.g., A comprehensive course covering advanced methods and tools in modern biotech labs, focusing on CRISPR, NGS, and bioinformatics.)"
-          required
-          disabled={loading}
-        />
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleRequestPermissions} 
-          sx={{ 
-            display: 'block', 
-            mx: 'auto', 
-            mb: 2, 
-            py: 1.5, 
-            px: 4, 
-            fontWeight: 'bold', 
-            fontSize: '16px', 
-            textTransform: 'uppercase' 
-          }}
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit Request'}
-        </Button>
-        <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
-          For any questions, please contact <a href="mailto:andriy@intofuture.org">andriy@intofuture.org</a>.
-        </Typography>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <FormLabel htmlFor="first-name" required>First Name</FormLabel>
+            <OutlinedInput
+              id="first-name"
+              name="first-name"
+              value={firstName}
+              onChange={handleInputChange(setFirstName)}
+              placeholder="John"
+              fullWidth
+              required
+              disabled={loading}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormLabel htmlFor="last-name" required>Last Name</FormLabel>
+            <OutlinedInput
+              id="last-name"
+              name="last-name"
+              value={lastName}
+              onChange={handleInputChange(setLastName)}
+              placeholder="Doe"
+              fullWidth
+              required
+              disabled={loading}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormLabel htmlFor="institution" required>Institution Affiliation</FormLabel>
+            <OutlinedInput
+              id="institution"
+              name="institution"
+              value={institution}
+              onChange={handleInputChange(setInstitution)}
+              placeholder="University Name"
+              fullWidth
+              required
+              disabled={loading}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormLabel htmlFor="email" required>Institutional Email</FormLabel>
+            <OutlinedInput
+              id="email"
+              name="email"
+              value={email}
+              onChange={handleInputChange(setEmail)}
+              placeholder="name@institution.edu"
+              fullWidth
+              required
+              disabled={loading}
+            />
+            <Typography variant="caption" sx={{ mt: 1 }}>Please use your institutional email to confirm your affiliation.</Typography>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormLabel htmlFor="course-number" required>Course Number</FormLabel>
+            <OutlinedInput
+              id="course-number"
+              name="course-number"
+              value={courseNumber}
+              onChange={handleInputChange(setCourseNumber)}
+              placeholder="e.g., BIOL301"
+              fullWidth
+              required
+              disabled={loading}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormLabel htmlFor="course-title" required>Course Title</FormLabel>
+            <OutlinedInput
+              id="course-title"
+              name="course-title"
+              value={courseTitle}
+              onChange={handleInputChange(setCourseTitle)}
+              placeholder="e.g., Biotech Research Methods"
+              fullWidth
+              required
+              disabled={loading}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormLabel htmlFor="course-description" required>Course Description</FormLabel>
+            <OutlinedInput
+              id="course-description"
+              name="course-description"
+              value={courseDescription}
+              onChange={handleInputChange(setCourseDescription)}
+              placeholder="e.g., A comprehensive course covering advanced methods and tools in modern biotech labs, focusing on CRISPR, NGS, and bioinformatics."
+              fullWidth
+              multiline
+              rows={2}
+              required
+              disabled={loading}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={handleRequestPermissions} 
+              fullWidth
+              className="submit-button"
+              sx={{ 
+                mt: 3, 
+                py: 1.5, 
+                fontWeight: 'bold', 
+                fontSize: '16px', 
+                textTransform: 'uppercase' 
+              }}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit Request'}
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
+              For any questions, please contact <a href="mailto:andriy@intofuture.org">andriy@intofuture.org</a>.
+            </Typography>
+          </Grid>
+        </Grid>
 
         <Dialog open={dialogOpen} onClose={handleCloseDialog}>
           <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
