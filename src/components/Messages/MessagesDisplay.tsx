@@ -57,7 +57,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   return (
     <Box className="messages-display-container"> {/* Naming the main container box */}
       {pinnedMessages.length > 0 && (
-        <Paper elevation={3} sx={{ mb: 3, p: 2 }}>
+        <Paper elevation={3} sx={{ mb: 3, p: 2, backgroundColor: '#FBFADA', borderRadius: '15px' }}>
           <Box className="pinned-section">
             <PushPinIcon color="primary" sx={{ mr: 1 }} />
             <Typography variant="h6" className="pinned-title">
@@ -74,15 +74,18 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                 >
                   <Grid container justifyContent="space-between" alignItems="flex-start">
                     <Grid item>
-                      <Chip 
-                        label={message.course}
-                        color="primary"
-                        variant="outlined"
-                        className="message-chip"
-                      />
-                      <Typography variant="subtitle2" className="message-posted-on">
-                        Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
-                      </Typography>
+                      <Box display="flex" alignItems="center">
+                        <Chip 
+                          label={message.course}
+                          color="primary"
+                          variant="outlined"
+                          className="message-chip"
+                          sx={{ marginRight: 1 }}
+                        />
+                        <Typography variant="subtitle2" className="message-posted-on">
+                          Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
+                        </Typography>
+                      </Box>
                       <Typography variant="h6" className="message-title">
                         Subject: {message.title}
                       </Typography>
@@ -124,63 +127,68 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
         </Paper>
       )}
 
-      {currentMessages.map((message) => (
-        <Card key={message.id} className="messages-card">
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls={`panel-${message.id}-content`}
-              id={`panel-${message.id}-header`}
-            >
-              <Grid container justifyContent="space-between" alignItems="flex-start">
-                <Grid item>
-                  <Chip 
-                    label={message.course}
-                    color="primary"
-                    variant="outlined"
-                    className="message-chip"
-                  />
-                  <Typography variant="subtitle2" className="message-posted-on">
-                    Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
-                  </Typography>
-                  <Typography variant="h6" className="message-title">
-                    Subject: {message.title}
-                  </Typography>
-                </Grid>
-                {userDetails?.isAdmin && (
+      <Paper elevation={3} sx={{ mb: 3, p: 2, backgroundColor: '#f5f5f5', borderRadius: '15px' }}>
+        {currentMessages.map((message) => (
+          <Card key={message.id} className="messages-card">
+            <Accordion>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls={`panel-${message.id}-content`}
+                id={`panel-${message.id}-header`}
+              >
+                <Grid container justifyContent="space-between" alignItems="flex-start">
                   <Grid item>
-                    <PinMessage message={message} messages={messages} setMessages={setMessages} />
-                    <IconButton onClick={() => navigate(`/edit-message/${message.id}`)} sx={{ marginRight: 1 }}>
-                      <EditIcon />
-                    </IconButton>
-                    <DeleteMessage messageId={message.id} onDelete={handleDeleteMessage} />
+                    <Box display="flex" alignItems="center">
+                      <Chip 
+                        label={message.course}
+                        color="primary"
+                        variant="outlined"
+                        className="message-chip"
+                        sx={{ marginRight: 1 }}
+                      />
+                      <Typography variant="subtitle2" className="message-posted-on">
+                        Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Typography variant="h6" className="message-title">
+                      Subject: {message.title}
+                    </Typography>
                   </Grid>
-                )}
-              </Grid>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
-                <Typography variant="body1" className="message-description">
-                  {message.description}
-                </Typography>
-                {message.links && message.links.some((link) => link.title && link.url) && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="subtitle2" className="message-links-title">Links:</Typography>
-                    {message.links.map((link, index) => (
-                      link.title && link.url && (
-                        <Box key={index} sx={{ mt: 1 }}>
-                          <Typography variant="body2" component="span" className="message-link">🔗 {link.title}: </Typography>
-                          <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
-                        </Box>
-                      )
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        </Card>
-      ))}
+                  {userDetails?.isAdmin && (
+                    <Grid item>
+                      <PinMessage message={message} messages={messages} setMessages={setMessages} />
+                      <IconButton onClick={() => navigate(`/edit-message/${message.id}`)} sx={{ marginRight: 1 }}>
+                        <EditIcon />
+                      </IconButton>
+                      <DeleteMessage messageId={message.id} onDelete={handleDeleteMessage} />
+                    </Grid>
+                  )}
+                </Grid>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ border: '1px solid #e0e0e0', padding: '20px', borderRadius: '4px', backgroundColor: '#fafafa', marginBottom: '16px' }}>
+                  <Typography variant="body1" className="message-description">
+                    {message.description}
+                  </Typography>
+                  {message.links && message.links.some((link) => link.title && link.url) && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="subtitle2" className="message-links-title">Links:</Typography>
+                      {message.links.map((link, index) => (
+                        link.title && link.url && (
+                          <Box key={index} sx={{ mt: 1 }}>
+                            <Typography variant="body2" component="span" className="message-link">🔗 {link.title}: </Typography>
+                            <Link href={link.url} target="_blank" rel="noopener">{link.url}</Link>
+                          </Box>
+                        )
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          </Card>
+        ))}
+      </Paper>
 
       <Box className="pagination-container"> {/* Naming the pagination container box */}
         <Button

@@ -1582,14 +1582,14 @@ button.ql-equals {
 /* Card Styling */
 .messages-display-container .messages-card {
   background-color: #F5F5F5; /* Light cream color */
-  padding: 20px;
+  padding: 0px;
   border-radius: 15px;
-  margin-bottom: 16px;
+  margin-bottom: 5px;
   border: 1px solid #ADBC9F; /* Light sage for border */
 }
 
 /* Chip Styling */
-.messages-card .message-chip {
+.messages-display-container .message-chip {
   margin-bottom: 8px;
   border-radius: 16px;
   font-family: 'Gabarito', sans-serif;
@@ -1599,31 +1599,31 @@ button.ql-equals {
 }
 
 /* Typography Styling */
-.messages-card .message-posted-on {
+.messages-display-container .message-posted-on {
   color: #436850; /* Sage green for the posted on text */
   font-family: 'Gabarito', sans-serif;
 }
 
-.messages-card .message-title {
+.messages-display-container .message-title {
   font-weight: bold;
   font-style: italic;
   font-family: 'Gabarito', sans-serif;
   color: #12372A; /* Dark green for message title */
 }
 
-.messages-card .message-description {
+.messages-display-container .message-description {
   white-space: pre-wrap;
   font-family: 'Gabarito', sans-serif;
   color: #12372A; /* Dark green for description */
 }
 
-.messages-card .message-links-title {
+.messages-display-container .message-links-title {
   font-weight: bold;
   font-family: 'Gabarito', sans-serif;
   color: #436850; /* Sage green for links title */
 }
 
-.messages-card .message-link {
+.messages-display-container .message-link {
   font-family: 'Gabarito', sans-serif;
   color: #12372A; /* Dark green for links */
 }
