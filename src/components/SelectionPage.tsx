@@ -58,7 +58,7 @@ const SelectionPage: React.FC = () => {
 
               <Grid item xs={12}>
                 <Card className="menu-item">
-                  {userDetails && !userDetails.isAdmin && (!userDetails.class || !userDetails.class.some(course => course !== "Public-Source")) ? (
+                  {userDetails && !userDetails.isAdmin && (!userDetails.class || !userDetails.class.some(course => course !== "Public")) ? (
                     <Tooltip title="The Laboratory Notebook is accessible to users enrolled in an academic course. Please enroll in a course via 'My Account' by following the instructions provided by your academic instructor.">
                       <span>
                         <CardActionArea disabled>

@@ -22,7 +22,7 @@ const MaterialGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
 
-  const [selectedCourse, setSelectedCourse] = useState('Public-Source');
+  const [selectedCourse, setSelectedCourse] = useState('Public');
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   
   const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });

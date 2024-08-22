@@ -34,7 +34,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   const messagesPerPage = 3;
 
   const filteredMessages = messages.filter(message => 
-    userDetails?.class?.includes(message.course) || message.course === 'Public-Source'
+    userDetails?.class?.includes(message.course) || message.course === 'Public'
   );  
 
   const pinnedMessages = filteredMessages.filter(message => message.isPinned);
@@ -53,6 +53,11 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   const handlePreviousPage = () => {
     setCurrentPage(currentPage - 1);
   };
+
+  const canEditMessage = (message: Message) => {
+    // Check if the user is Super-Admin or if the message is not Public
+    return userDetails?.isSuperAdmin || (userDetails?.isAdmin && message.course !== 'Public');
+  };  
 
   return (
     <Box className="messages-display-container"> {/* Naming the main container box */}
@@ -90,7 +95,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                         Subject: {message.title}
                       </Typography>
                     </Grid>
-                    {userDetails?.isAdmin && (
+                    {canEditMessage(message) && (
                       <Grid item>
                         <PinMessage message={message} messages={messages} setMessages={setMessages} />
                         <IconButton onClick={() => navigate(`/edit-message/${message.id}`)} sx={{ marginRight: 1 }}>
@@ -154,7 +159,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                       Subject: {message.title}
                     </Typography>
                   </Grid>
-                  {userDetails?.isAdmin && (
+                  {canEditMessage(message) && (
                     <Grid item>
                       <PinMessage message={message} messages={messages} setMessages={setMessages} />
                       <IconButton onClick={() => navigate(`/edit-message/${message.id}`)} sx={{ marginRight: 1 }}>

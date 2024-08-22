@@ -10,14 +10,14 @@ interface CourseSelectorProps {
 
 const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange }) => {
   const { userDetails } = useUser();
-  const [courses, setCourses] = useState<string[]>(['Public-Source']);
+  const [courses, setCourses] = useState<string[]>(['Public']);
 
   useEffect(() => {
     if (userDetails?.class) {
-      const uniqueCourses = Array.from(new Set(['Public-Source', ...userDetails.class]));
+      const uniqueCourses = Array.from(new Set(['Public', ...userDetails.class]));
       setCourses(uniqueCourses);
     } else {
-      setCourses(['Public-Source']);
+      setCourses(['Public']);
     }
   }, [userDetails]);
 
