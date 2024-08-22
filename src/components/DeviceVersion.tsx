@@ -9,12 +9,12 @@ const DeviceVersion: React.FC = () => {
   const { isMobile, isTablet, isDesktop } = useDeviceDetection();
 
   return (
-    <AppBar position="static">
-      <Toolbar>
+    <AppBar position="static" className="device-version-bar">
+      <Toolbar className="device-version-toolbar">
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          {isMobile && <Typography variant="body1">ATE 2.0 Mobile Version</Typography>}
-          {isTablet && <Typography variant="body1">ATE 2.0 Tablet Version</Typography>}
-          {isDesktop && <Typography variant="body1">ATE 2.0 Desktop Version</Typography>}
+          {isMobile && <Typography variant="body1" className="device-version-text">NexLAB Mobile Version 1.0</Typography>}
+          {isTablet && <Typography variant="body1" className="device-version-text">NexLAB Tablet Version 1.0</Typography>}
+          {isDesktop && <Typography variant="body1" className="device-version-text">NexLAB Desktop Version 1.0</Typography>}
         </Box>
       </Toolbar>
     </AppBar>

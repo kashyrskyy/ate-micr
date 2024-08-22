@@ -1699,6 +1699,42 @@ button.ql-equals {
   border-color: #436850; /* Keep outline color on active and focus */
 }
 
+.footer-container {
+  width: 100%;
+  text-align: center;
+  padding: 16px 0; /* Equivalent to py: 2 */
+  font-family: 'Gabarito', sans-serif; /* Apply Gabarito font */
+}
+
+.footer-container .footer-logo {
+  max-width: 500px;
+  max-height: 400px;
+  width: auto;
+  height: auto;
+}
+
+.footer-container .footer-text {
+  margin-top: 8px; /* Equivalent to mt: 1 */
+  font-family: 'Gabarito', sans-serif;
+}
+
+.device-version-bar {
+  background-color: #ADBC9F; /* Set background color */
+}
+
+.device-version-bar .device-version-toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;  
+  background-color: #ADBC9F; /* Set background color */
+}
+
+.device-version-bar .device-version-text {
+  font-family: 'Gabarito', sans-serif; /* Apply Gabarito font */
+  font-size: 1rem; /* Adjust font size if needed */
+}
+
 /*
  * Navigation
  */
