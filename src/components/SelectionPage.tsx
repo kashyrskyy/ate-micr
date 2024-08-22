@@ -183,6 +183,7 @@ const SelectionPage: React.FC = () => {
                     fontSize: '1.25rem',
                     '&:hover': {
                       backgroundColor: '#12372A',
+                      border: '0px solid #12372A',
                     },
                   }}
                 >

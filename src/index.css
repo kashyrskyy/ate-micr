@@ -1478,9 +1478,11 @@ button.ql-equals {
   transition: background-color 0.3s;
 }
 
-.menu-item:hover {
-  background: #C0C0C0;
+.menu-item .MuiCardActionArea-root:hover {
+  background-color: #12372A; /* Your desired hover color */
+  border: 0px solid #f5f5f5;
 }
+
 
 .messages-container {
   background: #f5f5f5;
@@ -1573,7 +1575,7 @@ button.ql-equals {
 }
 
 /* Pagination container */
-.pagination-container {
+.messages-display-container .pagination-container {
   display: flex;
   justify-content: center;
   margin-top: 16px;
@@ -1639,8 +1641,10 @@ button.ql-equals {
   transition: background-color 0.3s;
 }
 
-.pagination-button:hover {
+.pagination-container .pagination-button:hover {
   background-color: #436850; /* Darker green for hover */
+  border: 0px solid #f5f5f5;
+  color: #FBFADA; /* Light cream text */
 }
 
 /* Pinned Messages Styling */
