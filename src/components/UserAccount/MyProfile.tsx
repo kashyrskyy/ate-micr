@@ -75,24 +75,22 @@ const MyProfile: React.FC = () => {
   };
 
   return (
-    <Box sx={{ padding: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Button variant="text" onClick={handleNavigateHome} sx={{ mr: 2 }}>
-          &larr; Home Page
-        </Button>
-      </Box>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 3 }}>
+    <Box className="profile-container">
+      <Button variant="text" onClick={handleNavigateHome} className="profile-button">
+        &larr; Home Page
+      </Button>
+      <Typography className="webpage_title">
         My Account
       </Typography>
       {userDetails && (
         <>
-          <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          <Typography className="profile-text">
             User ID: {userDetails.uid}
           </Typography>
-          <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          <Typography className="profile-text">
             Account Status: {getAccountStatus()}
           </Typography>
-          <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          <Typography className="profile-text">
             Current Courses: {userDetails.class ? userDetails.class.join(', ') : 'None'}
           </Typography>
         </>
@@ -100,14 +98,14 @@ const MyProfile: React.FC = () => {
 
       {/* Enroll in a Course Section - Hidden for educators */}
       {!userDetails?.isAdmin && (
-        <Box sx={{ mt: 4 }}>
+        <Box className="profile-switch-container">
           <FormControlLabel
             control={<Switch checked={isEnrollOpen} onChange={handleToggleEnroll} />}
             label="Enroll in a Course"
           />
           {isEnrollOpen && (
             <Box sx={{ mt: 2 }}>
-              <Typography variant="body1" sx={{ mb: 2 }}>
+              <Typography variant="body1" className="profile-text">
                 Use the area below to add a course access to your account.
               </Typography>
               <AddCourseForm onCourseAdded={handleCourseAdded} />
@@ -117,7 +115,7 @@ const MyProfile: React.FC = () => {
       )}
 
       {/* Advanced Section */}
-      <Box sx={{ mt: 4 }}>
+      <Box className="profile-advanced-section">
         <FormControlLabel
           control={<Switch checked={isAdvancedOpen} onChange={handleToggleAdvanced} />}
           label="Advanced"
@@ -129,10 +127,11 @@ const MyProfile: React.FC = () => {
                 variant="text"
                 onClick={handleNavigateToRequestPermissions}
                 disabled={userDetails?.isAdmin}
+                className="profile-button"
               >
                 {userDetails?.isAdmin ? (
                   <Typography>
-                    <span style={{ color: 'green' }}>✔ Educator Account Approved</span>
+                    <span className="success-text">✔ Educator Account Approved</span>
                   </Typography>
                 ) : (
                   'Request Educator Permissions'

@@ -12,13 +12,13 @@ const Header: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Button variant="text" onClick={handleNavigateHome} sx={{ mr: 2 }}>
+      <Box className="supplemental-header">
+        <Button variant="text" onClick={handleNavigateHome} className="supplemental-back-button">
           &larr; Home Page
         </Button>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+        <Typography className="supplemental-title">
           Supplemental Materials
         </Typography>
       </Box>

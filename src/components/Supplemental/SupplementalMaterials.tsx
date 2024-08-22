@@ -10,9 +10,9 @@ const SupplementalMaterials: React.FC = () => {
   const { userDetails } = useUser();
 
   return (
-    <Box sx={{ flexGrow: 1, padding: 3 }}>
+    <Box className="supplemental-container">
       <Header />
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+      <Box className="supplemental-content">
         {userDetails?.isAdmin && <AddMaterialButton />}
         <MaterialGrid />
       </Box>
