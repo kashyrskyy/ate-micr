@@ -14,9 +14,9 @@ const RequestEducatorPermissionsForm: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [institution, setInstitution] = useState('');
   const [email, setEmail] = useState('');
-  const [courseName, setCourseName] = useState('');
+  const [courseNumber, setCourseNumber] = useState('');
+  const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
-  const [additionalInfo, setAdditionalInfo] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,7 +31,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
   };
 
   const handleRequestPermissions = async () => {
-    if (!firstName || !lastName || !institution || !email || !courseName || !courseDescription) {
+    if (!firstName || !lastName || !institution || !email || !courseNumber || !courseTitle || !courseDescription) {
       setDialogTitle('Error');
       setDialogContent('Please fill in all required fields.');
       setDialogOpen(true);
@@ -47,9 +47,9 @@ const RequestEducatorPermissionsForm: React.FC = () => {
         lastName,
         institution,
         email,
-        courseName,
+        courseNumber,
+        courseTitle,
         courseDescription,
-        additionalInfo,
         status: 'pending',
         timestamp: new Date(),
       };
@@ -63,9 +63,9 @@ const RequestEducatorPermissionsForm: React.FC = () => {
       setLastName('');
       setInstitution('');
       setEmail('');
-      setCourseName('');
+      setCourseNumber('');
+      setCourseTitle('');
       setCourseDescription('');
-      setAdditionalInfo('');
 
       // Show success message and then navigate back to My Account
       setDialogOpen(true);
@@ -156,20 +156,29 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           disabled={loading}
         />
         <TextField
-          label="Course Name"
-          placeholder="Course you intend to use in this app"
-          value={courseName}
-          onChange={handleInputChange(setCourseName)}
+          label="Course Number"
+          value={courseNumber}
+          onChange={handleInputChange(setCourseNumber)}
           fullWidth
           variant="outlined"
           sx={{ mb: 2 }}
-          helperText="Specify the course you intend to use in this application."
+          helperText="Enter the course number (e.g., BIOL301)."
+          required
+          disabled={loading}
+        />
+        <TextField
+          label="Course Title"
+          value={courseTitle}
+          onChange={handleInputChange(setCourseTitle)}
+          fullWidth
+          variant="outlined"
+          sx={{ mb: 2 }}
+          helperText="Enter the course title (e.g., Advanced Techniques in Biotechnology)."
           required
           disabled={loading}
         />
         <TextField
           label="Course Description"
-          placeholder="Briefly describe the course"
           value={courseDescription}
           onChange={handleInputChange(setCourseDescription)}
           fullWidth
@@ -177,19 +186,8 @@ const RequestEducatorPermissionsForm: React.FC = () => {
           multiline
           rows={4}
           sx={{ mb: 2 }}
+          helperText="Provide a brief description of the course (e.g., A comprehensive course covering advanced methods and tools in modern biotech labs, focusing on CRISPR, NGS, and bioinformatics.)"
           required
-          disabled={loading}
-        />
-        <TextField
-          label="Additional Information"
-          value={additionalInfo}
-          onChange={handleInputChange(setAdditionalInfo)}
-          fullWidth
-          variant="outlined"
-          multiline
-          rows={4}
-          sx={{ mb: 3 }}
-          helperText="Provide any additional information (optional)."
           disabled={loading}
         />
         <Button 

@@ -12,9 +12,9 @@ interface EducatorRequest {
   uid: string;
   institution: string;
   email: string;
-  courseName: string;
+  courseNumber: string;
+  courseTitle: string;
   courseDescription: string;
-  additionalInfo?: string;
   timestamp: { seconds: number; nanoseconds: number };
   status: 'pending' | 'approved' | 'denied';
 }
@@ -67,7 +67,8 @@ const EducatorRequestsAdminPage: React.FC = () => {
     try {
       const passcode = generatePasscode();
       const courseDocRef = await addDoc(collection(db, 'courses'), {
-        name: currentRequestData.courseName,
+        number: currentRequestData.courseNumber,
+        title: currentRequestData.courseTitle,
         passcode: passcode,
         courseAdmin: currentRequestData.uid
       });
@@ -75,7 +76,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
       const userDocRef = doc(db, 'users', currentRequestData.uid);
       await updateDoc(userDocRef, {
         isAdmin: true,
-        class: arrayUnion(currentRequestData.courseName)
+        class: arrayUnion(currentRequestData.courseNumber)
       });
 
       await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
@@ -157,9 +158,9 @@ const EducatorRequestsAdminPage: React.FC = () => {
               <TableCell>User ID</TableCell>
               <TableCell>Institution</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Course Name</TableCell>
+              <TableCell>Course Number</TableCell>
+              <TableCell>Course Title</TableCell>
               <TableCell>Course Description</TableCell>
-              <TableCell>Additional Info</TableCell>
               <TableCell>Timestamp</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -171,9 +172,9 @@ const EducatorRequestsAdminPage: React.FC = () => {
                 <TableCell>{request.uid}</TableCell>
                 <TableCell>{request.institution}</TableCell>
                 <TableCell>{request.email}</TableCell>
-                <TableCell>{request.courseName}</TableCell>
+                <TableCell>{request.courseNumber}</TableCell>
+                <TableCell>{request.courseTitle}</TableCell>
                 <TableCell>{request.courseDescription}</TableCell>
-                <TableCell>{request.additionalInfo || 'N/A'}</TableCell>
                 <TableCell>{new Date(request.timestamp.seconds * 1000).toLocaleString()}</TableCell>
                 <TableCell>
                   {request.status === 'pending' && (

@@ -9,9 +9,9 @@ import { useNavigate } from 'react-router-dom';
 const RequestNewCourseForm: React.FC = () => {
   const { userDetails } = useUser();
 
-  const [courseName, setCourseName] = useState('');
+  const [courseNumber, setCourseNumber] = useState('');
+  const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
-  const [additionalInfo, setAdditionalInfo] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,7 +25,7 @@ const RequestNewCourseForm: React.FC = () => {
   };
 
   const handleRequestNewCourse = async () => {
-    if (!courseName || !courseDescription) {
+    if (!courseNumber || !courseTitle || !courseDescription) {
       setDialogTitle('Error');
       setDialogContent('Please fill in all required fields.');
       setDialogOpen(true);
@@ -37,9 +37,9 @@ const RequestNewCourseForm: React.FC = () => {
     try {
       const requestDoc = {
         uid: userDetails?.uid,
-        courseName,
+        courseNumber,
+        courseTitle,
         courseDescription,
-        additionalInfo,
         status: 'pending',
         timestamp: new Date(),
       };
@@ -49,9 +49,9 @@ const RequestNewCourseForm: React.FC = () => {
       setDialogContent('Your course request has been submitted for review.');
 
       // Clear form fields
-      setCourseName('');
+      setCourseNumber('');
+      setCourseTitle('');
       setCourseDescription('');
-      setAdditionalInfo('');
 
       // Show success message and then navigate back to My Account
       setDialogOpen(true);
@@ -100,14 +100,26 @@ const RequestNewCourseForm: React.FC = () => {
           Request Creating a New Course
         </Typography>
         <TextField
-          label="Course Name"
-          value={courseName}
-          onChange={handleInputChange(setCourseName)}
+          label="Course Number"
+          value={courseNumber}
+          onChange={handleInputChange(setCourseNumber)}
           fullWidth
           variant="outlined"
           sx={{ mb: 2 }}
           required
           disabled={loading}
+          helperText="Enter the course number (e.g., BIOL301)."
+        />
+        <TextField
+          label="Course Title"
+          value={courseTitle}
+          onChange={handleInputChange(setCourseTitle)}
+          fullWidth
+          variant="outlined"
+          sx={{ mb: 2 }}
+          required
+          disabled={loading}
+          helperText="Enter the course title (e.g., Advanced Techniques in Biotechnology)."
         />
         <TextField
           label="Course Description"
@@ -120,18 +132,7 @@ const RequestNewCourseForm: React.FC = () => {
           sx={{ mb: 2 }}
           required
           disabled={loading}
-        />
-        <TextField
-          label="Additional Information"
-          value={additionalInfo}
-          onChange={handleInputChange(setAdditionalInfo)}
-          fullWidth
-          variant="outlined"
-          multiline
-          rows={4}
-          sx={{ mb: 3 }}
-          helperText="Provide any additional information (optional)."
-          disabled={loading}
+          helperText="Provide a brief description of the course (e.g., A comprehensive course covering advanced methods and tools in modern biotech labs, focusing on CRISPR, NGS, and bioinformatics)."
         />
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
           <Button 

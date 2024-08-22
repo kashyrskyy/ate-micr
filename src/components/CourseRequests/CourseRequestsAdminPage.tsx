@@ -7,9 +7,9 @@ import { useNavigate } from 'react-router-dom';
 interface CourseRequest {
   id: string;
   uid: string;  // Educator ID
-  courseName: string;
+  courseNumber: string;
+  courseTitle: string;
   courseDescription: string;
-  additionalInfo?: string;
   timestamp: { seconds: number; nanoseconds: number };
   status: 'pending' | 'approved' | 'denied';
 }
@@ -64,7 +64,8 @@ const CourseRequestsAdminPage: React.FC = () => {
 
       // Create a new course document
       const courseDocRef = await addDoc(collection(db, 'courses'), {
-        name: currentRequestData.courseName,
+        number: currentRequestData.courseNumber,
+        title: currentRequestData.courseTitle,
         passcode: passcode,
         courseAdmin: currentRequestData.uid
       });
@@ -72,7 +73,7 @@ const CourseRequestsAdminPage: React.FC = () => {
       // Update the user's document to associate them with the new course
       const userDocRef = doc(db, 'users', currentRequestData.uid);
       await updateDoc(userDocRef, {
-        class: arrayUnion(currentRequestData.courseName)
+        class: arrayUnion(currentRequestData.courseNumber)
       });
 
       // Update the course request document with the new course ID and passcode
@@ -152,9 +153,9 @@ const CourseRequestsAdminPage: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Educator ID</TableCell>
-              <TableCell>Course Name</TableCell>
+              <TableCell>Course Number</TableCell>
+              <TableCell>Course Title</TableCell>
               <TableCell>Course Description</TableCell>
-              <TableCell>Additional Info</TableCell>
               <TableCell>Timestamp</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -163,9 +164,9 @@ const CourseRequestsAdminPage: React.FC = () => {
             {requests.map((request) => (
               <TableRow key={request.id}>
                 <TableCell>{request.uid}</TableCell>
-                <TableCell>{request.courseName}</TableCell>
+                <TableCell>{request.courseNumber}</TableCell>
+                <TableCell>{request.courseTitle}</TableCell>
                 <TableCell>{request.courseDescription}</TableCell>
-                <TableCell>{request.additionalInfo || 'N/A'}</TableCell>
                 <TableCell>{new Date(request.timestamp.seconds * 1000).toLocaleString()}</TableCell>
                 <TableCell>
                   {request.status === 'pending' && (
@@ -218,7 +219,7 @@ const CourseRequestsAdminPage: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="confirmation-dialog-description">
-            Are you sure you want to {currentAction} this request for {currentRequestData?.courseName} submitted by Educator ID: {currentRequestData?.uid}?
+            Are you sure you want to {currentAction} this request for {currentRequestData?.courseNumber} submitted by Educator ID: {currentRequestData?.uid}?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
