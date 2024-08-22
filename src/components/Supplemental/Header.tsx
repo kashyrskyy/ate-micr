@@ -19,7 +19,7 @@ const Header: React.FC = () => {
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography className="supplemental-title">
-          Supplemental Materials
+          Course Materials
         </Typography>
       </Box>
     </Box>
