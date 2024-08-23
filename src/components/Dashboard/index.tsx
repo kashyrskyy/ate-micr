@@ -19,8 +19,9 @@ const Dashboard = () => {
 
   console.log("Dashboard loaded");
 
-  const [adminDesigns, setAdminDesigns] = useState<Design[]>([]); // State for admin's designs
-  const [userDesigns, setUserDesigns] = useState<Design[]>([]); // State for other users' designs
+  const [superAdminDesigns, setSuperAdminDesigns] = useState<Design[]>([]); // State for super-admin designs
+  const [adminDesigns, setAdminDesigns] = useState<Design[]>([]); // State for educator's designs
+  const [userDesigns, setUserDesigns] = useState<Design[]>([]); // State for student's designs
   const [selectedDesign, setSelectedDesign] = useState<Design | null>(null); // Updated type for selectedDesign state
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -47,12 +48,19 @@ const Dashboard = () => {
 
   const getDesigns = useCallback(async () => {
     if (!userDetails) return;
-
+  
     let designsQuery;
+    const superAdminDesigns: Design[] = [];
     const adminDesigns: Design[] = [];
     const userDesigns: Design[] = [];
-      
-    if (userDetails.isAdmin) {
+  
+    if (userDetails.isSuperAdmin) {
+      // Super-Admins can view all designs, so no filtering by course
+      designsQuery = query(
+        collection(db, "designs"),
+        orderBy("dateCreated", "desc")
+      );
+    } else if (userDetails.isAdmin) {
       // Use 'in' query to retrieve only designs related to the courses the admin has access to
       if (userDetails.class && userDetails.class.length > 0) {
         designsQuery = query(
@@ -74,7 +82,7 @@ const Dashboard = () => {
         orderBy("dateCreated", "desc")
       );
     }
-
+  
     const querySnapshot = await getDocs(designsQuery);
   
     querySnapshot.forEach(doc => {
@@ -91,25 +99,40 @@ const Dashboard = () => {
         files: data.files || []
       } as Design;
   
-      if (data.userId === userDetails.uid) {
-        adminDesigns.push(design); // Admin's own designs
+      if (userDetails.isSuperAdmin) {
+        if (data.userId === userDetails.uid) {
+          superAdminDesigns.push(design); // Super Admin's own designs
+        } else if (data.userId !== userDetails.uid && data.course && data.isAdmin) {
+          adminDesigns.push(design); // Educator designs from other admins
+        } else if (data.userId !== userDetails.uid && !data.isAdmin) {
+          userDesigns.push(design); // Student designs
+        }
+      } else if (userDetails.isAdmin) {
+        if (data.userId === userDetails.uid) {
+          adminDesigns.push(design); // Admin's own designs
+        } else {
+          userDesigns.push(design); // Other users' designs for courses the admin has access to
+        }
       } else {
-        userDesigns.push(design); // Other users' designs for courses the admin has access to
+        if (data.userId === userDetails.uid) {
+          userDesigns.push(design); // Student's own designs
+        }
       }
     });
-
+  
+    setSuperAdminDesigns(superAdminDesigns);
     setAdminDesigns(adminDesigns);
     setUserDesigns(userDesigns);
-  }, [userDetails, db]);
+  }, [userDetails, db]);  
 
   useEffect(() => {
     if (!loading && userDetails) {
       getDesigns();
     }
-  }, [userDetails, loading, getDesigns]);  
+  }, [userDetails, loading, getDesigns]);
 
   const handleEdit = (id: string) => {
-    const design = [...adminDesigns, ...userDesigns].find(design => design.id === id);
+    const design = [...superAdminDesigns, ...adminDesigns, ...userDesigns].find(design => design.id === id);
     setSelectedDesign(design || null);
     setIsEditing(true);
   };
@@ -130,52 +153,53 @@ const Dashboard = () => {
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     } else {
-        // User ID matches, proceed with deletion
-        try {
-            // Query for builds associated with the design
-            const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", pendingDeleteDesignId), where("userId", "==", userDetails.uid));
-            const buildsSnapshot = await getDocs(buildsQuery);
+      // User ID matches, proceed with deletion
+      try {
+        // Query for builds associated with the design
+        const buildsQuery = query(collection(db, "builds"), where("design_ID", "==", pendingDeleteDesignId), where("userId", "==", userDetails.uid));
+        const buildsSnapshot = await getDocs(buildsQuery);
 
-            for (const buildDoc of buildsSnapshot.docs) {
-                const buildId = buildDoc.id;
+        for (const buildDoc of buildsSnapshot.docs) {
+          const buildId = buildDoc.id;
 
-                // Query for tests associated with each build
-                const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid));
-                const testsSnapshot = await getDocs(testsQuery);
+          // Query for tests associated with each build
+          const testsQuery = query(collection(db, "tests"), where("build_ID", "==", buildId), where("userId", "==", userDetails.uid));
+          const testsSnapshot = await getDocs(testsQuery);
 
-                // Delete each test
-                for (const testDoc of testsSnapshot.docs) {
-                    await deleteDoc(doc(db, "tests", testDoc.id));
-                }
+          // Delete each test
+          for (const testDoc of testsSnapshot.docs) {
+            await deleteDoc(doc(db, "tests", testDoc.id));
+          }
 
-                // After deleting tests, delete the build
-                await deleteDoc(doc(db, "builds", buildId));
-            }
-
-            // After deleting builds and their tests, delete the design
-            await deleteDoc(doc(db, "designs", pendingDeleteDesignId));
-
-            // Update UI
-            setAdminDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
-            setUserDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
-
-            // Show success message
-            setSnackbarMessage('Your design and its associated builds and tests have been deleted.');
-            setSnackbarSeverity('success');
-            setSnackbarOpen(true);
-        } catch (error) {
-            console.error("Error deleting design, builds, and tests: ", error);
-            // Show error message
-            setSnackbarMessage('There was an issue deleting your design and its associated builds and tests.');
-            setSnackbarSeverity('error');
-            setSnackbarOpen(true);
-        } finally {
-            // Reset states
-            setUserIdForConfirmation('');
-            setUserIdConfirmationDialogOpen(false);
-            setPendingDeleteDesignId(null); // Clear the pending design ID
+          // After deleting tests, delete the build
+          await deleteDoc(doc(db, "builds", buildId));
         }
+
+        // After deleting builds and their tests, delete the design
+        await deleteDoc(doc(db, "designs", pendingDeleteDesignId));
+
+        // Update UI
+        setSuperAdminDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
+        setAdminDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
+        setUserDesigns(prev => prev.filter(design => design.id !== pendingDeleteDesignId));
+
+        // Show success message
+        setSnackbarMessage('Your design and its associated builds and tests have been deleted.');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Error deleting design, builds, and tests: ", error);
+        // Show error message
+        setSnackbarMessage('There was an issue deleting your design and its associated builds and tests.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      } finally {
+        // Reset states
+        setUserIdForConfirmation('');
+        setUserIdConfirmationDialogOpen(false);
+        setPendingDeleteDesignId(null); // Clear the pending design ID
       }
+    }
   };
 
   return (
@@ -183,16 +207,25 @@ const Dashboard = () => {
       {!isAdding && !isEditing && (
         <>
           <Header setIsAdding={setIsAdding} />
-          {userDetails?.isAdmin && (
+          {userDetails?.isSuperAdmin && (
             <>
+              <h2>Super Admin Designs</h2>
+              <NotebookTable
+                designs={superAdminDesigns}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+                isAdmin={true}
+                userDetails={userDetails}
+                showUserIdColumn={true}
+              />
               <h2>Educator Designs</h2>
               <NotebookTable
                 designs={adminDesigns}
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
                 isAdmin={true}
-                userDetails={userDetails} // Pass userDetails as a prop
-                showUserIdColumn={true} // Show User ID column for admin designs
+                userDetails={userDetails}
+                showUserIdColumn={true}
               />
               <h2>Student Designs</h2>
               <NotebookTable
@@ -200,26 +233,53 @@ const Dashboard = () => {
                 handleEdit={handleEdit}
                 handleDelete={handleDelete}
                 isAdmin={false}
-                userDetails={userDetails} // Pass userDetails as a prop
-                showUserIdColumn={true} // Show User ID column for admin designs
+                userDetails={userDetails}
+                showUserIdColumn={true}
               />
             </>
           )}
-          {!userDetails?.isAdmin && (
-            <NotebookTable
-              designs={adminDesigns} // Regular users only see their designs
-              handleEdit={handleEdit}
-              handleDelete={handleDelete}
-              isAdmin={false}
-              userDetails={userDetails} // Pass userDetails as a prop
-              showUserIdColumn={false} // Do not show User ID column for regular users
-            />
+
+          {userDetails?.isAdmin && !userDetails.isSuperAdmin && (
+            <>
+              <h2>Educator Designs</h2>
+              <NotebookTable
+                designs={adminDesigns}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+                isAdmin={true}
+                userDetails={userDetails}
+                showUserIdColumn={true}
+              />
+              <h2>Student Designs</h2>
+              <NotebookTable
+                designs={userDesigns}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+                isAdmin={false}
+                userDetails={userDetails}
+                showUserIdColumn={true}
+              />
+            </>
+          )}
+
+          {!userDetails?.isAdmin && !userDetails?.isSuperAdmin && (
+            <>
+              <h2>Student Designs</h2>
+              <NotebookTable
+                designs={userDesigns}
+                handleEdit={handleEdit}
+                handleDelete={handleDelete}
+                isAdmin={false}
+                userDetails={userDetails}
+                showUserIdColumn={false}
+              />
+            </>
           )}
         </>
       )}
       {isAdding && (
         <Add
-          designs={adminDesigns}
+          designs={superAdminDesigns.concat(adminDesigns)}
           setDesigns={setAdminDesigns}
           setIsAdding={setIsAdding}
           getDesigns={getDesigns}
@@ -228,7 +288,7 @@ const Dashboard = () => {
       )}
       {isEditing && (
         <Edit
-          designs={adminDesigns}
+          designs={superAdminDesigns.concat(adminDesigns)}
           selectedDesign={selectedDesign}
           setDesigns={setAdminDesigns}
           setIsEditing={setIsEditing}
