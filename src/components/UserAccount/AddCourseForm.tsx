@@ -20,20 +20,20 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({ onCourseAdded }) => {
   const handleAddCourse = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'courses'));
-      const coursesList = querySnapshot.docs.map(doc => doc.data() as { name: string, passcode: string });
+      const coursesList = querySnapshot.docs.map(doc => doc.data() as { number: string, passcode: string });
 
       // Find course with matching passcode
       const selectedCourse = coursesList.find(c => c.passcode === passcode);
       if (selectedCourse) {
         if (userDetails) {
           const userCourses = userDetails.class || [];
-          if (userCourses.includes(selectedCourse.name)) {
+          if (userCourses.includes(selectedCourse.number)) {
             // Notify user that the course is already added
-            onCourseAdded(`Course access for ${selectedCourse.name} is already added to your account!`, 'info');
+            onCourseAdded(`Course access for ${selectedCourse.number} is already added to your account!`, 'info');
           } else {
             const userDoc = doc(db, 'users', userDetails.uid);
             await updateDoc(userDoc, {
-              class: arrayUnion(selectedCourse.name),
+              class: arrayUnion(selectedCourse.number),
             });
             // Fetch updated user details
             const updatedUserDoc = await getDoc(userDoc);
@@ -41,7 +41,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({ onCourseAdded }) => {
               const updatedUserData = updatedUserDoc.data() as UserDetails;
               setUserDetails({ ...updatedUserData, uid: userDetails.uid });
             }
-            onCourseAdded(`Course access for ${selectedCourse.name} added to your account successfully!`, 'success');
+            onCourseAdded(`Course access for ${selectedCourse.number} added to your account successfully!`, 'success');
             setPasscode(''); // Clear the input field on success
           }
         }
