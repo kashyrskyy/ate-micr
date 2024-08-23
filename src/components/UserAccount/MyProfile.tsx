@@ -101,7 +101,7 @@ const MyProfile: React.FC = () => {
         <Box className="profile-switch-container">
           <FormControlLabel
             control={<Switch checked={isEnrollOpen} onChange={handleToggleEnroll} />}
-            label="Enroll in a Course"
+            label="Enroll in a Course (As a Student)"
           />
           {isEnrollOpen && (
             <Box sx={{ mt: 2 }}>

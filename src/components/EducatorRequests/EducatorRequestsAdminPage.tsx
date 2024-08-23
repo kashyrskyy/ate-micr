@@ -1,6 +1,6 @@
 // src/components/EducatorRequests/EducatorRequestsAdminPage.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Box, Typography, Button, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Select, MenuItem } from '@mui/material';
 import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, arrayUnion } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,12 +15,16 @@ interface EducatorRequest {
   courseNumber: string;
   courseTitle: string;
   courseDescription: string;
+  requestType: 'primary' | 'co-instructor';
   timestamp: { seconds: number; nanoseconds: number };
   status: 'pending' | 'approved' | 'denied';
 }
 
 const EducatorRequestsAdminPage: React.FC = () => {
   const [requests, setRequests] = useState<EducatorRequest[]>([]);
+  const [courses, setCourses] = useState<any[]>([]); // Assuming each course has id, title, and number
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(''); // State for selected course when approving co-instructor
+
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
@@ -32,24 +36,24 @@ const EducatorRequestsAdminPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchRequestsAndCourses = async () => {
       const querySnapshot = await getDocs(collection(db, 'educatorRequests'));
       const fetchedRequests = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as EducatorRequest[];
-
-      fetchedRequests.sort((a, b) => {
-        if (a.status === 'pending' && b.status !== 'pending') return -1;
-        if (a.status === 'approved' && b.status === 'denied') return -1;
-        if (a.status === 'denied' && b.status === 'approved') return 1;
-        return 0;
-      });
-
+  
+      const courseSnapshot = await getDocs(collection(db, 'courses'));
+      const fetchedCourses = courseSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+  
       setRequests(fetchedRequests);
+      setCourses(fetchedCourses);
     };
-    fetchRequests();
-  }, [db]);
+    fetchRequestsAndCourses();
+  }, [db]);  
 
   // Function to generate a unique 28-character passcode
   function generatePasscode() {
@@ -65,27 +69,48 @@ const EducatorRequestsAdminPage: React.FC = () => {
     if (!currentRequestId || !currentRequestData) return;
 
     try {
-      const passcode = generatePasscode();
-      const courseDocRef = await addDoc(collection(db, 'courses'), {
-        number: currentRequestData.courseNumber,
-        title: currentRequestData.courseTitle,
-        passcode: passcode,
-        courseAdmin: currentRequestData.uid
-      });
+      if (currentRequestData.requestType === 'primary') {
+        const passcode = generatePasscode();
+        const courseDocRef = await addDoc(collection(db, 'courses'), {
+          number: currentRequestData.courseNumber,
+          title: currentRequestData.courseTitle,
+          passcode: passcode,
+          courseAdmin: [currentRequestData.uid] // Initialize with primary admin as array
+        });
 
-      const userDocRef = doc(db, 'users', currentRequestData.uid);
-      await updateDoc(userDocRef, {
-        isAdmin: true,
-        class: arrayUnion(currentRequestData.courseNumber)
-      });
+        const userDocRef = doc(db, 'users', currentRequestData.uid);
+        await updateDoc(userDocRef, {
+          isAdmin: true,
+          class: arrayUnion(currentRequestData.courseNumber)
+        });
 
-      await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
-        status: 'approved',
-        courseId: courseDocRef.id,
-        passcode: passcode
-      });
+        await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
+          status: 'approved',
+          courseId: courseDocRef.id,
+          passcode: passcode
+        });
 
-      setSnackbarMessage('Request approved, course added, and user promoted to educator.');
+      } else if (currentRequestData.requestType === 'co-instructor') {
+        const courseDocRef = doc(db, 'courses', selectedCourseId);
+
+        // Update courseAdmin array to include the co-instructor
+        await updateDoc(courseDocRef, {
+          courseAdmin: arrayUnion(currentRequestData.uid)
+        });
+
+        const userDocRef = doc(db, 'users', currentRequestData.uid);
+        await updateDoc(userDocRef, {
+          isAdmin: true,
+          class: arrayUnion(currentRequestData.courseNumber)
+        });
+
+        await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
+          status: 'approved',
+          courseId: selectedCourseId
+        });
+      }
+
+      setSnackbarMessage('Request approved, and user promoted to educator.');
       setSnackbarSeverity('success');
       setRequests(requests.map(request => request.id === currentRequestId ? { ...request, status: 'approved' } : request));
     } catch (error) {
@@ -120,6 +145,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
     setCurrentAction(action);
     setCurrentRequestId(requestId);
     setCurrentRequestData(requestData);
+    setSelectedCourseId(''); // Reset selected course ID when dialog is closed
     setDialogOpen(true);
   };
 
@@ -166,44 +192,87 @@ const EducatorRequestsAdminPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {requests.map((request) => (
-              <TableRow key={request.id}>
-                <TableCell>{`${request.firstName} ${request.lastName}`}</TableCell>
-                <TableCell>{request.uid}</TableCell>
-                <TableCell>{request.institution}</TableCell>
-                <TableCell>{request.email}</TableCell>
-                <TableCell>{request.courseNumber}</TableCell>
-                <TableCell>{request.courseTitle}</TableCell>
-                <TableCell>{request.courseDescription}</TableCell>
-                <TableCell>{new Date(request.timestamp.seconds * 1000).toLocaleString()}</TableCell>
-                <TableCell>
-                  {request.status === 'pending' && (
-                    <>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{ mr: 1 }}
-                        onClick={() => handleOpenDialog('approve', request.id, request)}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={() => handleOpenDialog('deny', request.id, request)}
-                      >
-                        Deny
-                      </Button>
-                    </>
-                  )}
-                  {request.status === 'approved' && (
-                    <Typography color="success.main">Approved</Typography>
-                  )}
-                  {request.status === 'denied' && (
-                    <Typography color="error.main">Denied</Typography>
-                  )}
-                </TableCell>
-              </TableRow>
+            {requests.filter(request => request.requestType === 'primary').map((request) => (
+              <React.Fragment key={request.id}>
+                <TableRow>
+                  <TableCell>{`${request.firstName} ${request.lastName}`}</TableCell>
+                  <TableCell>{request.uid}</TableCell>
+                  <TableCell>{request.institution}</TableCell>
+                  <TableCell>{request.email}</TableCell>
+                  <TableCell>{request.courseNumber}</TableCell>
+                  <TableCell>{request.courseTitle}</TableCell>
+                  <TableCell>{request.courseDescription}</TableCell>
+                  <TableCell>{new Date(request.timestamp.seconds * 1000).toLocaleString()}</TableCell>
+                  <TableCell>
+                    {request.status === 'pending' && (
+                      <>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          sx={{ mr: 1 }}
+                          onClick={() => handleOpenDialog('approve', request.id, request)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          onClick={() => handleOpenDialog('deny', request.id, request)}
+                        >
+                          Deny
+                        </Button>
+                      </>
+                    )}
+                    {request.status === 'approved' && (
+                      <Typography color="success.main">Approved</Typography>
+                    )}
+                    {request.status === 'denied' && (
+                      <Typography color="error.main">Denied</Typography>
+                    )}
+                  </TableCell>
+                </TableRow>
+
+                {/* Render co-instructor requests under the primary instructor */}
+                {requests.filter(coRequest => coRequest.requestType === 'co-instructor' && coRequest.courseNumber === request.courseNumber).map((coRequest) => (
+                  <TableRow key={coRequest.id} sx={{ pl: 4 }}>
+                    <TableCell sx={{ pl: 4 }}>{`${coRequest.firstName} ${coRequest.lastName}`}</TableCell>
+                    <TableCell>{coRequest.uid}</TableCell>
+                    <TableCell>{coRequest.institution}</TableCell>
+                    <TableCell>{coRequest.email}</TableCell>
+                    <TableCell>{coRequest.courseNumber}</TableCell>
+                    <TableCell>{coRequest.courseTitle}</TableCell>
+                    <TableCell>{coRequest.courseDescription}</TableCell>
+                    <TableCell>{new Date(coRequest.timestamp.seconds * 1000).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {coRequest.status === 'pending' && (
+                        <>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            sx={{ mr: 1 }}
+                            onClick={() => handleOpenDialog('approve', coRequest.id, coRequest)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => handleOpenDialog('deny', coRequest.id, coRequest)}
+                          >
+                            Deny
+                          </Button>
+                        </>
+                      )}
+                      {coRequest.status === 'approved' && (
+                        <Typography color="success.main">Approved</Typography>
+                      )}
+                      {coRequest.status === 'denied' && (
+                        <Typography color="error.main">Denied</Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
@@ -229,6 +298,23 @@ const EducatorRequestsAdminPage: React.FC = () => {
           <DialogContentText id="confirmation-dialog-description">
             Are you sure you want to {currentAction} this request for {currentRequestData?.firstName} {currentRequestData?.lastName}?
           </DialogContentText>
+          
+          {currentAction === 'approve' && currentRequestData?.requestType === 'co-instructor' && (
+            <Box sx={{ mt: 2 }}>
+              <Typography>Select Course:</Typography>
+              <Select
+                fullWidth
+                value={selectedCourseId}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+              >
+                {courses.map(course => (
+                  <MenuItem key={course.id} value={course.id}>
+                    {`${course.number} - ${course.title}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="primary">
@@ -239,6 +325,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
             color="primary"
             variant="contained"
             autoFocus
+            disabled={currentRequestData?.requestType === 'co-instructor' && !selectedCourseId} // Disable if no course is selected for co-instructor
           >
             Confirm
           </Button>

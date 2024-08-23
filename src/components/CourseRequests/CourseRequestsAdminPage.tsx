@@ -67,7 +67,7 @@ const CourseRequestsAdminPage: React.FC = () => {
         number: currentRequestData.courseNumber,
         title: currentRequestData.courseTitle,
         passcode: passcode,
-        courseAdmin: currentRequestData.uid
+        courseAdmin: [currentRequestData.uid] // Initialize with primary admin as array
       });
 
       // Update the user's document to associate them with the new course

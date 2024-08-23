@@ -1,6 +1,6 @@
 // src/components/UserAccount/RequestEducatorPermissionsForm.tsx
 import React, { useState } from 'react';
-import { Box, Typography, Grid, OutlinedInput, FormLabel, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
+import { Box, Typography, Grid, OutlinedInput, FormLabel, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress, MenuItem, Select, SelectChangeEvent, Divider } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
@@ -17,6 +17,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
   const [courseNumber, setCourseNumber] = useState('');
   const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
+  const [requestType, setRequestType] = useState('primary'); // New state for request type
 
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -30,8 +31,12 @@ const RequestEducatorPermissionsForm: React.FC = () => {
     setter(event.target.value);
   };
 
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    setRequestType(event.target.value as string);
+  };
+
   const handleRequestPermissions = async () => {
-    if (!firstName || !lastName || !institution || !email || !courseNumber || !courseTitle || !courseDescription) {
+    if (!firstName || !lastName || !institution || !email || !courseNumber || !courseTitle || (requestType === 'primary' && !courseDescription)) {
       setDialogTitle('Error');
       setDialogContent('Please fill in all required fields.');
       setDialogOpen(true);
@@ -49,7 +54,8 @@ const RequestEducatorPermissionsForm: React.FC = () => {
         email,
         courseNumber,
         courseTitle,
-        courseDescription,
+        courseDescription: requestType === 'primary' ? courseDescription : 'CO-INSTRUCTOR REQUEST',
+        requestType, // Store the request type (primary/co-instructor)
         status: 'pending',
         timestamp: new Date(),
       };
@@ -66,6 +72,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
       setCourseNumber('');
       setCourseTitle('');
       setCourseDescription('');
+      setRequestType('primary'); // Reset to default
 
       // Show success message and then navigate back to My Account
       setDialogOpen(true);
@@ -105,6 +112,22 @@ const RequestEducatorPermissionsForm: React.FC = () => {
         <Typography variant="h5" component="h1" className="request-form-title">
           Request Educator Permissions
         </Typography>
+
+        <Grid item xs={12}>
+          <FormLabel htmlFor="request-type" required>Request Type</FormLabel>
+          <Select
+            id="request-type"
+            name="request-type"
+            value={requestType}
+            onChange={handleSelectChange}
+            fullWidth
+            required
+            disabled={loading}
+          >
+            <MenuItem value="primary">I am a primary course instructor, I want to create a new course</MenuItem>
+            <MenuItem value="co-instructor">I am a co-instructor, I want to be added to an existing course</MenuItem>
+          </Select>
+        </Grid>
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -160,6 +183,15 @@ const RequestEducatorPermissionsForm: React.FC = () => {
             />
             <Typography variant="caption" sx={{ mt: 1 }}>Please use your institutional email to confirm your affiliation.</Typography>
           </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          {requestType === 'primary' ? 'New Course Details' : 'Existing Course Details'}
+        </Typography>
+
+        <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <FormLabel htmlFor="course-number" required>Course Number</FormLabel>
             <OutlinedInput
@@ -186,21 +218,23 @@ const RequestEducatorPermissionsForm: React.FC = () => {
               disabled={loading}
             />
           </Grid>
-          <Grid item xs={12}>
-            <FormLabel htmlFor="course-description" required>Course Description</FormLabel>
-            <OutlinedInput
-              id="course-description"
-              name="course-description"
-              value={courseDescription}
-              onChange={handleInputChange(setCourseDescription)}
-              placeholder="e.g., A comprehensive course covering advanced methods and tools in modern biotech labs, focusing on CRISPR, NGS, and bioinformatics."
-              fullWidth
-              multiline
-              rows={2}
-              required
-              disabled={loading}
-            />
-          </Grid>
+          {requestType === 'primary' && (
+            <Grid item xs={12}>
+              <FormLabel htmlFor="course-description" required>Course Description</FormLabel>
+              <OutlinedInput
+                id="course-description"
+                name="course-description"
+                value={courseDescription}
+                onChange={handleInputChange(setCourseDescription)}
+                placeholder="e.g., A comprehensive course covering advanced methods and tools in modern biotech labs, focusing on CRISPR, NGS, and bioinformatics."
+                fullWidth
+                multiline
+                rows={2}
+                required
+                disabled={loading}
+              />
+            </Grid>
+          )}
           <Grid item xs={12}>
             <Button 
               variant="contained" 
