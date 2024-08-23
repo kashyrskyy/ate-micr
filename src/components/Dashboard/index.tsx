@@ -46,41 +46,61 @@ const Dashboard = () => {
   };
 
   const getDesigns = useCallback(async () => {
-    let designsQuery;
-    if (userDetails && userDetails.isAdmin) {
-      designsQuery = query(collection(db, "designs"), orderBy("dateCreated", "desc"));
-    } else if (userDetails) {
-      designsQuery = query(collection(db, "designs"), where("userId", "==", userDetails.uid), orderBy("dateCreated", "desc"));
-    }
+    if (!userDetails) return;
 
-    const querySnapshot = await getDocs(designsQuery || query(collection(db, "designs"))); // Provide default query
+    let designsQuery;
     const adminDesigns: Design[] = [];
     const userDesigns: Design[] = [];
-    
+      
+    if (userDetails.isAdmin) {
+      // Use 'in' query to retrieve only designs related to the courses the admin has access to
+      if (userDetails.class && userDetails.class.length > 0) {
+        designsQuery = query(
+          collection(db, "designs"),
+          where("course", "in", userDetails.class),
+          orderBy("dateCreated", "desc")
+        );
+      } else {
+        // If the admin has no courses, return empty
+        setAdminDesigns([]);
+        setUserDesigns([]);
+        return;
+      }
+    } else {
+      // Non-admin users only see their designs
+      designsQuery = query(
+        collection(db, "designs"),
+        where("userId", "==", userDetails.uid),
+        orderBy("dateCreated", "desc")
+      );
+    }
+
+    const querySnapshot = await getDocs(designsQuery);
+  
     querySnapshot.forEach(doc => {
       const data = doc.data();
       const design = {
         id: doc.id,
         title: data.title,
         description: data.description,
-        course: data.course, // Ensure course is included
+        course: data.course,
         dateCreated: data.dateCreated,
         dateModified: data.dateModified,
         userId: data.userId,
         images: data.images || [],
         files: data.files || []
       } as Design;
-
-      if (data.userId === userDetails?.uid) {
-        adminDesigns.push(design);
+  
+      if (data.userId === userDetails.uid) {
+        adminDesigns.push(design); // Admin's own designs
       } else {
-        userDesigns.push(design);
+        userDesigns.push(design); // Other users' designs for courses the admin has access to
       }
     });
 
     setAdminDesigns(adminDesigns);
     setUserDesigns(userDesigns);
-  }, [userDetails]);
+  }, [userDetails, db]);
 
   useEffect(() => {
     if (!loading && userDetails) {
@@ -165,7 +185,7 @@ const Dashboard = () => {
           <Header setIsAdding={setIsAdding} />
           {userDetails?.isAdmin && (
             <>
-              <h2>Admin Designs</h2>
+              <h2>Educator Designs</h2>
               <NotebookTable
                 designs={adminDesigns}
                 handleEdit={handleEdit}
@@ -174,7 +194,7 @@ const Dashboard = () => {
                 userDetails={userDetails} // Pass userDetails as a prop
                 showUserIdColumn={true} // Show User ID column for admin designs
               />
-              <h2>Users' Designs</h2>
+              <h2>Student Designs</h2>
               <NotebookTable
                 designs={userDesigns}
                 handleEdit={handleEdit}

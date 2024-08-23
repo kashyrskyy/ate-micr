@@ -83,7 +83,7 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
                   <TableCell>
                     <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
                   </TableCell>
-                  <TableCell>{design.course || 'N/A'}</TableCell> {/* Display course */}
+                  <TableCell>{design.course || 'N/A'}</TableCell>
                   {showUserIdColumn && <TableCell>{design.userId}</TableCell>}
                   <TableCell>{formatDate(design.dateCreated)}</TableCell>
                   <TableCell>{formatDate(design.dateModified)}</TableCell>
