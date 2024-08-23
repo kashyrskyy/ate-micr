@@ -1,7 +1,6 @@
 // src/components/Supplemental/CourseDropdown.tsx
 import React, { useState, useEffect } from 'react';
 import { TextField, MenuItem } from '@mui/material';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
 
 interface CourseDropdownProps {
@@ -12,21 +11,15 @@ interface CourseDropdownProps {
 const CourseDropdown: React.FC<CourseDropdownProps> = ({ value, onChange }) => {
   const [courses, setCourses] = useState<string[]>([]);
   const { userDetails } = useUser();
-  const db = getFirestore();
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      if (userDetails?.class) {
-        const userCourses = userDetails.class;
-        const querySnapshot = await getDocs(collection(db, 'courses'));
-        const coursesList = querySnapshot.docs
-          .map((doc) => doc.data().name)
-          .filter((course) => userCourses.includes(course));
-        setCourses(coursesList);
-      }
-    };
-    fetchCourses();
-  }, [db, userDetails]);
+    if (userDetails?.class && userDetails.class.length > 0) {
+      // Set the courses directly from userDetails.class
+      setCourses(userDetails.class);
+    } else {
+      setCourses([]); // Set to an empty array if no courses are available
+    }
+  }, [userDetails]);
 
   return (
     <TextField
