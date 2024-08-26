@@ -134,6 +134,17 @@ const SelectionPage: React.FC = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/super-admin-course-management')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            Course Management
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Card className="menu-item">
                       <CardActionArea onClick={() => navigate('/educator-requests')}>
                         <CardContent>
                           <Typography className="menu-item-typography" variant="h6" component="div">
