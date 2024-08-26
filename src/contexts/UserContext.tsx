@@ -9,7 +9,7 @@ export interface UserDetails {
   isAdmin?: boolean;
   isSuperAdmin?: boolean;
   lastLogin?: any; // You can further specify the type for date/time if needed
-  class?: string[]; // Update this to an array of strings
+  classes?: Record<string, { number: string; title: string }>; // Use Record to define the map structure
 }
 
 interface UserContextType {

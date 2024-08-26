@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, Paper, Chip, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
-import { getFirestore, doc, updateDoc, getDoc, collection, getDocs, arrayUnion } from 'firebase/firestore';
+import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { getFirestore, doc, updateDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 import UserTable from './UserTable'; // Import the UserTable component
@@ -13,10 +13,16 @@ interface User {
   lastLogin?: {
     toDate: () => Date;
   };
-  class?: string[]; // Updated to an array of strings
+  classes?: Record<string, { number: string; title: string }>; // Updated to reflect the new structure
 }
 
-const AssignCourse: React.FC<{ userId: string; userClass?: string[] }> = ({ userId, userClass }) => {
+interface Course {
+  id: string;
+  number: string;
+  title: string;
+}
+
+const AssignCourse: React.FC<{ userId: string; userClasses?: Record<string, { number: string; title: string }>; courses: Course[] }> = ({ userId, userClasses, courses }) => {
   const [selectedCourse, setSelectedCourse] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -34,8 +40,13 @@ const AssignCourse: React.FC<{ userId: string; userClass?: string[] }> = ({ user
     setLoading(true);
     try {
       const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { class: arrayUnion(selectedCourse) });
-      setMessage(`Course ${selectedCourse} assigned successfully to user ${userId}.`);
+      const courseData = courses.find(course => course.id === selectedCourse);
+      if (courseData) {
+        await updateDoc(userRef, { [`classes.${selectedCourse}`]: { number: courseData.number, title: courseData.title } });
+        setMessage(`Course ${courseData.title} assigned successfully to user ${userId}.`);
+      } else {
+        setMessage('Selected course not found.');
+      }
     } catch (error) {
       console.error('Error assigning course:', error);
       setMessage('Error assigning course.');
@@ -52,7 +63,7 @@ const AssignCourse: React.FC<{ userId: string; userClass?: string[] }> = ({ user
     <>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
-          Current Courses: {userClass ? userClass.join(', ') : 'None'}
+          Current Courses: {userClasses ? Object.values(userClasses).map(c => `${c.number} - ${c.title}`).join(', ') : 'None'}
         </Typography>
         <FormControl sx={{ minWidth: 200, mr: 2 }}>
           <InputLabel>Course</InputLabel>
@@ -60,8 +71,11 @@ const AssignCourse: React.FC<{ userId: string; userClass?: string[] }> = ({ user
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
           >
-            <MenuItem value="MICRO230">MICRO230</MenuItem>
-            <MenuItem value="MICRO240">MICRO240</MenuItem>
+            {courses.map((course) => (
+              <MenuItem key={course.id} value={course.id}>
+                {`${course.number} - ${course.title}`}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <Button
@@ -86,14 +100,15 @@ const UserManagement: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [userExists, setUserExists] = useState(false);
-  const [userClass, setUserClass] = useState<string[] | undefined>(undefined);
+  const [userClasses, setUserClasses] = useState<Record<string, { number: string; title: string }> | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [newStatus, setNewStatus] = useState(false);
-  const [users, setUsers] = useState<User[]>([]); // Single state for all users
-  const [selectedCourse, setSelectedCourse] = useState(''); // Added state for selected course
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [courses, setCourses] = useState<Course[]>([]); // Added state for storing courses
   const db = getFirestore();
 
   const navigate = useNavigate();
@@ -102,8 +117,27 @@ const UserManagement: React.FC = () => {
     navigate('/');
   };
 
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const coursesCollection = collection(db, 'courses');
+        const coursesSnapshot = await getDocs(coursesCollection);
+        const coursesData = coursesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          number: doc.data().number,
+          title: doc.data().title
+        }) as Course);
+        setCourses(coursesData);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    };
+
+    fetchCourses();
+  }, [db]);
+
   const fetchUserDetails = async () => {
-    if (!userId) {  // Prevent the fetch operation when userId is empty
+    if (!userId) {
       return;
     }
 
@@ -116,7 +150,7 @@ const UserManagement: React.FC = () => {
       if (userDoc.exists()) {
         const userData = userDoc.data() as User;
         setIsAdmin(userData.isAdmin);
-        setUserClass(userData.class);
+        setUserClasses(userData.classes);
         setUserExists(true);
       } else {
         setMessage('User not found.');
@@ -157,17 +191,17 @@ const UserManagement: React.FC = () => {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, { isAdmin: newStatus });
       setMessage(`User ${newStatus ? 'granted' : 'revoked'} admin privileges successfully.`);
-      setIsAdmin(newStatus);  // Update the local state immediately
-  
+      setIsAdmin(newStatus);
+
       // Update user list locally instead of re-fetching from the database
       const updatedUsers = users.map((user) => {
         if (user.id === userId) {
-          return { ...user, isAdmin: newStatus }; // Update only the isAdmin status
+          return { ...user, isAdmin: newStatus };
         }
         return user;
       });
 
-      setUsers(updatedUsers); // Set the updated users array to state
+      setUsers(updatedUsers);
 
     } catch (error) {
       console.error('Error updating user:', error);
@@ -175,7 +209,7 @@ const UserManagement: React.FC = () => {
     }
     setOpenSnackbar(true);
     setOpenDialog(false);
-  };  
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -198,11 +232,11 @@ const UserManagement: React.FC = () => {
 
   const handleCourseChange = (event: SelectChangeEvent<string>) => {
     setSelectedCourse(event.target.value as string);
-  };  
+  };
 
   const filteredUsers = (users: User[]) => {
-    if (selectedCourse) { // Filtering logic based on selected course
-      return users.filter(user => user.class && user.class.includes(selectedCourse));
+    if (selectedCourse) {
+      return users.filter(user => user.classes && user.classes.hasOwnProperty(selectedCourse));
     }
     return users;
   };
@@ -211,8 +245,8 @@ const UserManagement: React.FC = () => {
     if (success) {
       setMessage('User account deleted successfully.');
       setUserExists(false);
-      setUserId(''); // Reset userId to clear the form
-      fetchAllUsers(); // Optionally, refetch the users to update the list
+      setUserId('');
+      fetchAllUsers();
     } else {
       setMessage('Error deleting user account.');
     }
@@ -244,10 +278,10 @@ const UserManagement: React.FC = () => {
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
                 fetchUserDetails();
-                e.preventDefault(); // Prevents the default action of the enter key
+                e.preventDefault();
               }
             }}
-            sx={{ minWidth: '300px' }}  // Set a minimum width for the input box
+            sx={{ minWidth: '300px' }}
           />
           {loading ? (
             <CircularProgress />
@@ -262,7 +296,7 @@ const UserManagement: React.FC = () => {
                     {isAdmin ? 'Revoke Admin' : 'Make Admin'}
                   </Button>
                 </Box>
-                <AssignCourse userId={userId} userClass={userClass} />
+                <AssignCourse userId={userId} userClasses={userClasses} courses={courses} />
                 <DeleteUser userId={userId} onUserDeleted={handleUserDeleted} />
               </Paper>
             )
@@ -273,14 +307,15 @@ const UserManagement: React.FC = () => {
         Current Users
       </Typography>
       <FormControl fullWidth sx={{ mb: 3, width: '25%' }}>
-        <InputLabel>Filter by Course</InputLabel> {/* Added course filter UI */}
+        <InputLabel>Filter by Course</InputLabel>
         <Select
           value={selectedCourse}
           onChange={handleCourseChange}
         >
           <MenuItem value="">All Courses</MenuItem>
-          <MenuItem value="MICRO230">MICRO230</MenuItem>
-          <MenuItem value="MICRO240">MICRO240</MenuItem>
+          {courses.map(course => (
+            <MenuItem key={course.id} value={course.id}>{course.number}</MenuItem>
+          ))}
         </Select>
       </FormControl>
       <UserTable users={filteredUsers(users)} />

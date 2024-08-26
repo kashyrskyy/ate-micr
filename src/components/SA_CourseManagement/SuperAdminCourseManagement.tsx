@@ -1,15 +1,14 @@
 // src/components/SA_CourseManagement/SuperAdminCourseManagement.tsx
 
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, updateDoc, doc, deleteDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, updateDoc, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
-
-import { 
-  Box, Typography, IconButton, 
-  Table, TableBody, TableCell, TableContainer, 
-  TableHead, TableRow, Paper, Snackbar, Alert, 
-  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, TextField, Tooltip 
+import {
+  Box, Typography, IconButton,
+  Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Paper, Snackbar, Alert,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, TextField, Tooltip
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -37,16 +36,17 @@ const SuperAdminCourseManagement: React.FC = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
+      setLoading(true);
       try {
         const querySnapshot = await getDocs(collection(db, 'courses'));
         const coursesList = querySnapshot.docs.map(doc => {
           const data = doc.data();
           return {
             id: doc.id,
-            title: data.title || 'Untitled', // Handle undefined values
+            title: data.title || 'Untitled',
             number: data.number || 'N/A',
-            courseAdmin: data.courseAdmin || [], // Ensure courseAdmin is an array
-          } as Course; // Type assertion to match Course interface
+            courseAdmin: data.courseAdmin || []
+          } as Course;
         });
         setCourses(coursesList);
       } catch (error) {
@@ -60,7 +60,10 @@ const SuperAdminCourseManagement: React.FC = () => {
   }, [db]);
 
   const handleAddSuperAdmin = async (courseId: string) => {
-    if (!userDetails) return; // Ensure userDetails is available
+    if (!userDetails) {
+      showSnackbar('User details are not available.', 'error');
+      return;
+    }
 
     const courseData = courses.find(course => course.id === courseId);
     if (courseData && userDetails) {
@@ -75,10 +78,13 @@ const SuperAdminCourseManagement: React.FC = () => {
         const updatedAdmins = [...courseData.courseAdmin, userDetails.uid];
         await updateDoc(courseRef, { courseAdmin: updatedAdmins });
 
-        // Update user's class array in the user document
+        // Update user's classes field in the user document
         const userRef = doc(db, 'users', userDetails.uid);
         await updateDoc(userRef, {
-          class: arrayUnion(courseData.number) // Add course number to class array
+          [`classes.${courseId}`]: {
+            number: courseData.number,
+            title: courseData.title
+          }
         });
 
         setCourses(courses.map(course =>
@@ -105,15 +111,16 @@ const SuperAdminCourseManagement: React.FC = () => {
           // Delete the course document
           await deleteDoc(doc(db, 'courses', selectedCourseId));
 
-          // Remove the course number from all users' class arrays
+          // Remove the course from all users' classes object
           const usersSnapshot = await getDocs(collection(db, 'users'));
-          const batch = writeBatch(db); // Correctly create a batch instance
+          const batch = writeBatch(db);
 
           usersSnapshot.forEach((userDoc) => {
             const userRef = doc(db, 'users', userDoc.id);
-            batch.update(userRef, {
-              class: arrayRemove(courseData.number) // Remove course number from class array
-            });
+            const userData = userDoc.data();
+            const updatedClasses = { ...userData.classes };
+            delete updatedClasses[selectedCourseId];
+            batch.update(userRef, { classes: updatedClasses });
           });
 
           await batch.commit(); // Commit the batch operation
@@ -160,11 +167,11 @@ const SuperAdminCourseManagement: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Button variant="text" onClick={handleNavigateHome} sx={{ mr: 2 }}>
-            &larr; Home Page
-            </Button>
-        </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Button variant="text" onClick={handleNavigateHome} sx={{ mr: 2 }}>
+          &larr; Home Page
+        </Button>
+      </Box>
       <Typography variant="h4" gutterBottom>Super Admin Course Management</Typography>
       {loading ? (
         <Typography>Loading courses...</Typography>

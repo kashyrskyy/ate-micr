@@ -16,7 +16,7 @@ const ExportToCSV: React.FC<ExportToCSVProps> = ({ students, selectedCourse }) =
       // Map student data to CSV format with proper handling of date and time
       const csvRows = students.map((student) => [
         `"${student.id}"`, // Enclosing ID in quotes to handle special characters
-        `"${student.class.join(', ')}"`, // Enclosing course names in quotes
+        `"${student.classes ? Object.values(student.classes).map((c: any) => `${c.number} - ${c.title}`).join(', ') : 'None'}"`, // Handle new structure for classes with type casting
         `"${student.lastLogin ? new Date(student.lastLogin.seconds * 1000).toLocaleString() : 'N/A'}"`, // Proper date formatting
       ]);
 
@@ -50,7 +50,7 @@ const ExportToCSV: React.FC<ExportToCSVProps> = ({ students, selectedCourse }) =
           padding: '0 30px',
           fontSize: '16px',
           fontWeight: 'bold',
-          textTransform: 'none', // Text is not all uppercase
+          textTransform: 'none',
           '&:hover': {
             background: 'linear-gradient(45deg, #1e88e5 30%, #3f51b5 90%)',
             boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',

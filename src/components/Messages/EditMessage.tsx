@@ -68,32 +68,34 @@ const EditMessage: React.FC = () => {
 
   const addLinkField = () => {
     setLinks([...links, { title: '', url: '' }]);
-  };  
+  };
 
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Edit Message
-        </Typography>
-        {/* Course Selection */}
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="select-course-label">Course</InputLabel>
-          <Select
-            labelId="select-course-label"
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value as string)}
-            label="Course"
-          >
-            {userDetails?.class?.map((course: string) => (
-              <MenuItem key={course} value={course}>
-                {course}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Edit Message
+          </Typography>
+          {/* Course Selection */}
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="select-course-label">Course</InputLabel>
+            <Select
+              labelId="select-course-label"
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value as string)}
+              label="Course"
+            >
+              {userDetails?.classes &&
+                Object.entries(userDetails.classes).map(([courseId, course]) => (
+                  <MenuItem key={courseId} value={courseId}>
+                    {`${course.number} - ${course.title}`}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
         <TextField
           label="Title"
           fullWidth

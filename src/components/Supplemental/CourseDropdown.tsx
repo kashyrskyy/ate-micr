@@ -9,13 +9,18 @@ interface CourseDropdownProps {
 }
 
 const CourseDropdown: React.FC<CourseDropdownProps> = ({ value, onChange }) => {
-  const [courses, setCourses] = useState<string[]>([]);
+  const [courses, setCourses] = useState<{ id: string; number: string; title: string }[]>([]);
   const { userDetails } = useUser();
 
   useEffect(() => {
-    if (userDetails?.class && userDetails.class.length > 0) {
-      // Set the courses directly from userDetails.class
-      setCourses(userDetails.class);
+    if (userDetails?.classes) {
+      // Convert classes object into an array of course objects
+      const userCourses = Object.entries(userDetails.classes).map(([id, course]) => ({
+        id,
+        number: course.number,
+        title: course.title,
+      }));
+      setCourses(userCourses);
     } else {
       setCourses([]); // Set to an empty array if no courses are available
     }
@@ -31,8 +36,8 @@ const CourseDropdown: React.FC<CourseDropdownProps> = ({ value, onChange }) => {
       sx={{ mb: 2 }}
     >
       {courses.map((course) => (
-        <MenuItem key={course} value={course}>
-          {course}
+        <MenuItem key={course.id} value={course.id}>
+          {course.number} - {course.title}
         </MenuItem>
       ))}
     </TextField>

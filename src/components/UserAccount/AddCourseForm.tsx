@@ -1,11 +1,19 @@
 // src/components/UserAccount/AddCourseForm.tsx
 import React, { useState } from 'react';
 import { TextField, Button, Grid } from '@mui/material';
-import { getFirestore, collection, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { useUser, UserDetails } from '../../contexts/UserContext';
 
 interface AddCourseFormProps {
   onCourseAdded: (message: string, severity: 'success' | 'error' | 'info') => void; // Callback to trigger when a course is successfully added or when an error occurs
+}
+
+// Define the Course interface
+interface Course {
+  id: string;
+  passcode: string;
+  number: string;
+  title: string;
 }
 
 const AddCourseForm: React.FC<AddCourseFormProps> = ({ onCourseAdded }) => {
@@ -20,27 +28,40 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({ onCourseAdded }) => {
   const handleAddCourse = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'courses'));
-      const coursesList = querySnapshot.docs.map(doc => doc.data() as { number: string, passcode: string });
+      const coursesList: Course[] = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        passcode: doc.data().passcode,
+        number: doc.data().number,
+        title: doc.data().title,
+      }));
 
       // Find course with matching passcode
       const selectedCourse = coursesList.find(c => c.passcode === passcode);
       if (selectedCourse) {
         if (userDetails) {
-          const userCourses = userDetails.class || [];
-          if (userCourses.includes(selectedCourse.number)) {
+          const userCourses = userDetails.classes || {};
+
+          if (userCourses[selectedCourse.id]) {
             // Notify user that the course is already added
             onCourseAdded(`Course access for ${selectedCourse.number} is already added to your account!`, 'info');
           } else {
             const userDoc = doc(db, 'users', userDetails.uid);
+
+            // Update user document using a map structure
             await updateDoc(userDoc, {
-              class: arrayUnion(selectedCourse.number),
+              [`classes.${selectedCourse.id}`]: {
+                number: selectedCourse.number,
+                title: selectedCourse.title,
+              },
             });
+
             // Fetch updated user details
             const updatedUserDoc = await getDoc(userDoc);
             if (updatedUserDoc.exists()) {
               const updatedUserData = updatedUserDoc.data() as UserDetails;
               setUserDetails({ ...updatedUserData, uid: userDetails.uid });
             }
+
             onCourseAdded(`Course access for ${selectedCourse.number} added to your account successfully!`, 'success');
             setPasscode(''); // Clear the input field on success
           }

@@ -1,6 +1,6 @@
 // src/components/UserAccount/MyProfile.tsx
 import React, { useState } from 'react';
-import { Box, Typography, Button, Switch, FormControlLabel, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, Button, Switch, FormControlLabel, Snackbar, Alert, Chip } from '@mui/material';
 import { UserDetails, useUser } from '../../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
@@ -41,7 +41,6 @@ const MyProfile: React.FC = () => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
 
-    // Action 2: Refresh the list of courses (assuming you have a function to fetch user details)
     if (severity === 'success' && userDetails) {
       const fetchUpdatedUserDetails = async () => {
         const userDoc = doc(db, 'users', userDetails.uid);
@@ -74,6 +73,19 @@ const MyProfile: React.FC = () => {
     setOpenSnackbar(false);
   };
 
+  const renderCourses = () => {
+    if (!userDetails?.classes) return 'None';
+
+    return Object.entries(userDetails.classes).map(([courseId, courseData]) => (
+      <Chip
+        key={courseId}
+        label={`${courseData.number} - ${courseData.title}`}
+        variant="filled"
+        sx={{ margin: '4px'}} // Add some margin to space out the chips
+      />
+    ));
+  };
+
   return (
     <Box className="profile-container">
       <Button variant="text" onClick={handleNavigateHome} className="profile-button">
@@ -91,8 +103,11 @@ const MyProfile: React.FC = () => {
             Account Status: {getAccountStatus()}
           </Typography>
           <Typography className="profile-text">
-            Current Courses: {userDetails.class ? userDetails.class.join(', ') : 'None'}
+            Current Courses: 
           </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap' }}> {/* Add a container for flex layout */}
+            {renderCourses()}
+          </Box>
         </>
       )}
 

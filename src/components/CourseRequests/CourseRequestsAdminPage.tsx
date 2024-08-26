@@ -1,7 +1,7 @@
 // src/components/CourseRequests/CourseRequestsAdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, arrayUnion } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 interface CourseRequest {
@@ -28,23 +28,27 @@ const CourseRequestsAdminPage: React.FC = () => {
 
   useEffect(() => {
     const fetchRequests = async () => {
-      const querySnapshot = await getDocs(collection(db, 'courseRequests'));
-      const fetchedRequests = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as CourseRequest[];
-
-      fetchedRequests.sort((a, b) => {
-        if (a.status === 'pending' && b.status !== 'pending') return -1;
-        if (a.status === 'approved' && b.status === 'denied') return -1;
-        if (a.status === 'denied' && b.status === 'approved') return 1;
-        return 0;
-      });
-
-      setRequests(fetchedRequests);
+      try {
+        const querySnapshot = await getDocs(collection(db, 'courseRequests'));
+        const fetchedRequests = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as CourseRequest[];
+  
+        fetchedRequests.sort((a, b) => {
+          if (a.status === 'pending' && b.status !== 'pending') return -1;
+          if (a.status === 'approved' && b.status === 'denied') return -1;
+          if (a.status === 'denied' && b.status === 'approved') return 1;
+          return 0;
+        });
+  
+        setRequests(fetchedRequests);
+      } catch (error) {
+        console.error("Error fetching course requests: ", error);
+      }
     };
     fetchRequests();
-  }, [db]);
+  }, [db]);  
 
   // Function to generate a unique 28-character passcode
   function generatePasscode() {
@@ -70,10 +74,13 @@ const CourseRequestsAdminPage: React.FC = () => {
         courseAdmin: [currentRequestData.uid] // Initialize with primary admin as array
       });
 
-      // Update the user's document to associate them with the new course
+      // Update the user's document to associate them with the new course using the map structure
       const userDocRef = doc(db, 'users', currentRequestData.uid);
       await updateDoc(userDocRef, {
-        class: arrayUnion(currentRequestData.courseNumber)
+        [`classes.${courseDocRef.id}`]: {
+          number: currentRequestData.courseNumber,
+          title: currentRequestData.courseTitle,
+        }
       });
 
       // Update the course request document with the new course ID and passcode

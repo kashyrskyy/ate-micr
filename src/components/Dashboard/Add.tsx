@@ -3,8 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert, SnackbarCloseReason, MenuItem, Select } from '@mui/material';
 
 import { useUser } from '../../contexts/UserContext';
-
-import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore"; 
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 import { db } from '../../config/firestore'
 
 import ImageUpload, { ImageUploadHandle } from './ImageUpload'; 
@@ -63,11 +62,13 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
 
   // Set default course when component mounts
   useEffect(() => {
-    if (userDetails?.class) {
-      const nonPublicCourses = userDetails.class.filter((course: string) => course !== "Public");
-      setCourse(nonPublicCourses[0] || ""); // Default to first non-public course, if none, set to an empty string
+    if (userDetails?.classes) {
+      const nonPublicCourses = Object.entries(userDetails.classes).filter(
+        ([, courseDetails]) => courseDetails.number !== "Public"
+      );
+      setCourse(nonPublicCourses.length > 0 ? nonPublicCourses[0][0] : ""); // Default to the first non-public course ID, if none, set to an empty string
     }
-  }, [userDetails?.class]);
+  }, [userDetails?.classes]);
   
   const saveDesign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -113,12 +114,6 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
       const docRef = await addDoc(collection(db, "designs"), newDesign);
       const addedDesign: Design = { ...newDesign, id: docRef.id };
       setDesigns([...designs, addedDesign]); // Update state correctly
-      // Assuming Snackbar state is set here
-      setTimeout(() => {
-        setIsAdding(false); // Or any other operation that might hide the Snackbar
-        getDesigns();
-      }, 1000); // Adjust delay as needed, but ensure it's at least as long as the Snackbar's autoHideDuration
-
       setSnackbarMessage(`${title} has been Added.`);
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -128,6 +123,11 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
       setDesignDescription('');
       setImages([]);
       setFiles([]);  // Reset the files state
+      
+      setTimeout(() => {
+        setIsAdding(false); // Or any other operation that might hide the Snackbar
+        getDesigns();
+      }, 1000); // Adjust delay as needed, but ensure it's at least as long as the Snackbar's autoHideDuration
     } catch (error) {
       console.log(error);
       setDialogContent('There was an issue adding your design.');
@@ -163,10 +163,10 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
             onChange={e => setCourse(e.target.value)}
             fullWidth
           >
-            {(userDetails?.class || [])
-              .filter((course: string) => course !== "Public") // Filter out "Public"
-              .map((course: string) => (
-                <MenuItem key={course} value={course}>{course}</MenuItem>
+            {(userDetails?.classes ? Object.entries(userDetails.classes) : [])
+              .filter(([, courseDetails]) => courseDetails.number !== "Public") // Filter out "Public"
+              .map(([courseId, courseDetails]) => (
+                <MenuItem key={courseId} value={courseId}>{`${courseDetails.number} - ${courseDetails.title}`}</MenuItem>
               ))}
           </Select>
 
@@ -199,17 +199,12 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
                 fontSize: '1rem',
                 mt: 2, 
                 textTransform: 'none',
-                // Define a minimum width or width if necessary
-                // Apply a box-shadow for hover effect instead of changing border or size
-                boxShadow: 'none', // No box-shadow initially
+                boxShadow: 'none', 
                 '&:hover': {
-                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
-                  // Use transform for visual feedback without layout shift
+                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
                   transform: 'scale(1.05)',
                 },
-                // Transition for the transform property for smooth effect
                 transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                // Prevent layout shift by applying a transparent border
                 border: '1px solid transparent',
               }}
             >
@@ -223,15 +218,15 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
                 fontSize: '1rem',
                 mt: 2, 
                 textTransform: 'none',
-                color: 'currentColor', // Ensures the font color stays the same
-                borderColor: 'rgba(255, 0, 0, 0.5)', // Lighter red border for the default state
-                boxShadow: 'none', // No box-shadow initially
+                color: 'currentColor',
+                borderColor: 'rgba(255, 0, 0, 0.5)',
+                boxShadow: 'none',
                 '&:hover': {
-                  borderColor: 'rgba(255, 0, 0, 0.7)', // Slightly darker red border on hover
-                  backgroundColor: 'rgba(255, 0, 0, 0.1)', // Light red background on hover
-                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
-                  color: 'currentColor', // Ensure the text color remains the same
-                  transform: 'scale(1.05)', // Transform effect on hover
+                  borderColor: 'rgba(255, 0, 0, 0.7)',
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
+                  color: 'currentColor',
+                  transform: 'scale(1.05)',
                 },
                 transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, background-color 0.3s ease-in-out',
               }}

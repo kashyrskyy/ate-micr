@@ -28,7 +28,7 @@ interface NotebookTableProps {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   isAdmin: boolean;
-  userDetails: { uid: string } | null; // Add userDetails prop
+  userDetails: { uid: string; classes?: Record<string, { number: string; title: string }> } | null; // Updated userDetails prop
   showUserIdColumn: boolean; // Add showUserIdColumn prop
 }
 
@@ -83,7 +83,11 @@ const NotebookTable: React.FC<NotebookTableProps> = ({ designs, handleEdit, hand
                   <TableCell>
                     <button onClick={() => handleEdit(design.id)} className="hyperlink-style">{design.title}</button>
                   </TableCell>
-                  <TableCell>{design.course || 'N/A'}</TableCell>
+                  <TableCell>
+                    {design.course && userDetails?.classes && userDetails.classes[design.course]
+                      ? `${userDetails.classes[design.course].number} - ${userDetails.classes[design.course].title}`
+                      : 'N/A'}
+                  </TableCell>
                   {showUserIdColumn && <TableCell>{design.userId}</TableCell>}
                   <TableCell>{formatDate(design.dateCreated)}</TableCell>
                   <TableCell>{formatDate(design.dateModified)}</TableCell>

@@ -9,7 +9,7 @@ interface User {
   lastLogin?: {
     toDate: () => Date;
   };
-  class?: string[];
+  classes?: Record<string, { number: string; title: string }>; // Update type for classes
 }
 
 interface UserTableProps {
@@ -41,8 +41,16 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                   <Chip label="Student (Regular)" />
                 )}
               </TableCell>
-              <TableCell>{user.lastLogin ? user.lastLogin.toDate().toLocaleString() : 'No data available'}</TableCell>
-              <TableCell>{user.class ? user.class.join(', ') : 'None'}</TableCell>
+              <TableCell>
+                {user.lastLogin ? user.lastLogin.toDate().toLocaleString() : 'No data available'}
+              </TableCell>
+              <TableCell>
+                {user.classes 
+                  ? Object.values(user.classes)
+                      .map((course) => `${course.number} - ${course.title}`)
+                      .join(', ') 
+                  : 'None'}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

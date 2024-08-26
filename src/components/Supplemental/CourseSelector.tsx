@@ -10,14 +10,18 @@ interface CourseSelectorProps {
 
 const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange }) => {
   const { userDetails } = useUser();
-  const [courses, setCourses] = useState<string[]>(['Public']);
+  const [courses, setCourses] = useState<{ id: string; number: string; title: string }[]>([{ id: 'public', number: 'Public', title: 'Public' }]);
 
   useEffect(() => {
-    if (userDetails?.class) {
-      const uniqueCourses = Array.from(new Set(['Public', ...userDetails.class]));
-      setCourses(uniqueCourses);
+    if (userDetails?.classes) {
+      const userCourses = Object.entries(userDetails.classes).map(([id, course]) => ({
+        id,
+        number: course.number,
+        title: course.title,
+      }));
+      setCourses([{ id: 'public', number: 'Public', title: 'Public' }, ...userCourses]);
     } else {
-      setCourses(['Public']);
+      setCourses([{ id: 'public', number: 'Public', title: 'Public' }]);
     }
   }, [userDetails]);
 
@@ -25,11 +29,11 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCours
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       {courses.map((course) => (
         <Button
-          key={course}
-          variant={selectedCourse === course ? 'contained' : 'outlined'}
-          onClick={() => onCourseChange(course)}
+          key={course.id}
+          variant={selectedCourse === course.id ? 'contained' : 'outlined'}
+          onClick={() => onCourseChange(course.id)}
         >
-          {course}
+          {course.number} - {course.title}
         </Button>
       ))}
     </Box>

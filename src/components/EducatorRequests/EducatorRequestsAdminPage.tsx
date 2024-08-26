@@ -67,7 +67,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
 
   const handleApprove = async () => {
     if (!currentRequestId || !currentRequestData) return;
-
+  
     try {
       if (currentRequestData.requestType === 'primary') {
         const passcode = generatePasscode();
@@ -77,39 +77,49 @@ const EducatorRequestsAdminPage: React.FC = () => {
           passcode: passcode,
           courseAdmin: [currentRequestData.uid] // Initialize with primary admin as array
         });
-
+  
         const userDocRef = doc(db, 'users', currentRequestData.uid);
+  
+        // Update user document using a map structure
         await updateDoc(userDocRef, {
           isAdmin: true,
-          class: arrayUnion(currentRequestData.courseNumber)
+          [`classes.${courseDocRef.id}`]: {
+            number: currentRequestData.courseNumber,
+            title: currentRequestData.courseTitle,
+          },
         });
-
+  
         await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
           status: 'approved',
           courseId: courseDocRef.id,
-          passcode: passcode
+          passcode: passcode,
         });
-
+  
       } else if (currentRequestData.requestType === 'co-instructor') {
         const courseDocRef = doc(db, 'courses', selectedCourseId);
-
+  
         // Update courseAdmin array to include the co-instructor
         await updateDoc(courseDocRef, {
-          courseAdmin: arrayUnion(currentRequestData.uid)
+          courseAdmin: arrayUnion(currentRequestData.uid),
         });
-
+  
         const userDocRef = doc(db, 'users', currentRequestData.uid);
+        
+        // Update user document using a map structure
         await updateDoc(userDocRef, {
           isAdmin: true,
-          class: arrayUnion(currentRequestData.courseNumber)
+          [`classes.${selectedCourseId}`]: {
+            number: currentRequestData.courseNumber,
+            title: currentRequestData.courseTitle,
+          },
         });
-
+  
         await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
           status: 'approved',
-          courseId: selectedCourseId
+          courseId: selectedCourseId,
         });
       }
-
+  
       setSnackbarMessage('Request approved, and user promoted to educator.');
       setSnackbarSeverity('success');
       setRequests(requests.map(request => request.id === currentRequestId ? { ...request, status: 'approved' } : request));
@@ -120,7 +130,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
     }
     setOpenSnackbar(true);
     handleCloseDialog();
-  };
+  };  
 
   const handleDeny = async () => {
     if (!currentRequestId) return;

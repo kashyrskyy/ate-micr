@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { getFirestore, doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, deleteField } from 'firebase/firestore';
 
+// Update interface to include course details
 interface CourseStudentManagementProps {
   selectedCourse: string;
+  selectedCourseDetails: { number: string; title: string } | null; // Add course details prop
   onStudentChange: () => void; // Callback to refresh the student list
 }
 
-const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selectedCourse, onStudentChange }) => {
+const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selectedCourse, selectedCourseDetails, onStudentChange }) => {
   const [studentId, setStudentId] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -32,13 +34,13 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const enrolledCourses = userData.class || [];
+        const enrolledClasses = userData.classes || {};
 
-        if (enrolledCourses.includes(selectedCourse)) {
+        if (selectedCourse in enrolledClasses) {
           // Open the confirmation dialog
           setConfirmDialogOpen(true);
         } else {
-          setMessage(`Student ${studentId} is not enrolled in course ${selectedCourse}, cannot remove.`);
+          setMessage(`Student ${studentId} is not enrolled in course ${selectedCourseDetails?.number || selectedCourse}, cannot remove.`);
           setOpenSnackbar(true);
         }
       } else {
@@ -57,9 +59,9 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
     setLoading(true);
     try {
       const userRef = doc(db, 'users', studentId);
-      // Remove the student from the selected course
-      await updateDoc(userRef, { class: arrayRemove(selectedCourse) });
-      setMessage(`Student ${studentId} removed from course ${selectedCourse}.`);
+      // Remove the course from the student's classes
+      await updateDoc(userRef, { [`classes.${selectedCourse}`]: deleteField() });
+      setMessage(`Student ${studentId} removed from course ${selectedCourseDetails?.number || selectedCourse}.`);
       setStudentId(''); // Clear the Student ID input field
       onStudentChange(); // Refresh the student list
     } catch (error) {
@@ -82,7 +84,7 @@ const CourseStudentManagement: React.FC<CourseStudentManagementProps> = ({ selec
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h6" component="h2">
-        Remove Students from {selectedCourse}
+        Remove Students from {selectedCourseDetails ? `${selectedCourseDetails.number} - ${selectedCourseDetails.title}` : selectedCourse}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <TextField

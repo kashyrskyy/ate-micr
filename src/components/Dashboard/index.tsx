@@ -62,10 +62,11 @@ const Dashboard = () => {
       );
     } else if (userDetails.isAdmin) {
       // Use 'in' query to retrieve only designs related to the courses the admin has access to
-      if (userDetails.class && userDetails.class.length > 0) {
+      const accessibleCourses = userDetails.classes ? Object.keys(userDetails.classes) : [];
+      if (accessibleCourses.length > 0) {
         designsQuery = query(
           collection(db, "designs"),
-          where("course", "in", userDetails.class),
+          where("course", "in", accessibleCourses),
           orderBy("dateCreated", "desc")
         );
       } else {

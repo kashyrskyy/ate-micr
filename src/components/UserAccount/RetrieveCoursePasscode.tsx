@@ -9,7 +9,7 @@ import CopyToClipboard from './CopyToClipboard'; // Adjust the path as necessary
 const RetrieveCoursePasscode: React.FC = () => {
   const { userDetails } = useUser();
   const [selectedCourse, setSelectedCourse] = useState('');
-  const [courses, setCourses] = useState<{ id: string, number: string, passcode: string }[]>([]);
+  const [courses, setCourses] = useState<{ id: string; number: string; title: string; passcode: string }[]>([]);
   const [passcode, setPasscode] = useState<string | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -23,8 +23,10 @@ const RetrieveCoursePasscode: React.FC = () => {
         const querySnapshot = await getDocs(q);
         const fetchedCourses = querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
-        })) as { id: string, number: string, passcode: string }[];        
+          number: doc.data().number as string,
+          title: doc.data().title as string,
+          passcode: doc.data().passcode as string,
+        })) as { id: string; number: string; title: string; passcode: string }[];        
         setCourses(fetchedCourses);
       }
     };
@@ -38,7 +40,7 @@ const RetrieveCoursePasscode: React.FC = () => {
     const course = courses.find(c => c.id === courseId);
     if (course) {
       setPasscode(course.passcode);
-      setSnackbarMessage(`Passcode for course number ${course.number} retrieved successfully.`);
+      setSnackbarMessage(`Passcode for course "${course.number} - ${course.title}" retrieved successfully.`);
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
     } else {
@@ -70,8 +72,8 @@ const RetrieveCoursePasscode: React.FC = () => {
           >
             {courses.map((course) => (
               <MenuItem key={course.id} value={course.id}>
-                {course.number}
-              </MenuItem>            
+                {`${course.number} - ${course.title}`}
+              </MenuItem>                        
             ))}
           </TextField>
           {passcode && (

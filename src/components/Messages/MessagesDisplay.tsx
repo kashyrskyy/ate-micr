@@ -34,7 +34,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   const messagesPerPage = 3;
 
   const filteredMessages = messages.filter(message => 
-    userDetails?.class?.includes(message.course) || message.course === 'Public'
+    userDetails?.classes?.hasOwnProperty(message.course) || message.course === 'Public'
   );  
 
   const pinnedMessages = filteredMessages.filter(message => message.isPinned);
@@ -59,6 +59,11 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
     return userDetails?.isSuperAdmin || (userDetails?.isAdmin && message.course !== 'Public');
   };  
 
+  const getCourseLabel = (courseId: string) => {
+    const course = userDetails?.classes?.[courseId];
+    return course ? `${course.number}` : courseId;
+  };
+
   return (
     <Box className="messages-display-container"> {/* Naming the main container box */}
       {pinnedMessages.length > 0 && (
@@ -81,7 +86,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                     <Grid item>
                       <Box display="flex" alignItems="center">
                         <Chip 
-                          label={message.course}
+                          label={getCourseLabel(message.course)}
                           color="primary"
                           variant="outlined"
                           className="message-chip"
@@ -145,7 +150,7 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                   <Grid item>
                     <Box display="flex" alignItems="center">
                       <Chip 
-                        label={message.course}
+                        label={getCourseLabel(message.course)}
                         color="primary"
                         variant="outlined"
                         className="message-chip"

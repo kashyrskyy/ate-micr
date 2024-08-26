@@ -58,7 +58,7 @@ const SelectionPage: React.FC = () => {
 
               <Grid item xs={12}>
                 <Card className="menu-item">
-                  {userDetails && !userDetails.isAdmin && (!userDetails.class || !userDetails.class.some(course => course !== "Public")) ? (
+                  {userDetails && !userDetails.isAdmin && (!userDetails.classes || Object.keys(userDetails.classes).length === 0) ? (
                     <Tooltip title="The Laboratory Notebook is accessible to users enrolled in an academic course. Please enroll in a course via 'My Account' by following the instructions provided by your academic instructor.">
                       <span>
                         <CardActionArea disabled>
@@ -133,16 +133,16 @@ const SelectionPage: React.FC = () => {
                     </Card>
                   </Grid>
                   <Grid item xs={12}>
-                    <Card className="menu-item">
-                      <CardActionArea onClick={() => navigate('/super-admin-course-management')}>
-                        <CardContent>
-                          <Typography className="menu-item-typography" variant="h6" component="div">
-                            Course Management
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  </Grid>
+                  <Card className="menu-item">
+                    <CardActionArea onClick={() => navigate('/super-admin-course-management')}>
+                      <CardContent>
+                        <Typography className="menu-item-typography" variant="h6" component="div">
+                          Course Management
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
                   <Grid item xs={12}>
                     <Card className="menu-item">
                       <CardActionArea onClick={() => navigate('/educator-requests')}>

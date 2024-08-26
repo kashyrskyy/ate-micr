@@ -70,11 +70,12 @@ const AddMessage: React.FC = () => {
               onChange={(e) => setSelectedCourse(e.target.value as string)}
               label="Course"
             >
-              {userDetails?.class?.map((course: string) => (
-                <MenuItem key={course} value={course}>
-                  {course}
-                </MenuItem>
-              ))}
+              {userDetails?.classes &&
+                Object.entries(userDetails.classes).map(([courseId, course]) => (
+                  <MenuItem key={courseId} value={courseId}>
+                    {`${course.number} - ${course.title}`}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Box>
