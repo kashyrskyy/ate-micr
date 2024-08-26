@@ -42,18 +42,18 @@ const EducatorRequestsAdminPage: React.FC = () => {
         id: doc.id,
         ...doc.data()
       })) as EducatorRequest[];
-  
+
       const courseSnapshot = await getDocs(collection(db, 'courses'));
       const fetchedCourses = courseSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-  
+
       setRequests(fetchedRequests);
       setCourses(fetchedCourses);
     };
     fetchRequestsAndCourses();
-  }, [db]);  
+  }, [db]);
 
   // Function to generate a unique 28-character passcode
   function generatePasscode() {
@@ -192,87 +192,44 @@ const EducatorRequestsAdminPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {requests.filter(request => request.requestType === 'primary').map((request) => (
-              <React.Fragment key={request.id}>
-                <TableRow>
-                  <TableCell>{`${request.firstName} ${request.lastName}`}</TableCell>
-                  <TableCell>{request.uid}</TableCell>
-                  <TableCell>{request.institution}</TableCell>
-                  <TableCell>{request.email}</TableCell>
-                  <TableCell>{request.courseNumber}</TableCell>
-                  <TableCell>{request.courseTitle}</TableCell>
-                  <TableCell>{request.courseDescription}</TableCell>
-                  <TableCell>{new Date(request.timestamp.seconds * 1000).toLocaleString()}</TableCell>
-                  <TableCell>
-                    {request.status === 'pending' && (
-                      <>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          sx={{ mr: 1 }}
-                          onClick={() => handleOpenDialog('approve', request.id, request)}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          onClick={() => handleOpenDialog('deny', request.id, request)}
-                        >
-                          Deny
-                        </Button>
-                      </>
-                    )}
-                    {request.status === 'approved' && (
-                      <Typography color="success.main">Approved</Typography>
-                    )}
-                    {request.status === 'denied' && (
-                      <Typography color="error.main">Denied</Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-
-                {/* Render co-instructor requests under the primary instructor */}
-                {requests.filter(coRequest => coRequest.requestType === 'co-instructor' && coRequest.courseNumber === request.courseNumber).map((coRequest) => (
-                  <TableRow key={coRequest.id} sx={{ pl: 4 }}>
-                    <TableCell sx={{ pl: 4 }}>{`${coRequest.firstName} ${coRequest.lastName}`}</TableCell>
-                    <TableCell>{coRequest.uid}</TableCell>
-                    <TableCell>{coRequest.institution}</TableCell>
-                    <TableCell>{coRequest.email}</TableCell>
-                    <TableCell>{coRequest.courseNumber}</TableCell>
-                    <TableCell>{coRequest.courseTitle}</TableCell>
-                    <TableCell>{coRequest.courseDescription}</TableCell>
-                    <TableCell>{new Date(coRequest.timestamp.seconds * 1000).toLocaleString()}</TableCell>
-                    <TableCell>
-                      {coRequest.status === 'pending' && (
-                        <>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            sx={{ mr: 1 }}
-                            onClick={() => handleOpenDialog('approve', coRequest.id, coRequest)}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => handleOpenDialog('deny', coRequest.id, coRequest)}
-                          >
-                            Deny
-                          </Button>
-                        </>
-                      )}
-                      {coRequest.status === 'approved' && (
-                        <Typography color="success.main">Approved</Typography>
-                      )}
-                      {coRequest.status === 'denied' && (
-                        <Typography color="error.main">Denied</Typography>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </React.Fragment>
+            {requests.map((request) => (
+              <TableRow key={request.id}>
+                <TableCell>{`${request.firstName} ${request.lastName}`}</TableCell>
+                <TableCell>{request.uid}</TableCell>
+                <TableCell>{request.institution}</TableCell>
+                <TableCell>{request.email}</TableCell>
+                <TableCell>{request.courseNumber}</TableCell>
+                <TableCell>{request.courseTitle}</TableCell>
+                <TableCell>{request.courseDescription}</TableCell>
+                <TableCell>{new Date(request.timestamp.seconds * 1000).toLocaleString()}</TableCell>
+                <TableCell>
+                  {request.status === 'pending' && (
+                    <>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{ mr: 1 }}
+                        onClick={() => handleOpenDialog('approve', request.id, request)}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => handleOpenDialog('deny', request.id, request)}
+                      >
+                        Deny
+                      </Button>
+                    </>
+                  )}
+                  {request.status === 'approved' && (
+                    <Typography color="success.main">Approved</Typography>
+                  )}
+                  {request.status === 'denied' && (
+                    <Typography color="error.main">Denied</Typography>
+                  )}
+                </TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
@@ -298,7 +255,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
           <DialogContentText id="confirmation-dialog-description">
             Are you sure you want to {currentAction} this request for {currentRequestData?.firstName} {currentRequestData?.lastName}?
           </DialogContentText>
-          
+
           {currentAction === 'approve' && currentRequestData?.requestType === 'co-instructor' && (
             <Box sx={{ mt: 2 }}>
               <Typography>Select Course:</Typography>
