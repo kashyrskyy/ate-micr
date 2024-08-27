@@ -63,10 +63,7 @@ const Login = () => {
     <Container maxWidth="lg" sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Grid container spacing={isMobile ? 2 : 4} alignItems="center" justifyContent="center">
         <Grid item xs={12} md={6} sx={{ textAlign: 'center' }}>
-          <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}ate-logo.png`} alt="ATE Logo" style={{ width: 150, marginBottom: 20 }} />
-          <Typography variant={isMobile ? 'h5' : 'h4'} component="h1" gutterBottom>
-            NexLAB
-          </Typography>
+          <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}nexlab-logo.png`} alt="ATE Logo" style={{ width: 600, marginBottom: 20 }} />
         </Grid>
         {!isMobile && (
           <Grid item>

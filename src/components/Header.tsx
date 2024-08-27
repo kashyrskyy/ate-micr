@@ -21,11 +21,9 @@ const Header: React.FC = () => {
   };
 
   return (
-    <Box className="header-box" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#12372A' }}>
+    <Box className="header-box" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#436850' }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" className="nexlab-title" sx={{ color: '#FBFADA', marginRight: '20px' }}>
-          NexLAB
-        </Typography>
+        <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}nexlab-logo.png`} alt="ATE Logo" style={{ width: 300 }} />
         <Box className="divider" sx={{ height: '40px', borderLeft: '2px solid #FBFADA', marginRight: '20px' }} />
         <Typography variant="body1" component="p" className="subtitle" sx={{ color: '#FBFADA', fontFamily: 'Gabarito', maxWidth: '300px' }}>
           Next-Generation Experiments and <br />
