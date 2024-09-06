@@ -189,9 +189,10 @@ const SuperAdminCourseManagement: React.FC = () => {
             </TableHead>
             <TableBody>
               {courses.map(course => {
-                const isAdmin = userDetails && course.courseAdmin.includes(userDetails.uid);
+                const isCourseAdmin = !!userDetails?.uid && course.courseAdmin.includes(userDetails.uid);
+
                 return (
-                  <TableRow key={course.id} sx={{ backgroundColor: isAdmin ? '#e0f7fa' : 'transparent' }}>
+                  <TableRow key={course.id} sx={{ backgroundColor: isCourseAdmin ? '#e0f7fa' : 'transparent' }}>
                     <TableCell>{course.id}</TableCell>
                     <TableCell>{course.number}</TableCell>
                     <TableCell>{course.title}</TableCell>
@@ -203,15 +204,20 @@ const SuperAdminCourseManagement: React.FC = () => {
                             edge="end" 
                             aria-label="add" 
                             onClick={() => handleAddSuperAdmin(course.id)}
-                            disabled={!!isAdmin} 
+                            disabled={isCourseAdmin} 
                           >
                             <AddIcon />
                           </IconButton>
                         </span>
                       </Tooltip>
-                      <Tooltip title="Delete this course">
+                      <Tooltip title={isCourseAdmin ? "Delete this course" : "You are not authorized to delete this course"}>
                         <span>
-                          <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteCourse(course.id)}>
+                          <IconButton 
+                            edge="end" 
+                            aria-label="delete" 
+                            onClick={() => handleDeleteCourse(course.id)} 
+                            disabled={!isCourseAdmin} 
+                          >
                             <DeleteIcon />
                           </IconButton>
                         </span>
