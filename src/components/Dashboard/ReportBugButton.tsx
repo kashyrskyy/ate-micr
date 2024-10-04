@@ -15,7 +15,7 @@ const ReportBugButton: React.FC = () => {
             className="report-bug-button"
             startIcon={<BugReportIcon />}
         >
-            Leave Feedback
+            Provide Feedback
         </Button>
     );
 };
