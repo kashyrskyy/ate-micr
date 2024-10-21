@@ -1461,14 +1461,14 @@ button.ql-equals {
 /* HOME PAGE DESIGN */
 
 .menu-container {
-  background: #f5f5f5;
+  background: #F0F4FF;
   padding: 16px;
   border-radius: 15px;
 }
 
 .menu-container .menu-item {
   border-radius: 45px;
-  background: #D9D9D9;
+  background: #CDDAFF;
   padding: 5px 24px;
   display: flex;
   justify-content: center;
@@ -1479,7 +1479,7 @@ button.ql-equals {
 }
 
 .menu-item .MuiCardActionArea-root:hover {
-  background-color: #12372A; /* Your desired hover color */
+  background-color: #0B53C0; /* Your desired hover color */
   border: 0px solid #f5f5f5;
 }
 
@@ -1545,14 +1545,14 @@ button.ql-equals {
   font-family: 'Nabla', sans-serif;
   font-size: 4rem;
   font-weight: 900;
-  color: #FBFADA;
+  color: #0B53C0;
   letter-spacing: 0.05em;
   margin-right: 20px; /* Add some space between title and divider */
 }
 
 .header-box .divider {
   height: 40px;
-  border-left: 2px solid #FBFADA;
+  border-left: 2px solid #0B53C0;
   margin-right: 20px; /* Adjust spacing as needed */
 }
 
@@ -1560,7 +1560,7 @@ button.ql-equals {
 .header-box .subtitle {
   font-family: 'Gabarito', sans-serif;
   font-size: 1rem; /* Adjust the font size as needed */
-  color: #FBFADA;
+  color: #0B53C0;
   line-height: 1.5; /* Adjust for spacing between lines */
   max-width: 300px; /* Adjust as needed for better text wrapping */
 }
@@ -1569,7 +1569,7 @@ button.ql-equals {
 
 /* Overall MessagesDisplay container */
 .messages-display-container {
-  background-color: #ADBC9F; /* Background for the entire container */
+  background-color: #6482AD; /* Background for the entire container */
   padding: 16px;
   border-radius: 15px;
 }
@@ -1596,8 +1596,8 @@ button.ql-equals {
   border-radius: 16px;
   font-family: 'Gabarito', sans-serif;
   font-size: 1rem;
-  background-color: #436850; /* Sage green background for chip */
-  color: #FBFADA; /* Light cream text for chip */
+  background-color: #6482AD; /* Sage green background for chip */
+  color: #FFFFFF; /* Light cream text for chip */
 }
 
 /* Typography Styling */
@@ -1634,7 +1634,7 @@ button.ql-equals {
 .pagination-container .pagination-button {
   font-family: 'Gabarito', sans-serif;
   margin-right: 8px; /* Margin between pagination buttons */
-  background-color: #ADBC9F; /* Light sage background */
+  background-color: #CDDAFF; /* Light sage background */
   color: #12372A; /* Dark green text */
   border-radius: 15px;
   padding: 8px 16px;
@@ -1642,7 +1642,7 @@ button.ql-equals {
 }
 
 .pagination-container .pagination-button:hover {
-  background-color: #436850; /* Darker green for hover */
+  background-color: #0B53C0; /* Darker green for hover */
   border: 0px solid #f5f5f5;
   color: #FBFADA; /* Light cream text */
 }

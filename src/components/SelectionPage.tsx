@@ -72,7 +72,9 @@ const SelectionPage: React.FC = () => {
                       </span>
                     </Tooltip>
                   ) : (
-                    <CardActionArea onClick={() => navigate('/laboratory-notebooks')}>
+                    <CardActionArea 
+                      onClick={() => navigate('/laboratory-notebooks')}
+                    >
                       <CardContent>
                         <Typography className="menu-item-typography" variant="h6" component="div">
                           Laboratory Notebook
@@ -188,13 +190,13 @@ const SelectionPage: React.FC = () => {
                   variant="contained"
                   onClick={() => navigate('/add-message')}
                   sx={{
-                    backgroundColor: '#ADBC9F',
-                    color: '#FBFADA',
+                    backgroundColor: '#CDDAFF',
+                    color: '#FFFFFF',
                     fontFamily: 'Staatliches, sans-serif',
                     fontSize: '1.25rem',
                     '&:hover': {
-                      backgroundColor: '#12372A',
-                      border: '0px solid #12372A',
+                      backgroundColor: '#0B53C0',
+                      border: '0px solid #0B53C0',
                     },
                   }}
                 >
