@@ -147,11 +147,6 @@ const MaterialGrid: React.FC = () => {
                         </>
                       )}
                     </Box>
-                    <Box sx={{ backgroundColor: '#E0F7FA', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mt: 2 }}>
-                      <Typography variant="body2" sx={{ color: '#00796B', fontWeight: 'bold' }}>
-                        {material.course || 'N/A'}
-                      </Typography>
-                    </Box>
                   </Box>
                 </Grid>
               ))
@@ -220,11 +215,6 @@ const MaterialGrid: React.FC = () => {
                         </>
                       )}
                     </Box>
-                    <Box sx={{ backgroundColor: '#E0F7FA', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mt: 2 }}>
-                      <Typography variant="body2" sx={{ color: '#00796B', fontWeight: 'bold' }}>
-                        {material.course || 'N/A'}
-                      </Typography>
-                    </Box>
                   </Box>
                 </Grid>
               ))
@@ -285,11 +275,6 @@ const MaterialGrid: React.FC = () => {
                       />
                     </>
                   )}
-                </Box>
-                <Box sx={{ backgroundColor: '#E0F7FA', borderRadius: '8px', padding: '4px 8px', display: 'inline-block', mt: 2 }}>
-                  <Typography variant="body2" sx={{ color: '#00796B', fontWeight: 'bold' }}>
-                    {material.course || 'N/A'}
-                  </Typography>
                 </Box>
               </Box>
             </Grid>
