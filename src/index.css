@@ -1569,7 +1569,7 @@ button.ql-equals {
 
 /* Overall MessagesDisplay container */
 .messages-display-container {
-  background-color: #6482AD; /* Background for the entire container */
+  background-color: #CDDAFF; /* Background for the entire container */
   padding: 16px;
   border-radius: 15px;
 }
@@ -1596,13 +1596,13 @@ button.ql-equals {
   border-radius: 16px;
   font-family: 'Gabarito', sans-serif;
   font-size: 1rem;
-  background-color: #6482AD; /* Sage green background for chip */
+  background-color: #6482AD;
   color: #FFFFFF; /* Light cream text for chip */
 }
 
 /* Typography Styling */
 .messages-display-container .message-posted-on {
-  color: #436850; /* Sage green for the posted on text */
+  color: #6482AD;
   font-family: 'Gabarito', sans-serif;
 }
 
@@ -1610,39 +1610,39 @@ button.ql-equals {
   font-weight: bold;
   font-style: italic;
   font-family: 'Gabarito', sans-serif;
-  color: #12372A; /* Dark green for message title */
+  color: #0B53C0; /* Dark green for message title */
 }
 
 .messages-display-container .message-description {
   white-space: pre-wrap;
   font-family: 'Gabarito', sans-serif;
-  color: #12372A; /* Dark green for description */
+  color: #0B53C0; /* Dark green for description */
 }
 
 .messages-display-container .message-links-title {
   font-weight: bold;
   font-family: 'Gabarito', sans-serif;
-  color: #436850; /* Sage green for links title */
+  color: #0B53C0; /* Sage green for links title */
 }
 
 .messages-display-container .message-link {
   font-family: 'Gabarito', sans-serif;
-  color: #12372A; /* Dark green for links */
+  color: #0B53C0; /* Dark blue for links */
 }
 
 /* Button Styling */
 .pagination-container .pagination-button {
   font-family: 'Gabarito', sans-serif;
   margin-right: 8px; /* Margin between pagination buttons */
-  background-color: #CDDAFF; /* Light sage background */
-  color: #12372A; /* Dark green text */
+  background-color: #F5F5F5; /* Dark Blue background */
+  color: #f5f5f5; /* Light text */
   border-radius: 15px;
   padding: 8px 16px;
   transition: background-color 0.3s;
 }
 
 .pagination-container .pagination-button:hover {
-  background-color: #0B53C0; /* Darker green for hover */
+  background-color: #6482AD; /* Darker blue for hover */
   border: 0px solid #f5f5f5;
   color: #FBFADA; /* Light cream text */
 }
@@ -1658,7 +1658,7 @@ button.ql-equals {
 .pinned-section .pinned-title {
   font-weight: bold;
   font-family: 'Gabarito', sans-serif;
-  color: #12372A; /* Dark green for pinned title */
+  color: #0B53C0; /* Dark blue for pinned title */
 }
 
 /* Report a Bug, Footer, and Device Version */
@@ -1675,9 +1675,9 @@ button.ql-equals {
   padding: 8px 16px; /* Equivalent to px and py */
   min-width: 150px;
   height: 50px; /* Explicit height */
-  background-color: #FBFADA; /* Inside color */
-  border: 2px solid #436850; /* Outline color */
-  color: #436850; /* Text color */
+  background-color: #F0F4FF; /* Inside color */
+  border: 2px solid #0B53C0; /* Outline color */
+  color: #0B53C0; /* Text color */
   text-transform: none;
   border-radius: 20px;
   font-size: 1rem;
@@ -1687,16 +1687,16 @@ button.ql-equals {
 }
 
 .report-bug-container .report-bug-button:hover {
-  background-color: #436850; /* Hover inside color */
-  color: #FBFADA; /* Hover text color */
-  border-color: #436850; /* Keep outline color on hover */
+  background-color: #0B53C0; /* Hover inside color */
+  color: #F0F4FF; /* Hover text color */
+  border-color: #0B53C0; /* Keep outline color on hover */
 }
 
 .report-bug-container .report-bug-button:active,
 .report-bug-container .report-bug-button:focus {
-  background-color: #436850; /* Active and focus inside color */
-  color: #FBFADA; /* Active and focus text color */
-  border-color: #436850; /* Keep outline color on active and focus */
+  background-color: #0B53C0; /* Active and focus inside color */
+  color: #F0F4FF; /* Active and focus text color */
+  border-color: #0B53C0; /* Keep outline color on active and focus */
 }
 
 .footer-container {
@@ -1719,7 +1719,7 @@ button.ql-equals {
 }
 
 .device-version-bar {
-  background-color: #ADBC9F; /* Set background color */
+  background-color: #CDDAFF; /* Set background color */
 }
 
 .device-version-bar .device-version-toolbar {
@@ -1727,7 +1727,7 @@ button.ql-equals {
   display: flex;
   justify-content: center;
   align-items: center;  
-  background-color: #ADBC9F; /* Set background color */
+  background-color: #CDDAFF; /* Set background color */
 }
 
 .device-version-bar .device-version-text {
@@ -1739,15 +1739,15 @@ button.ql-equals {
 
 .profile-container {
   padding: 24px; /* Equivalent to padding: 3 */
-  background-color: #F2EFE5; /* Background color from the palette */
-  color: #0A6847; /* Text color from the palette */
+  background-color: #F0F4FF; /* Background color from the palette */
+  color: #0B53C0; /* Text color from the palette */
 }
 
 .profile-container .webpage_title {
   font-family: 'Staatliches', sans-serif;
   font-size: 3rem;
   font-weight: bold;
-  color: #0A6847; /* Primary color from the palette */
+  color: #0B53C0; /* Primary color from the palette */
   margin-bottom: 24px; /* Equivalent to mb: 3 */
 }
 
@@ -1760,7 +1760,7 @@ button.ql-equals {
 .profile-container .profile-button {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.25rem;
-  color: #0A6847;
+  color: #0B53C0;
   text-transform: none;
   border: 0px solid #f5f5f5;
 }
@@ -1783,14 +1783,14 @@ button.ql-equals {
 
 .lab-notebook-container {
   padding: 24px; /* Equivalent to padding: 3 */
-  background-color: #F2EFE5; /* Background color from the palette */
-  color: #0A6847; /* Text color from the palette */
+  background-color: #F0F4FF; /* Background color from the palette */
+  color: #0B53C0; /* Text color from the palette */
 }
 
 .lab-notebook-container .back-home-button {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.25rem;
-  color: #0A6847;
+  color: #0B53C0;
   text-transform: none;
   border: 0px solid #f5f5f5;
 }
@@ -1799,7 +1799,7 @@ button.ql-equals {
   font-family: 'Staatliches', sans-serif;
   font-size: 3rem;
   font-weight: bold;
-  color: #0A6847; /* Primary color from the palette */
+  color: #0B53C0; /* Primary color from the palette */
   margin-bottom: 24px; /* Equivalent to mb: 3 */
 }
 
@@ -1809,8 +1809,8 @@ button.ql-equals {
   margin-top: 16px; /* Equivalent to mt: 2 */
   text-transform: none;
   min-width: 150px;
-  background-color: #ADBC9F; /* Match the color palette */
-  color: #FBFADA;
+  background-color: #CDDAFF; /* Match the color palette */
+  color: #FFFFFF;
   box-shadow: none; /* No box-shadow initially */
   border: 1px solid transparent;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
@@ -1819,8 +1819,8 @@ button.ql-equals {
 .lab-notebook-container .create-new-button:hover {
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
   transform: scale(1.05); /* Scale effect on hover */
-  background-color: #12372A; /* Darker shade on hover */
-  color: #FBFADA; /* Maintain text color */
+  background-color: #0B53C0; /* Darker shade on hover */
+  color: #FFFFFF; /* Maintain text color */
 }
 
 /* SUPPLEMENTAL MATERIALS PAGE */
@@ -1842,13 +1842,13 @@ button.ql-equals {
   font-family: 'Staatliches', sans-serif;
   font-size: 3rem;
   font-weight: bold;
-  color: #0A6847; /* Primary color */
+  color: #0B53C0; /* Primary color */
 }
 
 .supplemental-container .supplemental-back-button {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.25rem;
-  color: #0A6847;
+  color: #0B53C0;
   text-transform: none;
   border: 0px solid #f5f5f5;
 }
@@ -1867,8 +1867,8 @@ button.ql-equals {
   margin-bottom: 32px; /* Equivalent to mb: 4 */
   text-transform: none;
   min-width: 150px;
-  background-color: #ADBC9F; /* Match the color palette */
-  color: #FBFADA;
+  background-color: #CDDAFF; /* Match the color palette */
+  color: #FFFFFF;
   box-shadow: none; /* No box-shadow initially */
   border: 0px solid transparent;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
@@ -1877,8 +1877,8 @@ button.ql-equals {
 .supplemental-content .add-material-button:hover {
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
   transform: scale(1.05); /* Scale effect on hover */
-  background-color: #12372A; /* Darker shade on hover */
-  color: #FBFADA; /* Maintain text color */
+  background-color: #0B53C0; /* Darker shade on hover */
+  color: #FFFFFF; /* Maintain text color */
 }
 
 /* REQUEST FORMS */
@@ -1908,7 +1908,7 @@ button.ql-equals {
   margin-right: auto; /* Equivalent to mx: 'auto' */
   max-width: 600px;
   padding: 24px; /* Equivalent to p: 3 */
-  background-color: #f9f9f9;
+  background-color: #F0F4FF;
   border-radius: 8px; /* Equivalent to borderRadius: 2 */
 }
 
@@ -1925,9 +1925,9 @@ button.ql-equals {
 .request-form-container .back-home-button {
   font-family: 'Gabarito', sans-serif;
   font-size: 1.25rem;
-  color: #0A6847;
+  color: #0B53C0;
   text-transform: none;
-  border: 0px solid #f5f5f5;
+  border: 0px solid #F0F4FF;
 }
 
 /* Style the Submit button with hover effects */
@@ -1938,8 +1938,8 @@ button.ql-equals {
   margin-bottom: 32px; /* Equivalent to mb: 4 */
   text-transform: none;
   min-width: 150px;
-  background-color: #ADBC9F; /* Match the color palette */
-  color: #FBFADA;
+  background-color: #CDDAFF; /* Match the color palette */
+  color: #F0F4FF;
   box-shadow: none; /* No box-shadow initially */
   border: 0px solid transparent;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
@@ -1948,8 +1948,8 @@ button.ql-equals {
 .request-form-container .submit-button:hover {
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
   transform: scale(1.05); /* Scale effect on hover */
-  background-color: #12372A; /* Darker shade on hover */
-  color: #FBFADA; /* Maintain text color */
+  background-color: #0B53C0; /* Darker shade on hover */
+  color: #F0F4FF; /* Maintain text color */
 }
 
 /*

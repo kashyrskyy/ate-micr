@@ -145,10 +145,10 @@ const AddMessage: React.FC = () => {
             variant="contained"
             onClick={handleAddMessage}
             sx={{
-              backgroundColor: '#A5D6A7',
+              backgroundColor: '#CDDAFF',
               color: '#424242',
               '&:hover': {
-                backgroundColor: '#81C784',
+                backgroundColor: '#0B53C0',
               },
             }}
           >

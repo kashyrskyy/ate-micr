@@ -65,7 +65,8 @@ const Logout = () => {
           boxShadow: 'none', // No box-shadow initially
           '&:hover': {
             borderColor: '#FFFFFF', // Slightly lighter border on hover
-            backgroundColor: 'rgba(251, 250, 218, 0.2)', // Light background on hover
+            backgroundColor: '#ffcdd2', // Light background on hover
+            color: '#c62828', // Updated text color to match your UI
             boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)', // Shadow effect on hover
             transform: 'scale(1.05)', // Transform effect on hover
           },
