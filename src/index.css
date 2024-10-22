@@ -1829,7 +1829,7 @@ button.ql-equals {
   flex-grow: 1;
   padding: 24px; /* Equivalent to padding: 3 */
   font-family: 'Gabarito', sans-serif;
-  background-color: #F2EFE5; /* Background color for the page */
+  background-color: #F0F4FF; /* Background color for the page */
 }
 
 .supplemental-container .supplemental-header {
