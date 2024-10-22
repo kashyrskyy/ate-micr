@@ -10,7 +10,7 @@ interface CourseSelectorProps {
 
 const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange }) => {
   const { userDetails } = useUser();
-  const [courses, setCourses] = useState<{ id: string; number: string; title: string }[]>([{ id: 'public', number: 'Public', title: 'Public' }]);
+  const [courses, setCourses] = useState<{ id: string; number: string; title: string }[]>([]);
 
   useEffect(() => {
     if (userDetails?.classes) {
@@ -19,23 +19,29 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCours
         number: course.number,
         title: course.title,
       }));
-      setCourses([{ id: 'public', number: 'Public', title: 'Public' }, ...userCourses]);
+      setCourses(userCourses);
     } else {
-      setCourses([{ id: 'public', number: 'Public', title: 'Public' }]);
+      setCourses([]); // Clear the courses if no classes are available for the user
     }
   }, [userDetails]);
 
   return (
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-      {courses.map((course) => (
-        <Button
-          key={course.id}
-          variant={selectedCourse === course.id ? 'contained' : 'outlined'}
-          onClick={() => onCourseChange(course.id)}
-        >
-          {course.number} - {course.title}
+      {courses.length > 0 ? (
+        courses.map((course) => (
+          <Button
+            key={course.id}
+            variant={selectedCourse === course.id ? 'contained' : 'outlined'}
+            onClick={() => onCourseChange(course.id)}
+          >
+            {course.number} - {course.title}
+          </Button>
+        ))
+      ) : (
+        <Button variant="outlined" disabled>
+          No Courses Available
         </Button>
-      ))}
+      )}
     </Box>
   );
 };

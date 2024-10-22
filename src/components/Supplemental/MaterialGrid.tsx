@@ -22,7 +22,7 @@ const MaterialGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
 
-  const [selectedCourse, setSelectedCourse] = useState('Public');
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   
   const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });
@@ -90,7 +90,7 @@ const MaterialGrid: React.FC = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <CourseSelector 
-        selectedCourse={selectedCourse} 
+        selectedCourse={selectedCourse || ''} // Pass empty string if no course is selected
         onCourseChange={(course) => {
           setLoading(true);
           setSelectedCourse(course);
