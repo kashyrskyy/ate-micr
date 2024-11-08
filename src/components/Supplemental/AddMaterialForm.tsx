@@ -44,6 +44,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'error' | 'success'>('success');
+  const [showSaveMessage, setShowSaveMessage] = useState(false);
 
   const [scheduledTimestamp, setScheduledTimestamp] = useState<Date | null>(materialData?.scheduledTimestamp?.toDate() || null);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
@@ -96,7 +97,10 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
       }
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
-      navigate('/supplemental-materials');
+      setShowSaveMessage(true); // Show "Changes Saved" message
+
+      // Hide the save message after 3 seconds
+      setTimeout(() => setShowSaveMessage(false), 3000);
     } catch (error) {
       setSnackbarMessage('Failed to save material');
       setSnackbarSeverity('error');
@@ -499,13 +503,20 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
                 </span>
               </Tooltip>
             </Box>
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Button type="button" variant="outlined" color="secondary" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" color="primary" onClick={(e) => handleSubmit(e, false)}>
-                Save
-              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Button type="submit" variant="contained" color="primary" onClick={(e) => handleSubmit(e, false)}>
+                  Save
+                </Button>
+                {showSaveMessage && (
+                  <Typography variant="body2" sx={{ fontStyle: 'italic', ml: 1 }}>
+                    Changes Saved
+                  </Typography>
+                )}
+              </Box>
               <Button type="button" variant="contained" color="primary" onClick={handlePublish} sx={{ backgroundColor: 'green' }}>
                 Publish
               </Button>
