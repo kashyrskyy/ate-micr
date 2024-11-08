@@ -1,6 +1,6 @@
 // src/components/Supplemental/AddMaterialForm.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Snackbar, Alert, Typography, IconButton, Tooltip, TextareaAutosize } from '@mui/material';
+import { Box, TextField, Button, Snackbar, Alert, Typography, IconButton, Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
@@ -9,8 +9,7 @@ import SideBar from './SideBar';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import BackToAllMaterialsButton from './BackToAllMaterialsButton';
-
-import { Material, Section, Subsection, SubSubsection } from '../../types/Material';
+import { Material, Section } from '../../types/Material';
 
 import ImageUpload from './ImageUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -67,7 +66,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
 
   const handleSubmit = async (e: React.FormEvent, shouldPublish: boolean = false, scheduleTimestamp?: Date | null) => {
     e.preventDefault();
-  
+
     try {
       if (materialData) {
         const docRef = doc(db, 'materials', materialData.id);
@@ -103,7 +102,7 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
     }
-  };  
+  };
 
   const handleCancel = () => {
     navigate('/supplemental-materials');
@@ -207,9 +206,11 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
     setFooter({ ...footer, content });
   };
 
+  // Delete Section
   const handleDeleteSection = (sectionIndex: number) => {
     const newSections = sections.filter((_, index) => index !== sectionIndex);
     setSections(newSections);
+
     if (newSections.length === 0) {
       setSelectedSection({ sectionIndex: undefined, type: 'header' });
     } else if (sectionIndex >= newSections.length) {
@@ -219,29 +220,38 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
     }
   };
 
+  // Delete Subsection
   const handleDeleteSubsection = (sectionIndex: number, subsectionIndex: number) => {
     const newSections = [...sections];
-    newSections[sectionIndex].subsections = newSections[sectionIndex].subsections.filter((_, index) => index !== subsectionIndex);
-    setSections(newSections);
-    if (newSections[sectionIndex].subsections.length === 0) {
-      setSelectedSection({ sectionIndex });
-    } else if (subsectionIndex >= newSections[sectionIndex].subsections.length) {
-      setSelectedSection({ sectionIndex, subsectionIndex: newSections[sectionIndex].subsections.length - 1 });
-    } else {
-      setSelectedSection({ sectionIndex, subsectionIndex });
+    if (newSections[sectionIndex]?.subsections) {
+      newSections[sectionIndex].subsections = newSections[sectionIndex].subsections.filter((_, index) => index !== subsectionIndex);
+      setSections(newSections);
+
+      if (newSections[sectionIndex].subsections.length === 0) {
+        setSelectedSection({ sectionIndex });
+      } else if (subsectionIndex >= newSections[sectionIndex].subsections.length) {
+        setSelectedSection({ sectionIndex, subsectionIndex: newSections[sectionIndex].subsections.length - 1 });
+      } else {
+        setSelectedSection({ sectionIndex, subsectionIndex });
+      }
     }
   };
 
+  // Delete Sub-Subsection
   const handleDeleteSubSubsection = (sectionIndex: number, subsectionIndex: number, subSubsectionIndex: number) => {
     const newSections = [...sections];
-    newSections[sectionIndex].subsections[subsectionIndex].subSubsections = newSections[sectionIndex].subsections[subsectionIndex].subSubsections.filter((_, index) => index !== subSubsectionIndex);
-    setSections(newSections);
-    if (newSections[sectionIndex].subsections[subsectionIndex].subSubsections.length === 0) {
-      setSelectedSection({ sectionIndex, subsectionIndex });
-    } else if (subSubsectionIndex >= newSections[sectionIndex].subsections[subsectionIndex].subSubsections.length) {
-      setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex: newSections[sectionIndex].subsections[subsectionIndex].subSubsections.length - 1 });
-    } else {
-      setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex });
+    const subsections = newSections[sectionIndex]?.subsections?.[subsectionIndex];
+    if (subsections && subsections.subSubsections) {
+      subsections.subSubsections = subsections.subSubsections.filter((_, index) => index !== subSubsectionIndex);
+      setSections(newSections);
+
+      if (!subsections.subSubsections.length) {
+        setSelectedSection({ sectionIndex, subsectionIndex });
+      } else if (subSubsectionIndex >= subsections.subSubsections.length) {
+        setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex: subsections.subSubsections.length - 1 });
+      } else {
+        setSelectedSection({ sectionIndex, subsectionIndex, subSubsectionIndex });
+      }
     }
   };
 
@@ -372,21 +382,35 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
                 <TextEditor
                   key={`${selectedSection.sectionIndex}-${selectedSection.subsectionIndex}-${selectedSection.subSubsectionIndex}`}
                   content={currentContent}
-                  onChange={(content) => handleUpdateContent(selectedSection.sectionIndex!, content, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                  onChange={(content) => handleUpdateContent(
+                    selectedSection.sectionIndex!,
+                    content,
+                    selectedSection.subsectionIndex,
+                    selectedSection.subSubsectionIndex
+                  )}
                 />
                 <ImageUpload
-                  sectionId={selectedSection.subSubsectionIndex !== undefined 
-                    ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].id
-                    : selectedSection.subsectionIndex !== undefined 
-                      ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].id 
-                      : sections[selectedSection.sectionIndex!].id}
-                  onImagesUploaded={(urls) => handleImagesUploaded(selectedSection.sectionIndex!, urls, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                  sectionId={
+                    selectedSection.sectionIndex !== undefined
+                      ? selectedSection.subSubsectionIndex !== undefined && selectedSection.subsectionIndex !== undefined
+                        ? sections[selectedSection.sectionIndex]?.subsections?.[selectedSection.subsectionIndex]?.subSubsections?.[selectedSection.subSubsectionIndex]?.id || ''
+                        : selectedSection.subsectionIndex !== undefined
+                          ? sections[selectedSection.sectionIndex]?.subsections?.[selectedSection.subsectionIndex]?.id || ''
+                          : sections[selectedSection.sectionIndex]?.id || ''
+                      : ''
+                  }
+                  onImagesUploaded={(urls) => handleImagesUploaded(
+                    selectedSection.sectionIndex!,
+                    urls,
+                    selectedSection.subsectionIndex,
+                    selectedSection.subSubsectionIndex
+                  )}
                 />
                 {(selectedSection.subSubsectionIndex !== undefined
-                  ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images
+                  ? sections[selectedSection.sectionIndex!]?.subsections?.[selectedSection.subsectionIndex!]?.subSubsections?.[selectedSection.subSubsectionIndex]?.images || []
                   : selectedSection.subsectionIndex !== undefined
-                    ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].images
-                    : sections[selectedSection.sectionIndex!].images
+                    ? sections[selectedSection.sectionIndex!]?.subsections?.[selectedSection.subsectionIndex]?.images || []
+                    : sections[selectedSection.sectionIndex!]?.images || []
                 ).map((image, index) => (
                   <Box key={index} sx={{ position: 'relative', mt: 2 }}>
                     <img src={image.url} alt={`Section ${selectedSection.sectionIndex! + 1} Image ${index + 1}`} style={{ maxWidth: '50%', marginBottom: '16px' }} />
@@ -394,13 +418,24 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
                       imageTitle={image.title}
                       onTitleChange={(newTitle) => {
                         const newSections = [...sections];
-                        if (selectedSection.subSubsectionIndex !== undefined) {
-                          newSections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].images[index].title = newTitle;
-                        } else if (selectedSection.subsectionIndex !== undefined) {
-                          newSections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].images[index].title = newTitle;
-                        } else {
-                          newSections[selectedSection.sectionIndex!].images[index].title = newTitle;
+
+                        // Check each level of the nested structure before assigning
+                        if (selectedSection.sectionIndex !== undefined) {
+                          if (selectedSection.subSubsectionIndex !== undefined && selectedSection.subsectionIndex !== undefined) {
+                            const subSubsections = newSections[selectedSection.sectionIndex].subsections?.[selectedSection.subsectionIndex]?.subSubsections;
+                            if (subSubsections && subSubsections[selectedSection.subSubsectionIndex]) {
+                              subSubsections[selectedSection.subSubsectionIndex].images[index].title = newTitle;
+                            }
+                          } else if (selectedSection.subsectionIndex !== undefined) {
+                            const subsections = newSections[selectedSection.sectionIndex].subsections;
+                            if (subsections && subsections[selectedSection.subsectionIndex]) {
+                              subsections[selectedSection.subsectionIndex].images[index].title = newTitle;
+                            }
+                          } else {
+                            newSections[selectedSection.sectionIndex].images[index].title = newTitle;
+                          }
                         }
+
                         setSections(newSections);
                       }}
                     />
@@ -413,12 +448,21 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
                   </Box>
                 ))}
                 <LinkManager
-                  links={selectedSection.subSubsectionIndex !== undefined
-                    ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex!].subSubsections[selectedSection.subSubsectionIndex].links
-                    : selectedSection.subsectionIndex !== undefined
-                      ? sections[selectedSection.sectionIndex!].subsections[selectedSection.subsectionIndex].links
-                      : sections[selectedSection.sectionIndex!].links}
-                  onLinksChange={(newLinks) => handleLinksChange(selectedSection.sectionIndex!, newLinks, selectedSection.subsectionIndex, selectedSection.subSubsectionIndex)}
+                  links={
+                    selectedSection.sectionIndex !== undefined
+                      ? selectedSection.subSubsectionIndex !== undefined && selectedSection.subsectionIndex !== undefined
+                        ? sections[selectedSection.sectionIndex]?.subsections?.[selectedSection.subsectionIndex]?.subSubsections?.[selectedSection.subSubsectionIndex]?.links || []
+                        : selectedSection.subsectionIndex !== undefined
+                          ? sections[selectedSection.sectionIndex]?.subsections?.[selectedSection.subsectionIndex]?.links || []
+                          : sections[selectedSection.sectionIndex]?.links || []
+                      : []
+                  }
+                  onLinksChange={(newLinks) => handleLinksChange(
+                    selectedSection.sectionIndex!,
+                    newLinks,
+                    selectedSection.subsectionIndex,
+                    selectedSection.subSubsectionIndex
+                  )}
                 />
               </>
             )}
