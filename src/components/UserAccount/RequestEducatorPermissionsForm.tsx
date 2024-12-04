@@ -63,7 +63,7 @@ const RequestEducatorPermissionsForm: React.FC = () => {
   
       // Add an email document to the `mail` collection to notify super-admins
       const emailDoc = {
-        to: ['andriy@intofuture.org'], // Replace with the super-admin's email address
+        to: ['andriy@intofuture.org', 'dylan@intofuture.org'],
         message: {
           subject: 'New Educator Request Submitted',
           html: `
