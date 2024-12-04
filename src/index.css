@@ -1483,14 +1483,6 @@ button.ql-equals {
   border: 0px solid #f5f5f5;
 }
 
-
-.messages-container {
-  background: #f5f5f5;
-  padding: 16px;
-  border-radius: 15px;
-  margin-top: 16px;
-}
-
 .menu-container .menu-item-typography {
   font-family: "Staatliches", sans-serif;
   font-weight: 400;
@@ -1502,6 +1494,13 @@ button.ql-equals {
   font-family: "Staatliches", sans-serif;
   font-weight: bold;
   margin-bottom: 16px;
+}
+
+.messages-container {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 15px;
+  margin-top: 16px;
 }
 
 /* For the "Inbox" text using Staatliches font */
@@ -1587,7 +1586,6 @@ button.ql-equals {
   padding: 0px;
   border-radius: 15px;
   margin-bottom: 5px;
-  border: 1px solid #ADBC9F; /* Light sage for border */
 }
 
 /* Chip Styling */

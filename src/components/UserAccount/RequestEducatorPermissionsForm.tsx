@@ -59,8 +59,30 @@ const RequestEducatorPermissionsForm: React.FC = () => {
         status: 'pending',
         timestamp: new Date(),
       };
-      await addDoc(collection(db, 'educatorRequests'), requestDoc);
-
+      const educatorRequestRef = await addDoc(collection(db, 'educatorRequests'), requestDoc);
+  
+      // Add an email document to the `mail` collection to notify super-admins
+      const emailDoc = {
+        to: ['andriy@intofuture.org'], // Replace with the super-admin's email address
+        message: {
+          subject: 'New Educator Request Submitted',
+          html: `
+            <p>A new educator request has been submitted:</p>
+            <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Institution:</strong> ${institution}</p>
+            <p><strong>Course:</strong> ${courseNumber} - ${courseTitle}</p>
+            <p><strong>Request Type:</strong> ${requestType}</p>
+            <p><strong>Description:</strong> ${courseDescription}</p>
+            <p><strong>Request ID:</strong> ${educatorRequestRef.id}</p>
+            <p><a href="https://kashyrskyy.github.io/ate-micr/#/educator-requests">
+            Click here to review the request.
+            </a></p>
+          `,
+        },
+      };
+      await addDoc(collection(db, 'mail'), emailDoc);
+  
       setDialogTitle('Success');
       setDialogContent('Your request has been submitted for review.');
 
