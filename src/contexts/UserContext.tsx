@@ -16,6 +16,7 @@ interface UserContextType {
   user: FirebaseUser | null;
   userDetails: UserDetails | null;
   setUserDetails: Dispatch<SetStateAction<UserDetails | null>>;
+  refreshUserDetails: () => Promise<void>; // Add refresh function
   loading: boolean;
   error: Error | null;
   isSuperAdmin: boolean;
@@ -89,8 +90,36 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);  
 
+  const refreshUserDetails = async () => {
+    if (!user) return; // Ensure there's a signed-in user
+    const db = getFirestore();
+    const userRef = doc(db, "users", user.uid);
+  
+    try {
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const data = userDoc.data() as UserDetails;
+        setUserDetails({ ...data, uid: user.uid });
+      } else {
+        console.error("User document does not exist. Unable to refresh user details.");
+      }
+    } catch (error) {
+      console.error("Error refreshing user details:", error);
+    }
+  };  
+
   return (
-    <UserContext.Provider value={{ user, userDetails, setUserDetails, loading, error, isSuperAdmin }}>
+    <UserContext.Provider
+      value={{
+        user,
+        userDetails,
+        setUserDetails,
+        refreshUserDetails,
+        loading,
+        error,
+        isSuperAdmin,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

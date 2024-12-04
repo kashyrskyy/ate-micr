@@ -1,11 +1,16 @@
-// src/components/CourseManagement.tsx
+// src/components/CourseManagement/CourseManagement.tsx
+
 import React, { useEffect, useState } from 'react';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import { useUser, UserDetails } from '../../contexts/UserContext';
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+
 import CourseStudentManagement from './CourseStudentManagement';
 import ExportToCSV from './ExportToCSV';
+
+import EditCourseDetails from './EditCourseDetails';
+import DeleteCourse from './DeleteCourse';
 
 const CourseManagement: React.FC = () => {
   const { userDetails } = useUser();
@@ -91,9 +96,6 @@ const CourseManagement: React.FC = () => {
       <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>
         Course Management
       </Typography>
-      <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', textDecoration: 'underline', mb: 2 }}>
-        Students Enrolled in Your Courses
-      </Typography>
       {userDetails?.classes && Object.keys(userDetails.classes).length > 1 && (
         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
           {Object.entries(userDetails.classes).map(([courseId, course]) => (
@@ -102,11 +104,31 @@ const CourseManagement: React.FC = () => {
               variant={selectedCourse === courseId ? 'contained' : 'outlined'}
               onClick={() => handleCourseChange(courseId)}
             >
-              {`${course.number} - ${course.title}`}
+              {`${course.number}`}
             </Button>
           ))}
         </Stack>
       )}
+      <>
+        <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
+          Manage Course Details
+        </Typography>
+        <EditCourseDetails
+          selectedCourse={selectedCourse}
+          selectedCourseDetails={selectedCourseDetails}
+          onCourseUpdate={refreshStudents} // Refresh students after edit
+        />
+        <DeleteCourse
+          selectedCourse={selectedCourse}
+          onCourseDelete={() => {
+            setSelectedCourse(''); // Reset selected course
+            refreshStudents(); // Refresh after deletion
+          }}
+        />
+      </>
+      <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
+        Students Enrolled in '{selectedCourseDisplay}' Course
+      </Typography>
       {filteredStudents.length === 0 ? (
         <Typography>No students enrolled in {selectedCourseDisplay}.</Typography>
       ) : (
