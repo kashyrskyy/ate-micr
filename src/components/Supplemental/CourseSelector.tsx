@@ -1,17 +1,18 @@
 // src/components/Supplemental/CourseSelector.tsx
 import React, { useState, useEffect } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { useUser } from '../../contexts/UserContext';
 
 interface CourseSelectorProps {
   selectedCourse: string;
   onCourseChange: (course: string) => void;
+  onCoursesLoaded?: (firstCourseId: string | null) => void; // Callback to notify the parent
 }
 
-const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange }) => {
+const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange, onCoursesLoaded }) => {
   const { userDetails } = useUser();
   const [courses, setCourses] = useState<{ id: string; number: string; title: string }[]>([]);
-
+    
   useEffect(() => {
     if (userDetails?.classes) {
       const userCourses = Object.entries(userDetails.classes).map(([id, course]) => ({
@@ -20,27 +21,40 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCours
         title: course.title,
       }));
       setCourses(userCourses);
+  
+      // Notify parent about the first course (only if courses exist and haven't been loaded yet)
+      if (onCoursesLoaded && userCourses.length > 0 && !selectedCourse) {
+        onCoursesLoaded(userCourses[0].id);
+      }
     } else {
-      setCourses([]); // Clear the courses if no classes are available for the user
+      setCourses([]);
+      if (onCoursesLoaded) {
+        onCoursesLoaded(null);
+      }
     }
-  }, [userDetails]);
+  }, [userDetails, onCoursesLoaded]);  
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+    <Box sx={{ width: '100%', mb: 2 }}>
       {courses.length > 0 ? (
-        courses.map((course) => (
-          <Button
-            key={course.id}
-            variant={selectedCourse === course.id ? 'contained' : 'outlined'}
-            onClick={() => onCourseChange(course.id)}
+        <FormControl sx={{ width: '15%' }}>
+          <InputLabel id="course-selector-label">Select Course</InputLabel>
+          <Select
+            labelId="course-selector-label"
+            value={selectedCourse}
+            onChange={(e) => onCourseChange(e.target.value)}
           >
-            {course.number} - {course.title}
-          </Button>
-        ))
+            {courses.map((course) => (
+              <MenuItem key={course.id} value={course.id}>
+                {course.number} - {course.title}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       ) : (
-        <Button variant="outlined" disabled>
+        <Typography variant="body1" align="center">
           No Courses Available
-        </Button>
+        </Typography>
       )}
     </Box>
   );

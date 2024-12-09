@@ -21,6 +21,8 @@ const MaterialGrid: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [isCourseAdmin, setIsCourseAdmin] = useState(false);
 
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // Track whether the initial course is loaded
+  
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });
@@ -47,26 +49,42 @@ const MaterialGrid: React.FC = () => {
   }, [selectedCourse, userDetails]);
 
   useEffect(() => {
-    if (!userDetails) return;
-
+    if (!selectedCourse) {
+      console.log("No course selected");
+      setMaterials([]);
+      setLoading(false); // Reset loading state if no course is selected
+      return;
+    }
+  
+    if (!initialLoadComplete) {
+      console.log("Initial load in progress, skipping fetch");
+      return;
+    }
+  
+    console.log(`Fetching materials for course: ${selectedCourse}`);
     setLoading(true);
-
-    const q = userDetails.isAdmin
+  
+    const q = userDetails?.isAdmin
       ? query(collection(db, 'materials'), where('course', '==', selectedCourse), orderBy('timestamp', 'desc'))
       : query(collection(db, 'materials'), where('course', '==', selectedCourse), where('published', '==', true), orderBy('timestamp', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const materialsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Material[];
-      setMaterials(materialsData);
-      setLoading(false);
-    }, (err) => {
-      console.error(err);
-      setError('Failed to fetch materials');
-      setLoading(false);
-    });
-
+  
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const materialsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Material[];
+        setMaterials(materialsData);
+        console.log(`Fetched ${materialsData.length} materials for course: ${selectedCourse}`);
+        setLoading(false);
+      },
+      (err) => {
+        console.error(err);
+        setError('Failed to fetch materials');
+        setLoading(false);
+      }
+    );
+  
     return () => unsubscribe();
-  }, [db, userDetails, selectedCourse]);
+  }, [db, selectedCourse, userDetails, initialLoadComplete]);  
 
   const handleDeleteClick = (id: string) => {
     setSelectedMaterial(id);
@@ -105,16 +123,30 @@ const MaterialGrid: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <CourseSelector 
-        selectedCourse={selectedCourse || ''} // Pass empty string if no course is selected
+      <CourseSelector
+        selectedCourse={selectedCourse || ''}
         onCourseChange={(course) => {
           setLoading(true);
           setSelectedCourse(course);
-        }} 
+        }}
+        onCoursesLoaded={(firstCourseId) => {
+          if (!initialLoadComplete) {
+            console.log('Setting first course from onCoursesLoaded:', firstCourseId);
+            setSelectedCourse(firstCourseId);
+            setInitialLoadComplete(true);
+          }
+        }}
       />
 
+      {/* Fallback for no materials */}
+      {materials.length === 0 && selectedCourse && (
+        <Typography variant="body1" align="center" sx={{ width: '100%', mb: 4 }}>
+          No materials found for the selected course.
+        </Typography>
+      )}
+
       {/* Only show "Saved" and "Publish Scheduled" sections to course admins */}
-      {isCourseAdmin && (
+      {isCourseAdmin && materials.length > 0 && (
         <>
           {/* Saved Materials */}
           <Box sx={{ mb: 4 }}>
@@ -189,9 +221,13 @@ const MaterialGrid: React.FC = () => {
           onUnpublish={handleUnpublish}
         />
       )}
-
       {error && (
-        <Snackbar open={true} autoHideDuration={6000} onClose={() => setError(null)}>
+        <Snackbar
+          open={true}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+          key={error} // Forces re-render on new errors
+        >
           <Alert onClose={() => setError(null)} severity="error">
             {error}
           </Alert>
