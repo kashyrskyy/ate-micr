@@ -53,10 +53,10 @@ const RequestNewCourseForm: React.FC = () => {
       setCourseTitle('');
       setCourseDescription('');
 
-      // Show success message and then navigate back to My Account
+      // Show success message and then navigate back to Course Management
       setDialogOpen(true);
       setTimeout(() => {
-        navigate('/my-profile');
+        navigate('/course-management'); // Change to Course Management route
       }, 2000);
 
     } catch (error) {
@@ -74,14 +74,14 @@ const RequestNewCourseForm: React.FC = () => {
   };
 
   const handleNavigateBack = () => {
-    navigate('/my-profile');
+    navigate('/course-management'); // Change back route to Course Management
   };
 
   return (
     <Box className="request-form-container" sx={{ padding: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Button variant="text" onClick={handleNavigateBack} className="back-home-button">
-          &larr; My Account
+          &larr; Course Management
         </Button>
       </Box>
       

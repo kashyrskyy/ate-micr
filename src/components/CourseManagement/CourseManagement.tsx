@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import { useUser, UserDetails } from '../../contexts/UserContext';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Stack } from '@mui/material';
+import { 
+  Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Stack, 
+  FormControlLabel, Switch 
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 import CourseStudentManagement from './CourseStudentManagement';
@@ -11,11 +14,15 @@ import ExportToCSV from './ExportToCSV';
 
 import EditCourseDetails from './EditCourseDetails';
 import DeleteCourse from './DeleteCourse';
+import RetrieveCoursePasscode from './RetrieveCoursePasscode';
 
 const CourseManagement: React.FC = () => {
   const { userDetails } = useUser();
   const [students, setStudents] = useState<UserDetails[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
+  
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false); // Advanced toggle
+
   const db = getFirestore();
   const navigate = useNavigate();
 
@@ -80,9 +87,16 @@ const CourseManagement: React.FC = () => {
     refreshStudents();
   }, [selectedCourse, db]);
 
-  const filteredStudents = students.filter(student => student.classes && student.classes[selectedCourse]);
+  const handleNavigateToRequestNewCourse = () => {
+    navigate('/request-new-course');
+  };
 
-  // Get course number and title using the selectedCourse ID
+  const handleToggleAdvanced = () => {
+    setIsAdvancedOpen(!isAdvancedOpen);
+  };
+
+  const filteredStudents = students.filter((student) => student.classes && student.classes[selectedCourse]);
+
   const selectedCourseDetails = userDetails?.classes ? userDetails.classes[selectedCourse] : null;
   const selectedCourseDisplay = selectedCourseDetails ? `${selectedCourseDetails.number} - ${selectedCourseDetails.title}` : selectedCourse;
 
@@ -96,6 +110,7 @@ const CourseManagement: React.FC = () => {
       <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>
         Course Management
       </Typography>
+
       {userDetails?.classes && Object.keys(userDetails.classes).length > 1 && (
         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
           {Object.entries(userDetails.classes).map(([courseId, course]) => (
@@ -109,6 +124,7 @@ const CourseManagement: React.FC = () => {
           ))}
         </Stack>
       )}
+
       <>
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
           Manage Course Details
@@ -126,9 +142,11 @@ const CourseManagement: React.FC = () => {
           }}
         />
       </>
+
       <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
         Students Enrolled in '{selectedCourseDisplay}' Course
       </Typography>
+
       {filteredStudents.length === 0 ? (
         <Typography>No students enrolled in {selectedCourseDisplay}.</Typography>
       ) : (
@@ -154,11 +172,30 @@ const CourseManagement: React.FC = () => {
           <ExportToCSV students={filteredStudents} selectedCourse={selectedCourse} />
         </>
       )}
+
       <CourseStudentManagement 
         selectedCourse={selectedCourse} 
         selectedCourseDetails={selectedCourseDetails}
         onStudentChange={refreshStudents} 
       />
+
+      {/* Advanced Section */}
+      <Box className="profile-advanced-section">
+        <FormControlLabel
+          control={<Switch checked={isAdvancedOpen} onChange={handleToggleAdvanced} />}
+          label="Advanced"
+        />
+        {isAdvancedOpen && (
+          <>
+            <Box sx={{ mt: 2 }}>
+              <Button variant="text" onClick={handleNavigateToRequestNewCourse}>
+                Request Creating a New Course
+              </Button>
+            </Box>
+            <RetrieveCoursePasscode />
+          </>
+        )}
+      </Box>
     </Box>
   );
 };

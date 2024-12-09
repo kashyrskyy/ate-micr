@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 import AddCourseForm from './AddCourseForm';
-import RetrieveCoursePasscode from './RetrieveCoursePasscode';
 
 const MyProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useUser();
@@ -29,10 +28,6 @@ const MyProfile: React.FC = () => {
     if (!userDetails?.isAdmin) {
       navigate('/request-educator-permissions');
     }
-  };
-
-  const handleNavigateToRequestNewCourse = () => {
-    navigate('/request-new-course');
   };
 
   const handleCourseAdded = (message: string, severity: 'success' | 'error' | 'info') => {
@@ -153,16 +148,6 @@ const MyProfile: React.FC = () => {
                 )}
               </Button>
             </Box>
-            {userDetails?.isAdmin && (
-              <>
-                <Box sx={{ mt: 2 }}>
-                  <Button variant="text" onClick={handleNavigateToRequestNewCourse}>
-                    Request Creating a New Course
-                  </Button>
-                </Box>
-                <RetrieveCoursePasscode />
-              </>
-            )}
           </>
         )}
       </Box>

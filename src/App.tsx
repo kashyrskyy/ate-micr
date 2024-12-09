@@ -22,7 +22,7 @@ import MyProfile from './components/UserAccount/MyProfile';
 import CourseManagement from './components/CourseManagement/CourseManagement';
 import RequestEducatorPermissionsForm from './components/UserAccount/RequestEducatorPermissionsForm';
 import EducatorRequestsAdminPage from './components/EducatorRequests/EducatorRequestsAdminPage';
-import RequestNewCourseForm from './components/UserAccount/RequestNewCourseForm';
+import RequestNewCourseForm from './components/CourseManagement/RequestNewCourseForm';
 import CourseRequestsAdminPage from './components/CourseRequests/CourseRequestsAdminPage';
 import SuperAdminCourseManagement from './components/SA_CourseManagement/SuperAdminCourseManagement';
 
