@@ -22,6 +22,7 @@ const CourseManagement: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false); // Advanced toggle
+  const [isRemoveStudentsOpen, setIsRemoveStudentsOpen] = useState(false); // Remove students toggle
 
   const db = getFirestore();
   const navigate = useNavigate();
@@ -93,6 +94,10 @@ const CourseManagement: React.FC = () => {
 
   const handleToggleAdvanced = () => {
     setIsAdvancedOpen(!isAdvancedOpen);
+  };
+
+  const handleToggleRemoveStudents = () => {
+    setIsRemoveStudentsOpen(!isRemoveStudentsOpen);
   };
 
   const filteredStudents = students.filter((student) => student.classes && student.classes[selectedCourse]);
@@ -173,11 +178,20 @@ const CourseManagement: React.FC = () => {
         </>
       )}
 
-      <CourseStudentManagement 
-        selectedCourse={selectedCourse} 
-        selectedCourseDetails={selectedCourseDetails}
-        onStudentChange={refreshStudents} 
-      />
+      {/* Remove Students Section */}
+      <Box className="remove-students-section" sx={{ mt: 4 }}>
+        <FormControlLabel
+          control={<Switch checked={isRemoveStudentsOpen} onChange={handleToggleRemoveStudents} />}
+          label="Remove Students from Course"
+        />
+        {isRemoveStudentsOpen && (
+          <CourseStudentManagement
+            selectedCourse={selectedCourse}
+            selectedCourseDetails={selectedCourseDetails}
+            onStudentChange={refreshStudents}
+          />
+        )}
+      </Box>
 
       {/* Advanced Section */}
       <Box className="profile-advanced-section">
