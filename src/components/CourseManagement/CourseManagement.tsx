@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import CourseStudentManagement from './CourseStudentManagement';
 import ExportToCSV from './ExportToCSV';
 
+import CourseSelector from './CourseSelector';
+
 import EditCourseDetails from './EditCourseDetails';
 import DeleteCourse from './DeleteCourse';
 import RetrieveCoursePasscode from './RetrieveCoursePasscode';
@@ -116,37 +118,49 @@ const CourseManagement: React.FC = () => {
         Course Management
       </Typography>
 
-      {userDetails?.classes && Object.keys(userDetails.classes).length > 1 && (
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-          {Object.entries(userDetails.classes).map(([courseId, course]) => (
-            <Button
-              key={courseId}
-              variant={selectedCourse === courseId ? 'contained' : 'outlined'}
-              onClick={() => handleCourseChange(courseId)}
-            >
-              {`${course.number}`}
-            </Button>
-          ))}
-        </Stack>
-      )}
+      {/* Row for Course Selection, Editing, and Deletion */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
+        <Box sx={{ flex: 1, maxWidth: '30%' }}>
+          {userDetails?.classes ? (
+            <CourseSelector
+              userClasses={userDetails.classes}
+              selectedCourse={selectedCourse}
+              onCourseChange={handleCourseChange}
+            />
+          ) : (
+            <Typography variant="body1">No courses available for selection.</Typography>
+          )}
+        </Box>
 
-      <>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
-          Manage Course Details
-        </Typography>
-        <EditCourseDetails
-          selectedCourse={selectedCourse}
-          selectedCourseDetails={selectedCourseDetails}
-          onCourseUpdate={refreshStudents} // Refresh students after edit
-        />
-        <DeleteCourse
-          selectedCourse={selectedCourse}
-          onCourseDelete={() => {
-            setSelectedCourse(''); // Reset selected course
-            refreshStudents(); // Refresh after deletion
+        <Box
+          sx={{
+            flex: 2,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2, // Space between buttons
           }}
-        />
-      </>
+        >
+          <EditCourseDetails
+            selectedCourse={selectedCourse}
+            selectedCourseDetails={selectedCourseDetails}
+            onCourseUpdate={refreshStudents} // Refresh students after edit
+          />
+          <DeleteCourse
+            selectedCourse={selectedCourse}
+            onCourseDelete={() => {
+              setSelectedCourse(''); // Reset selected course
+              refreshStudents(); // Refresh after deletion
+            }}
+          />
+        </Box>
+      </Box>
 
       <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
         Students Enrolled in '{selectedCourseDisplay}' Course

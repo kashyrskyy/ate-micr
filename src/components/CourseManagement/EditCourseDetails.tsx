@@ -81,7 +81,7 @@ const EditCourseDetails: React.FC<EditCourseDetailsProps> = ({ selectedCourse, s
   return (
     <Box sx={{ mt: 2 }}>
       <Button variant="outlined" color="primary" onClick={handleOpen}>
-        Edit Course Details
+        Edit Course Number & Title
       </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Edit Course Details</DialogTitle>
