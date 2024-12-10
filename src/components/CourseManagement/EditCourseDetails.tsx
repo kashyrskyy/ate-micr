@@ -18,8 +18,7 @@ const EditCourseDetails: React.FC<EditCourseDetailsProps> = ({ selectedCourse, s
   const [courseTitle, setCourseTitle] = useState('');
 
   const db = getFirestore();
-
-  const { userDetails, refreshUserDetails } = useUser(); // Fix: Include userDetails
+  const { userDetails, refreshUserDetails } = useUser();
   
   // Open the dialog and populate the fields with the current course details
   const handleOpen = () => {
@@ -30,48 +29,55 @@ const EditCourseDetails: React.FC<EditCourseDetailsProps> = ({ selectedCourse, s
     setOpen(true);
   };
 
+  // Close dialog and reset state
   const handleClose = () => {
     setOpen(false);
-    setCourseNumber(''); // Clear the state when dialog is closed
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setCourseNumber('');
     setCourseTitle('');
   };
 
   const handleSave = async () => {
     if (!selectedCourse || !userDetails?.uid) {
-        console.error('Selected course or user details are missing.'); // Ensure userDetails and UID are available
-        return;
+      console.error('Selected course or user details are missing.');
+      return;
     }
-  
+
     try {
       const courseRef = doc(db, 'courses', selectedCourse);
-  
+
       // Update the course document
       await updateDoc(courseRef, {
         number: courseNumber,
         title: courseTitle,
       });
-  
+
       // Update the user's classes field
       const userRef = doc(db, 'users', userDetails.uid);
       const userSnapshot = await getDoc(userRef);
-  
+
       if (userSnapshot.exists()) {
         const userData = userSnapshot.data();
         if (userData.classes && userData.classes[selectedCourse]) {
+          const existingCourseData = userData.classes[selectedCourse];
           const updatedClasses = {
             ...userData.classes,
             [selectedCourse]: {
+              ...existingCourseData,
               number: courseNumber,
               title: courseTitle,
             },
           };
-  
+
           await updateDoc(userRef, { classes: updatedClasses });
         }
       }
-      
-      await refreshUserDetails(); // Refresh userDetails in context
-      onCourseUpdate(); // Refresh parent data
+
+      await refreshUserDetails();
+      onCourseUpdate();
       handleClose();
     } catch (error) {
       console.error('Error updating course:', error);
@@ -102,7 +108,12 @@ const EditCourseDetails: React.FC<EditCourseDetailsProps> = ({ selectedCourse, s
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained" color="primary" disabled={!courseNumber || !courseTitle} >
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            color="primary"
+            disabled={!courseNumber || !courseTitle}
+          >
             Save
           </Button>
         </DialogActions>

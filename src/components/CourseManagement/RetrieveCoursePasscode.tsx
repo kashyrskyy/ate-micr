@@ -60,7 +60,7 @@ const RetrieveCoursePasscode: React.FC = () => {
       <Typography variant="subtitle1" component="h2" sx={{ mb: 2 }}>
         Retrieve Course Passcode
       </Typography>
-      <Grid container spacing={2} sx={{ maxWidth: '40%' }}>
+      <Grid container spacing={2} sx={{ maxWidth: '75%' }}>
         <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center' }}>
           <TextField
             select
