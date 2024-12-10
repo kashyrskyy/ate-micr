@@ -933,13 +933,19 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
           <Select
             id="course"
             value={course}
-            onChange={e => {
+            onChange={(e) => {
               setCourse(e.target.value);
-              setUnsavedChanges(prev => ({ ...prev, design: true }));
+              setUnsavedChanges((prev) => ({ ...prev, design: true }));
             }}
             fullWidth
           >
-            <MenuItem value={course}>{course}</MenuItem>
+            {(userDetails?.classes ? Object.entries(userDetails.classes) : [])
+              .filter(([_, courseDetails]) => courseDetails.number !== 'Public') // Exclude 'Public' courses
+              .map(([courseId, courseDetails]) => (
+                <MenuItem key={courseId} value={courseId}>
+                  {`${courseDetails.number} - ${courseDetails.title}`}
+                </MenuItem>
+              ))}
           </Select>
           
           <label className="designTitles" htmlFor="description">Description</label>
