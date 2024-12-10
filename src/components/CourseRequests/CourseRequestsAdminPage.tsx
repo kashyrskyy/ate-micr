@@ -1,7 +1,7 @@
 // src/components/CourseRequests/CourseRequestsAdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { getFirestore, collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 interface CourseRequest {
@@ -62,37 +62,51 @@ const CourseRequestsAdminPage: React.FC = () => {
 
   const handleApprove = async () => {
     if (!currentRequestId || !currentRequestData) return;
-
+  
     try {
       const passcode = generatePasscode();
-
+  
       // Create a new course document
       const courseDocRef = await addDoc(collection(db, 'courses'), {
         number: currentRequestData.courseNumber,
         title: currentRequestData.courseTitle,
         passcode: passcode,
-        courseAdmin: [currentRequestData.uid] // Initialize with primary admin as array
+        courseAdmin: [currentRequestData.uid], // Initialize with primary admin as array
       });
-
+  
       // Update the user's document to associate them with the new course using the map structure
       const userDocRef = doc(db, 'users', currentRequestData.uid);
+      const userDoc = await getDoc(userDocRef);
+  
+      // Get existing classes from the user's document (if any)
+      const existingClasses = userDoc.exists() ? userDoc.data()?.classes || {} : {};
+  
+      // Update the user's document to include the new course
       await updateDoc(userDocRef, {
-        [`classes.${courseDocRef.id}`]: {
-          number: currentRequestData.courseNumber,
-          title: currentRequestData.courseTitle,
-        }
+        classes: {
+          ...existingClasses,
+          [courseDocRef.id]: {
+            number: currentRequestData.courseNumber,
+            title: currentRequestData.courseTitle,
+            isCourseAdmin: true, // Set explicitly
+          },
+        },
       });
-
+  
       // Update the course request document with the new course ID and passcode
       await updateDoc(doc(db, 'courseRequests', currentRequestId), {
         status: 'approved',
         courseId: courseDocRef.id,
-        passcode: passcode
+        passcode: passcode,
       });
-
+  
       setSnackbarMessage('Course request approved, course added.');
       setSnackbarSeverity('success');
-      setRequests(requests.map(request => request.id === currentRequestId ? { ...request, status: 'approved' } : request));
+      setRequests((prevRequests) =>
+        prevRequests.map((request) =>
+          request.id === currentRequestId ? { ...request, status: 'approved' } : request
+        )
+      );
     } catch (error) {
       console.error('Error approving request: ', error);
       setSnackbarMessage('Error approving the request. Please try again.');
@@ -100,7 +114,7 @@ const CourseRequestsAdminPage: React.FC = () => {
     }
     setOpenSnackbar(true);
     handleCloseDialog();
-  };
+  };  
 
   const handleDeny = async () => {
     if (!currentRequestId) return;
