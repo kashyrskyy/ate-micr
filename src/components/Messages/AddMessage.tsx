@@ -1,11 +1,11 @@
 // src/components/Messages/AddMessage.tsx
 import React, { useState } from 'react';
-import { Box, Button, TextField, Typography, Container, TextareaAutosize, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { Box, Button, TextField, Typography, Container, TextareaAutosize } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 
-import { useUser } from '../../contexts/UserContext';
+import CourseSelector from './CourseSelector';
 
 interface Link {
   title: string;
@@ -22,17 +22,20 @@ const AddMessage: React.FC = () => {
   const navigate = useNavigate();
   const db = getFirestore();
 
-  const { userDetails } = useUser(); // Fetch user details from context
-
   const handleAddMessage = async () => {
     try {
+      if (!selectedCourse) {
+        alert('Please select a course to post the message.');
+        return;
+      }
+
       await addDoc(collection(db, 'messages'), {
         title,
         description,
         links,
-        course: selectedCourse, // Save selected course
+        course: selectedCourse,
         postedOn: serverTimestamp(),
-        isPinned: false, // Default to false when adding a new message
+        isPinned: false,
       });
       navigate('/');
     } catch (error) {
@@ -40,9 +43,7 @@ const AddMessage: React.FC = () => {
     }
   };
 
-  const handleCancel = () => {
-    navigate('/');
-  };
+  const handleCancel = () => navigate('/');
 
   const handleLinkChange = (index: number, field: keyof Link, value: string) => {
     const newLinks = [...links];
@@ -50,36 +51,17 @@ const AddMessage: React.FC = () => {
     setLinks(newLinks);
   };
 
-  const addLinkField = () => {
-    setLinks([...links, { title: '', url: '' }]);
-  };
+  const addLinkField = () => setLinks([...links, { title: '', url: '' }]);
 
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Add New Message
-          </Typography>
-          {/* Course Selection */}
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="select-course-label">Course</InputLabel>
-            <Select
-              labelId="select-course-label"
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value as string)}
-              label="Course"
-            >
-              {userDetails?.classes &&
-                Object.entries(userDetails.classes).map(([courseId, course]) => (
-                  <MenuItem key={courseId} value={courseId}>
-                    {`${course.number} - ${course.title}`}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </Box>
-        
+        <Typography variant="h4" component="h1" gutterBottom>
+          Add New Message
+        </Typography>
+
+        <CourseSelector value={selectedCourse} onChange={setSelectedCourse} />
+
         <TextField
           label="Title"
           fullWidth

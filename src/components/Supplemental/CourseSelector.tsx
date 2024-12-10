@@ -37,7 +37,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCours
   return (
     <Box sx={{ width: '100%', mb: 2 }}>
       {courses.length > 0 ? (
-        <FormControl sx={{ width: '15%' }}>
+        <FormControl sx={{ width: '30%' }}>
           <InputLabel id="course-selector-label">Select Course</InputLabel>
           <Select
             labelId="course-selector-label"
