@@ -1,7 +1,7 @@
 // src/components/EducatorRequests/EducatorRequestsAdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Select, MenuItem } from '@mui/material';
-import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, arrayUnion } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, addDoc, arrayUnion } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 // Define the interface for the request data
@@ -27,7 +27,7 @@ const EducatorRequestsAdminPage: React.FC = () => {
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'warning'>('success');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentAction, setCurrentAction] = useState<'approve' | 'deny' | null>(null);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
@@ -67,53 +67,97 @@ const EducatorRequestsAdminPage: React.FC = () => {
 
   const handleApprove = async () => {
     if (!currentRequestId || !currentRequestData) return;
+
+    // Validate request data
+    if (!currentRequestData.courseNumber || !currentRequestData.courseTitle) {
+      setSnackbarMessage('Course number or title is missing. Cannot approve request.');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (currentRequestData.requestType === 'co-instructor' && !selectedCourseId) {
+      setSnackbarMessage('Please select a course for the co-instructor request.');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (currentRequestData.status !== 'pending') {
+      setSnackbarMessage('This request has already been processed.');
+      setSnackbarSeverity('warning');
+      setOpenSnackbar(true);
+      return;
+    }
   
     try {
+      const userDocRef = doc(db, 'users', currentRequestData.uid);
+
       if (currentRequestData.requestType === 'primary') {
+        // Create a new course document
         const passcode = generatePasscode();
         const courseDocRef = await addDoc(collection(db, 'courses'), {
           number: currentRequestData.courseNumber,
           title: currentRequestData.courseTitle,
-          passcode: passcode,
-          courseAdmin: [currentRequestData.uid] // Initialize with primary admin as array
+          passcode,
+          courseAdmin: [currentRequestData.uid], // Initialize with primary admin as array
         });
+
+        // Update the user's document
+        const userDoc = await getDoc(userDocRef);
+        const existingClasses = userDoc.exists() ? userDoc.data()?.classes || {} : {};
   
-        const userDocRef = doc(db, 'users', currentRequestData.uid);
-  
-        // Update user document using a map structure
         await updateDoc(userDocRef, {
           isAdmin: true,
-          [`classes.${courseDocRef.id}`]: {
-            number: currentRequestData.courseNumber,
-            title: currentRequestData.courseTitle,
+          classes: {
+            ...existingClasses,
+            [courseDocRef.id]: {
+              number: currentRequestData.courseNumber,
+              title: currentRequestData.courseTitle,
+              isCourseAdmin: true, // Explicitly set the user as course admin
+            },
           },
         });
-  
+
+        // Update the educator request document
         await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
           status: 'approved',
           courseId: courseDocRef.id,
-          passcode: passcode,
+          passcode,
         });
   
       } else if (currentRequestData.requestType === 'co-instructor') {
+        if (!selectedCourseId) {
+          setSnackbarMessage('Please select a course for the co-instructor request.');
+          setSnackbarSeverity('error');
+          setOpenSnackbar(true);
+          return;
+        }
+
+        // Add the user to the existing course's admin array
         const courseDocRef = doc(db, 'courses', selectedCourseId);
-  
-        // Update courseAdmin array to include the co-instructor
         await updateDoc(courseDocRef, {
           courseAdmin: arrayUnion(currentRequestData.uid),
         });
-  
-        const userDocRef = doc(db, 'users', currentRequestData.uid);
-        
+
+        // Update the user's document
+        const userDoc = await getDoc(userDocRef);
+        const existingClasses = userDoc.exists() ? userDoc.data()?.classes || {} : {};
+          
         // Update user document using a map structure
         await updateDoc(userDocRef, {
           isAdmin: true,
-          [`classes.${selectedCourseId}`]: {
-            number: currentRequestData.courseNumber,
-            title: currentRequestData.courseTitle,
+          classes: {
+            ...existingClasses,
+            [selectedCourseId]: {
+              number: currentRequestData.courseNumber,
+              title: currentRequestData.courseTitle,
+              isCourseAdmin: true, // Co-instructors are also course admins
+            },
           },
         });
   
+        // Update the educator request document
         await updateDoc(doc(db, 'educatorRequests', currentRequestId), {
           status: 'approved',
           courseId: selectedCourseId,
@@ -122,7 +166,11 @@ const EducatorRequestsAdminPage: React.FC = () => {
   
       setSnackbarMessage('Request approved, and user promoted to educator.');
       setSnackbarSeverity('success');
-      setRequests(requests.map(request => request.id === currentRequestId ? { ...request, status: 'approved' } : request));
+      setRequests((prevRequests) =>
+        prevRequests.map((request) =>
+          request.id === currentRequestId ? { ...request, status: 'approved' } : request
+        )
+      );
     } catch (error) {
       console.error('Error approving request: ', error);
       setSnackbarMessage('Error approving the request. Please try again.');
