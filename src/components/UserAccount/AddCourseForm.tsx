@@ -52,6 +52,7 @@ const AddCourseForm: React.FC<AddCourseFormProps> = ({ onCourseAdded }) => {
               [`classes.${selectedCourse.id}`]: {
                 number: selectedCourse.number,
                 title: selectedCourse.title,
+                isCourseAdmin: false, // Explicitly set this field to false
               },
             });
 

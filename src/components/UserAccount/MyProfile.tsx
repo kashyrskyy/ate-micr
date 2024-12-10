@@ -74,7 +74,7 @@ const MyProfile: React.FC = () => {
     return Object.entries(userDetails.classes).map(([courseId, courseData]) => (
       <Chip
         key={courseId}
-        label={`${courseData.number} - ${courseData.title}`}
+        label={`${courseData.number} - ${courseData.title}${courseData.isCourseAdmin ? ' (Admin)' : ''}`}
         variant="filled"
         sx={{ margin: '4px'}} // Add some margin to space out the chips
       />
