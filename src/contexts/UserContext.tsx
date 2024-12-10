@@ -9,7 +9,7 @@ export interface UserDetails {
   isAdmin?: boolean;
   isSuperAdmin?: boolean;
   lastLogin?: any; // You can further specify the type for date/time if needed
-  classes?: Record<string, { number: string; title: string }>; // Use Record to define the map structure
+  classes?: Record<string, { number: string; title: string; isCourseAdmin: boolean }>; // Use Record to define the map structure, include isCourseAdmin
 }
 
 interface UserContextType {
@@ -52,26 +52,76 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   
       if (authUser) {
         const userRef = doc(db, "users", authUser.uid);
+        const publicCourseId = import.meta.env.VITE_PUBLIC_COURSE_ID;
+
+        if (!publicCourseId) {
+          console.error("Public course ID is not defined in environment variables.");
+          setLoading(false);
+          return;
+        }
+        
+        const publicCourseRef = doc(db, "courses", publicCourseId);
+  
         try {
           const userDoc = await getDoc(userRef);
+          const publicCourseDoc = await getDoc(publicCourseRef);
+  
+          if (!publicCourseDoc.exists()) {
+            throw new Error("Public course document does not exist in the courses collection.");
+          }
+  
+          const publicCourseData = publicCourseDoc.data();
+
+          if (!publicCourseData || !publicCourseData.number || !publicCourseData.title) {
+            throw new Error("Public course data is incomplete or invalid.");
+          }
+          
+          const publicCourse = {
+            number: publicCourseData.number,
+            title: publicCourseData.title,
+            isCourseAdmin: false,
+          };
+  
           if (userDoc.exists()) {
             console.log("User document exists.");
             console.log('User is signed in with UID:', authUser.uid);
             await updateDoc(userRef, { lastLogin: serverTimestamp() });
+  
+            // Check if "Public" course is already added
             const data = userDoc.data() as UserDetails;
-            setUserDetails({ ...data, uid: authUser.uid });
+            if (!data.classes || !data.classes[publicCourseId]) {
+              await updateDoc(userRef, {
+                [`classes.${publicCourseId}`]: publicCourse,
+              });
+            }
+  
+            setUserDetails({
+              ...data, // Copy all existing fields from `data` (like isAdmin, isSuperAdmin, etc.)
+              uid: authUser.uid, // Ensure the UID of the authenticated user is set
+              classes: {
+                ...(data.classes || {}), // Spread existing `classes` (or initialize to an empty object if `classes` is undefined)
+                [publicCourseId]: publicCourse, // Add the new `Public` course with `publicCourseId` as the key
+              },
+            });            
             setIsSuperAdmin(data.isSuperAdmin || false);
           } else {
             console.error("User document does not exist. Creating a new one...");
             await setDoc(userRef, {
               isAdmin: false,
               isSuperAdmin: false,
-              lastLogin: serverTimestamp()
+              lastLogin: serverTimestamp(),
+              classes: {
+                [publicCourseId]: publicCourse,
+              },
             });
+  
             setUserDetails({
               uid: authUser.uid,
               isAdmin: false,
-              lastLogin: serverTimestamp()
+              classes: {
+                [publicCourseId]: publicCourse,
+              },
+              lastLogin: serverTimestamp(),
             });
             setIsSuperAdmin(false);
           }
