@@ -83,7 +83,8 @@ const SuperAdminCourseManagement: React.FC = () => {
         await updateDoc(userRef, {
           [`classes.${courseId}`]: {
             number: courseData.number,
-            title: courseData.title
+            title: courseData.title,
+            isCourseAdmin: true, // Explicitly set the admin status
           }
         });
 

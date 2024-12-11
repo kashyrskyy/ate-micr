@@ -31,7 +31,8 @@ const CourseManagement: React.FC = () => {
   const { userDetails } = useUser();
   const [students, setStudents] = useState<UserDetails[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [isRequestNewCourseOpen, setIsRequestNewCourseOpen] = useState(false);
+  const [isRetrievePasscodeOpen, setIsRetrievePasscodeOpen] = useState(false);
   const [isRemoveStudentsOpen, setIsRemoveStudentsOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -124,13 +125,48 @@ const CourseManagement: React.FC = () => {
         Course Management
       </Typography>
 
+      <Box sx={{ mt: 4 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={isRequestNewCourseOpen}
+              onChange={() => setIsRequestNewCourseOpen((prev) => !prev)}
+            />
+          }
+          label="Request Creating a New Course"
+        />
+        {isRequestNewCourseOpen && (
+          <Box sx={{ mt: 2 }}>
+            <Button variant="text" onClick={handleNavigateToRequestNewCourse}>
+              Request Creating a New Course
+            </Button>
+          </Box>
+        )}
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={isRetrievePasscodeOpen}
+              onChange={() => setIsRetrievePasscodeOpen((prev) => !prev)}
+            />
+          }
+          label="Retrieve Course Passcode"
+        />
+        {isRetrievePasscodeOpen && (
+          <Box sx={{ mt: 2 }}>
+            <RetrieveCoursePasscode />
+          </Box>
+        )}
+      </Box>
+
       {/* Course Selector and Course Management Buttons */}
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 3,
+          mb: 4,
+          mt: 4,
         }}
       >
         <Box sx={{ flex: 1, maxWidth: '30%' }}>
@@ -232,26 +268,6 @@ const CourseManagement: React.FC = () => {
         </Box>
       )}
 
-      {/* Advanced Section */}
-      <Box sx={{ mt: 4 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={isAdvancedOpen}
-              onChange={() => setIsAdvancedOpen((prev) => !prev)}
-            />
-          }
-          label="Advanced"
-        />
-        {isAdvancedOpen && (
-          <Box sx={{ mt: 2 }}>
-            <Button variant="text" onClick={handleNavigateToRequestNewCourse}>
-              Request Creating a New Course
-            </Button>
-            <RetrieveCoursePasscode />
-          </Box>
-        )}
-      </Box>
     </Box>
   );
 };
