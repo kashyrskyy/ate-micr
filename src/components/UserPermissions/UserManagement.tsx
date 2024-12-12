@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Box, Typography, TextField, Button, Snackbar, Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Chip } from '@mui/material';
 import { getFirestore, doc, updateDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,7 +13,7 @@ interface User {
   lastLogin?: {
     toDate: () => Date;
   };
-  classes?: Record<string, { number: string; title: string }>; // Updated to reflect the new structure
+  classes?: Record<string, { number: string; title: string, isCourseAdmin?: boolean }>; // Updated to reflect the new structure
 }
 
 interface Course {
@@ -22,11 +22,13 @@ interface Course {
   title: string;
 }
 
-const AssignCourse: React.FC<{ userId: string; userClasses?: Record<string, { number: string; title: string }>; courses: Course[] }> = ({ userId, userClasses, courses }) => {
+const AssignCourse: React.FC<{ userId: string; userClasses?: Record<string, { number: string; title: string; isCourseAdmin?: boolean }>; courses: Course[] }> = ({ userId, userClasses, courses }) => {
   const [selectedCourse, setSelectedCourse] = useState('');
+  const [isAdminForCourse, setIsAdminForCourse] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [openAssignDialog, setOpenAssignDialog] = useState(false);
 
   const db = getFirestore();
 
@@ -42,8 +44,13 @@ const AssignCourse: React.FC<{ userId: string; userClasses?: Record<string, { nu
       const userRef = doc(db, 'users', userId);
       const courseData = courses.find(course => course.id === selectedCourse);
       if (courseData) {
-        await updateDoc(userRef, { [`classes.${selectedCourse}`]: { number: courseData.number, title: courseData.title } });
-        setMessage(`Course ${courseData.title} assigned successfully to user ${userId}.`);
+        await updateDoc(userRef, { [`classes.${selectedCourse}`]: { number: courseData.number, title: courseData.title, isCourseAdmin: isAdminForCourse, } });
+
+        setMessage(
+          `Course ${courseData.title} assigned successfully to user ${userId}${
+            isAdminForCourse ? ' as Course Admin.' : '.'
+          }`
+        );
       } else {
         setMessage('Selected course not found.');
       }
@@ -58,13 +65,31 @@ const AssignCourse: React.FC<{ userId: string; userClasses?: Record<string, { nu
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
+  
+  const handleAssignDialogOpen = () => setOpenAssignDialog(true);
+  const handleAssignDialogClose = () => setOpenAssignDialog(false);
 
   return (
     <>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
         <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
-          Current Courses: {userClasses ? Object.values(userClasses).map(c => `${c.number} - ${c.title}`).join(', ') : 'None'}
+          Current Courses:
         </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {userClasses
+            ? Object.values(userClasses).map((c, index) => (
+                <Chip
+                  key={index}
+                  label={`${c.isCourseAdmin ? '[Course Admin] ' : ''}${c.number} - ${c.title}`}
+                  style={{
+                    backgroundColor: c.isCourseAdmin ? '#ffcccb' : '#d4edda', // Light red for admin, light green for non-admin
+                    color: c.isCourseAdmin ? '#b71c1c' : '#155724', // Dark red text for admin, dark green text for non-admin
+                    margin: '4px',
+                  }}
+                />
+              ))
+            : <Typography>No courses assigned.</Typography>}
+        </Box>
         <FormControl sx={{ minWidth: 200, mr: 2 }}>
           <InputLabel>Course</InputLabel>
           <Select
@@ -78,20 +103,53 @@ const AssignCourse: React.FC<{ userId: string; userClasses?: Record<string, { nu
             ))}
           </Select>
         </FormControl>
+        <FormControl sx={{ mr: 2 }}>
+          <InputLabel>Role</InputLabel>
+          <Select
+            value={isAdminForCourse ? 'admin' : 'student'}
+            onChange={(e) => setIsAdminForCourse(e.target.value === 'admin')}
+          >
+            <MenuItem value="admin">Course Admin</MenuItem>
+            <MenuItem value="student">Student</MenuItem>
+          </Select>
+        </FormControl>
         <Button
           variant="contained"
           color="primary"
-          onClick={handleAssignCourse}
-          disabled={loading}
+          onClick={handleAssignDialogOpen}
+          disabled={loading || !selectedCourse}
         >
           {loading ? <CircularProgress size={24} /> : 'Assign Course'}
         </Button>
       </Box>
+
       <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity="info">
           {message}
         </Alert>
       </Snackbar>
+
+      <Dialog
+        open={openAssignDialog}
+        onClose={handleAssignDialogClose}
+        aria-labelledby="assign-dialog-title"
+      >
+        <DialogTitle id="assign-dialog-title">Assign Course</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to assign the course {selectedCourse} to this user
+            {isAdminForCourse ? ' as a Course Admin?' : '?'}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAssignDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleAssignCourse} color="primary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
@@ -100,7 +158,7 @@ const UserManagement: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [userExists, setUserExists] = useState(false);
-  const [userClasses, setUserClasses] = useState<Record<string, { number: string; title: string }> | undefined>(undefined);
+  const [userClasses, setUserClasses] = useState<Record<string, { number: string; title: string; isCourseAdmin?: boolean }> | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -111,6 +169,8 @@ const UserManagement: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]); // Added state for storing courses
   const db = getFirestore();
 
+  const [selectedStatus, setSelectedStatus] = useState(''); // '' means no filter applied
+  
   const navigate = useNavigate();
 
   const handleNavigateHome = () => {
@@ -234,12 +294,20 @@ const UserManagement: React.FC = () => {
     setSelectedCourse(event.target.value as string);
   };
 
-  const filteredUsers = (users: User[]) => {
-    if (selectedCourse) {
-      return users.filter(user => user.classes && user.classes.hasOwnProperty(selectedCourse));
-    }
-    return users;
+  // Filters users based on selected course
+  const courseFilter = (user: User) =>
+  selectedCourse ? user.classes && user.classes.hasOwnProperty(selectedCourse) : true;
+
+  // Filters users based on their status
+  const statusFilter = (user: User) => {
+    if (selectedStatus === 'superAdmin') return user.isSuperAdmin;
+    if (selectedStatus === 'educator') return user.isAdmin && !user.isSuperAdmin;
+    if (selectedStatus === 'student') return !user.isAdmin && !user.isSuperAdmin;
+    return true; // No filter applied
   };
+
+  const filteredUsers = (users: User[]) =>
+    users.filter((user) => courseFilter(user) && statusFilter(user));
 
   const handleUserDeleted = (success: boolean) => {
     if (success) {
@@ -287,13 +355,53 @@ const UserManagement: React.FC = () => {
             <CircularProgress />
           ) : (
             userExists && (
-              <Paper variant="outlined" sx={{ padding: 2, borderRadius: '15px', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
-                    Current Status: {isAdmin ? 'Educator (Admin)' : 'Student (Non-Admin)'}
-                  </Typography>
-                  <Button type="submit" variant="contained" color={isAdmin ? 'secondary' : 'primary'} sx={{ mt: 2 }}>
-                    {isAdmin ? 'Revoke Admin' : 'Make Admin'}
+              <Paper variant="outlined" sx={{ padding: 2, borderRadius: '15px', mb: 1 }}>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    border: '1px solid #e0e0e0', 
+                    padding: '16px', 
+                    borderRadius: '8px',
+                    backgroundColor: '#f9f9f9',
+                    mb: 2
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
+                      Current Status:
+                    </Typography>
+                    <Chip
+                      label={isAdmin ? 'Educator (Admin)' : 'Student (Non-Admin)'}
+                      color={isAdmin ? 'primary' : 'default'}
+                      sx={{
+                        fontSize: '0.9rem',
+                        fontWeight: 'bold',
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        backgroundColor: isAdmin ? '#1976d2' : '#e0e0e0',
+                        color: isAdmin ? '#fff' : '#000',
+                      }}
+                    />
+                  </Box>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color={isAdmin ? 'secondary' : 'primary'}
+                    sx={{
+                      padding: '8px 16px',
+                      textTransform: 'none',
+                      fontSize: '0.9rem',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
+                      },
+                    }}
+                  >
+                    {isAdmin ? 'Revoke Educator Access' : 'Grant Educator Access'}
                   </Button>
                 </Box>
                 <AssignCourse userId={userId} userClasses={userClasses} courses={courses} />
@@ -316,6 +424,18 @@ const UserManagement: React.FC = () => {
           {courses.map(course => (
             <MenuItem key={course.id} value={course.id}>{course.number}</MenuItem>
           ))}
+        </Select>
+      </FormControl>
+      <FormControl fullWidth sx={{ mb: 3, width: '25%' }}>
+        <InputLabel>User Status</InputLabel>
+        <Select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+        >
+          <MenuItem value="">All Statuses</MenuItem>
+          <MenuItem value="superAdmin">Super Admin</MenuItem>
+          <MenuItem value="educator">Educator</MenuItem>
+          <MenuItem value="student">Student</MenuItem>
         </Select>
       </FormControl>
       <UserTable users={filteredUsers(users)} />
