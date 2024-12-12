@@ -4,7 +4,7 @@ import React from 'react';
 import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
 interface CourseSelectorProps {
-  userClasses: Record<string, { number: string; title: string }>;
+  userClasses: Record<string, { number: string; title: string, isCourseAdmin?: boolean }>;
   selectedCourse: string;
   onCourseChange: (courseId: string) => void;
 }

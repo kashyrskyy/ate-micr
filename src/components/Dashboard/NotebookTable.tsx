@@ -28,7 +28,7 @@ interface NotebookTableProps {
   handleEdit: (id: string) => void;
   handleDelete: (id: string) => void;
   isAdmin: boolean;
-  userDetails: { uid: string; classes?: Record<string, { number: string; title: string }> } | null; // Updated userDetails prop
+  userDetails: { uid: string; classes?: Record<string, { number: string; title: string, isCourseAdmin?: boolean}> } | null; // Updated userDetails prop
   showUserIdColumn: boolean; // Add showUserIdColumn prop
 }
 
