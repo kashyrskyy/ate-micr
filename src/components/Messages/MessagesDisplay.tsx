@@ -33,36 +33,35 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
   const [currentPage, setCurrentPage] = useState(0);
   const messagesPerPage = 3;
 
-  const filteredMessages = messages.filter(message => 
-    userDetails?.classes?.hasOwnProperty(message.course) || message.course === 'Public'
+  // Filter messages based on user's accessible courses
+  const filteredMessages = messages.filter(message =>
+    userDetails?.classes && message.course in userDetails.classes
   );  
 
+  // Separate pinned and unpinned messages
   const pinnedMessages = filteredMessages.filter(message => message.isPinned);
-  const unpinnedMessages = filteredMessages.filter(message => !message.isPinned);  
+  const unpinnedMessages = filteredMessages.filter(message => !message.isPinned); 
 
+  // Pagination logic
   const indexOfLastMessage = (currentPage + 1) * messagesPerPage;
   const indexOfFirstMessage = indexOfLastMessage - messagesPerPage;
   const currentMessages = unpinnedMessages.slice(indexOfFirstMessage, indexOfLastMessage);
 
   const totalPages = Math.ceil(unpinnedMessages.length / messagesPerPage);
 
-  const handleNextPage = () => {
-    setCurrentPage(currentPage + 1);
-  };
+  // Handle next and previous page
+  const handleNextPage = () => setCurrentPage((prev) => prev + 1);
+  const handlePreviousPage = () => setCurrentPage((prev) => prev - 1);
+  
+  // Determine if the user can edit a message
+  const canEditMessage = (message: Message) =>
+    !!(userDetails?.isSuperAdmin || userDetails?.classes?.[message.course]?.isCourseAdmin);  
 
-  const handlePreviousPage = () => {
-    setCurrentPage(currentPage - 1);
-  };
-
-  const canEditMessage = (message: Message) => {
-    // Check if the user is Super-Admin or if the message is not Public
-    return userDetails?.isSuperAdmin || (userDetails?.isAdmin && message.course !== 'Public');
-  };  
-
+  // Get course label
   const getCourseLabel = (courseId: string) => {
     const course = userDetails?.classes?.[courseId];
-    return course ? `${course.number}` : courseId;
-  };
+    return course ? `${course.number}` : 'Unknown Course';
+  };  
 
   return (
     <Box className="messages-display-container"> {/* Naming the main container box */}

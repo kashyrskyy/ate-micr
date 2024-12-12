@@ -63,10 +63,8 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
   // Set default course when component mounts
   useEffect(() => {
     if (userDetails?.classes) {
-      const nonPublicCourses = Object.entries(userDetails.classes).filter(
-        ([, courseDetails]) => courseDetails.number !== "Public"
-      );
-      setCourse(nonPublicCourses.length > 0 ? nonPublicCourses[0][0] : ""); // Default to the first non-public course ID, if none, set to an empty string
+      const firstCourse = Object.keys(userDetails.classes)[0]; // Select the first course ID as the default
+      setCourse(firstCourse || ""); // If no courses, set to an empty string
     }
   }, [userDetails?.classes]);
   
@@ -162,9 +160,9 @@ const Add: React.FC<AddProps> = ({ designs, setDesigns, setIsAdding, getDesigns,
             value={course}
             onChange={e => setCourse(e.target.value)}
             fullWidth
+            disabled={!userDetails?.classes || Object.keys(userDetails.classes).length === 0}
           >
             {(userDetails?.classes ? Object.entries(userDetails.classes) : [])
-              .filter(([, courseDetails]) => courseDetails.number !== "Public") // Filter out "Public"
               .map(([courseId, courseDetails]) => (
                 <MenuItem key={courseId} value={courseId}>{`${courseDetails.number} - ${courseDetails.title}`}</MenuItem>
               ))}

@@ -9,7 +9,7 @@ interface User {
   lastLogin?: {
     toDate: () => Date;
   };
-  classes?: Record<string, { number: string; title: string }>; // Update type for classes
+  classes?: Record<string, { number: string; title: string; isCourseAdmin?: boolean }>; // Update type for classes
 }
 
 interface UserTableProps {
@@ -36,19 +36,27 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
                 {user.isSuperAdmin ? (
                   <Chip label="Super Admin" color="secondary" />
                 ) : user.isAdmin ? (
-                  <Chip label="Educator (Admin)" color="primary" />
+                  <Chip label="Educator" color="primary" />
                 ) : (
-                  <Chip label="Student (Regular)" />
+                  <Chip label="Student" />
                 )}
               </TableCell>
               <TableCell>
                 {user.lastLogin ? user.lastLogin.toDate().toLocaleString() : 'No data available'}
               </TableCell>
               <TableCell>
-                {user.classes 
-                  ? Object.values(user.classes)
-                      .map((course) => `${course.number} - ${course.title}`)
-                      .join(', ') 
+                {user.classes
+                  ? Object.entries(user.classes).map(([courseId, course]) => (
+                      <Chip
+                        key={courseId}
+                        label={`${course.isCourseAdmin ? '[Course Admin] ' : ''}${course.number} - ${course.title}`}
+                        style={{
+                          backgroundColor: course.isCourseAdmin ? '#ffcccb' : '#d4edda', // Light red for admin, light green for non-admin
+                          color: course.isCourseAdmin ? '#b71c1c' : '#155724', // Dark red text for admin, dark green text for non-admin
+                          margin: '4px',
+                        }}
+                      />
+                    ))
                   : 'None'}
               </TableCell>
             </TableRow>

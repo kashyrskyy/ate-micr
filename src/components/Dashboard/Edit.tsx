@@ -940,7 +940,6 @@ const Edit: React.FC<EditProps> = ({ selectedDesign, setIsEditing, getDesigns, o
             fullWidth
           >
             {(userDetails?.classes ? Object.entries(userDetails.classes) : [])
-              .filter(([_, courseDetails]) => courseDetails.number !== 'Public') // Exclude 'Public' courses
               .map(([courseId, courseDetails]) => (
                 <MenuItem key={courseId} value={courseId}>
                   {`${courseDetails.number} - ${courseDetails.title}`}
