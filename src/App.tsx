@@ -26,6 +26,8 @@ import RequestNewCourseForm from './components/CourseManagement/RequestNewCourse
 import CourseRequestsAdminPage from './components/CourseRequests/CourseRequestsAdminPage';
 import SuperAdminCourseManagement from './components/SA_CourseManagement/SuperAdminCourseManagement';
 
+import ChatbotWrapper from './components/Chatbot/ChatbotWrapper';
+
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
 const Dashboard = lazy(() => import('./components/Dashboard/index'));
@@ -33,6 +35,8 @@ const SupplementalMaterials = lazy(() => import('./components/Supplemental/Suppl
 
 const App = () => {
   const { userDetails, loading, isSuperAdmin } = useUser();
+
+  const chatbotId = import.meta.env.VITE_CHATBOT_ID; // Ensure the chatbot ID is correctly set
 
   if (loading) {
     return (
@@ -88,6 +92,8 @@ const App = () => {
         </div>
         <Footer />
         <DeviceVersion />
+        {/* Chatbot Wrapper */}
+        {userDetails && chatbotId && <ChatbotWrapper chatbotId={chatbotId} />}
       </Router>
     </ThemeProvider>
   );
