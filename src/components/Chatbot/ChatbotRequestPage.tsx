@@ -1,5 +1,5 @@
 // src/components/Chatbot/ChatbotRequestPage.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -8,12 +8,15 @@ import {
   MenuItem,
   Snackbar,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import FileUpload from './FileUpload';
+
+import useMaterials from '../../hooks/useMaterials';
 
 const ChatbotRequestPage: React.FC = () => {
   const { userDetails } = useUser();
@@ -22,17 +25,24 @@ const ChatbotRequestPage: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [courseId, setCourseId] = useState('');
+  const [materialId, setMaterialId] = useState('');
   const [uploadedFileUrls, setUploadedFileUrls] = useState<string[]>([]);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+  const { materials, loading: materialsLoading, error: materialsError } = useMaterials(courseId);
+
+  useEffect(() => {
+    setMaterialId(''); // Reset materialId whenever courseId changes
+  }, [courseId]);
 
   const handleFileUploadComplete = (newFileUrls: string[]) => {
     setUploadedFileUrls((prevUrls) => [...prevUrls, ...newFileUrls]); // Append new URLs to existing state
   };  
 
   const handleSubmit = async () => {
-    if (!title || !courseId || uploadedFileUrls.length === 0) {
+    if (!title || !courseId || !materialId || uploadedFileUrls.length === 0) {
       setSnackbarMessage('Please fill all required fields and upload at least one file.');
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
@@ -51,12 +61,25 @@ const ChatbotRequestPage: React.FC = () => {
     const courseNumber = selectedCourse.number || 'N/A';
     const courseTitle = selectedCourse.title || 'Untitled Course';
 
+      // Retrieve material details
+    const selectedMaterial = materials.find((material) => material.id === materialId);
+    if (!selectedMaterial) {
+      setSnackbarMessage('Selected material details could not be found.');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    const { title: materialTitle } = selectedMaterial;
+
     try {
       await addDoc(collection(db, 'chatbotRequests'), {
         educatorId: userDetails?.uid,
         courseId,
         courseNumber,
         courseTitle,
+        materialId,
+        materialTitle,
         title,
         files: uploadedFileUrls,
         status: 'pending',
@@ -123,6 +146,39 @@ const ChatbotRequestPage: React.FC = () => {
             {userDetails?.classes?.[id]?.title || 'Untitled Course'}
           </MenuItem>
         ))}
+      </TextField>
+
+      <TextField
+        label="Material"
+        value={materialId}
+        onChange={(e) => setMaterialId(e.target.value)}
+        fullWidth
+        margin="normal"
+        required
+        select
+        disabled={!courseId || materialsLoading}
+        helperText={
+          !courseId
+            ? 'Please select a course first.'
+            : materialsError || (materialsLoading ? 'Loading materials...' : materials.length === 0 ? 'No materials available for this course.' : '')
+        }
+      >
+        {!courseId ? (
+          <MenuItem disabled>Please select a course first</MenuItem>
+        ) : materialsLoading ? (
+          <MenuItem disabled>
+            <CircularProgress size={20} sx={{ marginRight: 2 }} />
+            Loading...
+          </MenuItem>
+        ) : materials.length === 0 ? (
+          <MenuItem disabled>No materials found</MenuItem>
+        ) : (
+          materials.map((material) => (
+            <MenuItem key={material.id} value={material.id}>
+              {material.title}
+            </MenuItem>
+          ))
+        )}
       </TextField>
 
       <Box sx={{ mt: 3 }}>

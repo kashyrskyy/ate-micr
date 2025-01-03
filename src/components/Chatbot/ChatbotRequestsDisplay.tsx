@@ -76,6 +76,9 @@ const ChatbotRequestsDisplay: React.FC = () => {
                 Course
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>
+                Material
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>
                 Submitted On
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>
@@ -97,6 +100,7 @@ const ChatbotRequestsDisplay: React.FC = () => {
               >
                 <TableCell>{request.title}</TableCell>
                 <TableCell>{`${request.courseNumber} - ${request.courseTitle}`}</TableCell>
+                <TableCell>{request.materialTitle || 'N/A'}</TableCell>
                 <TableCell>{new Date(request.timestamp).toLocaleString()}</TableCell>
                 <TableCell>
                   <Typography

@@ -95,6 +95,10 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
           number: requestData.courseNumber,
           title: requestData.courseTitle,
         },
+        material: {
+          id: requestData.materialId || null,
+          title: requestData.materialTitle || 'N/A',
+        },
         createdBy: requestData.educatorId,
         files: requestData.files,
         timestamp: new Date().toISOString(),
@@ -161,8 +165,10 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
             <TableRow>
               <TableCell>Title</TableCell>
               <TableCell>Course</TableCell>
+              <TableCell>Material</TableCell>
               <TableCell>Educator ID</TableCell>
               <TableCell>Course ID</TableCell>
+              <TableCell>Material ID</TableCell>
               <TableCell>Submitted On</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>File Links</TableCell>
@@ -175,8 +181,14 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
               <TableRow key={request.id}>
                 <TableCell>{request.title}</TableCell>
                 <TableCell>{`${request.courseNumber} - ${request.courseTitle}`}</TableCell>
+                <TableCell>
+                  {request.materialTitle || 'N/A'}
+                </TableCell>
                 <TableCell>{request.educatorId}</TableCell>
                 <TableCell>{request.courseId}</TableCell>
+                <TableCell>
+                  {request.materialId || 'N/A'}
+                </TableCell>
                 <TableCell>{new Date(request.timestamp).toLocaleString()}</TableCell>
                 <TableCell>
                   <Typography
