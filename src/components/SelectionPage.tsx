@@ -114,6 +114,20 @@ const SelectionPage: React.FC = () => {
                       </CardActionArea>
                     </Card>
                   </Grid>
+
+                  <Grid item xs={12}>
+                    {userDetails?.isAdmin && (
+                      <Card className="menu-item">
+                        <CardActionArea onClick={() => navigate('/chatbot-management')}>
+                          <CardContent>
+                            <Typography className="menu-item-typography" variant="h6" component="div">
+                              Chatbot Management
+                            </Typography>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+                    )}
+                  </Grid>
                 </>
               )}
 
@@ -162,6 +176,17 @@ const SelectionPage: React.FC = () => {
                         <CardContent>
                           <Typography className="menu-item-typography" variant="h6" component="div">
                             Course Requests
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/super-admin-chatbot-requests')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            Chatbot Requests
                           </Typography>
                         </CardContent>
                       </CardActionArea>

@@ -27,6 +27,9 @@ import CourseRequestsAdminPage from './components/CourseRequests/CourseRequestsA
 import SuperAdminCourseManagement from './components/SA_CourseManagement/SuperAdminCourseManagement';
 
 import ChatbotWrapper from './components/Chatbot/ChatbotWrapper';
+import ChatbotManagementPage from './components/Chatbot/ChatbotManagementPage';
+import ChatbotRequestPage from './components/Chatbot/ChatbotRequestPage';
+import SuperAdminChatbotRequestsPage from './components/SA_Chatbot/SuperAdminChatbotRequestsPage';
 
 // Lazy loading components
 const Login = lazy(() => import('./components/Login/index'));
@@ -80,12 +83,15 @@ const App = () => {
               <Route path="/add-message" element={<PrivateRoute element={AddMessage} />} />
               <Route path="/edit-message/:id" element={<PrivateRoute element={EditMessage} />} />
               {isSuperAdmin && <Route path="/user-management" element={<PrivateRoute element={UserManagement} />} />}
+              <Route path="/chatbot-management" element={<PrivateRoute element={ChatbotManagementPage} />} />
               <Route path="/course-management" element={<PrivateRoute element={CourseManagement} />} />
+              <Route path="/request-chatbot" element={<PrivateRoute element={ChatbotRequestPage} />} />
               <Route path="/request-educator-permissions" element={<PrivateRoute element={RequestEducatorPermissionsForm} />} />
               <Route path="/educator-requests" element={<PrivateRoute element={EducatorRequestsAdminPage} />} />
               <Route path="/request-new-course" element={<RequestNewCourseForm />} />
               <Route path="/course-requests" element={<CourseRequestsAdminPage />} />
               <Route path="/super-admin-course-management" element={<SuperAdminCourseManagement />} />
+              <Route path="/super-admin-chatbot-requests" element={<PrivateRoute element={SuperAdminChatbotRequestsPage} />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
