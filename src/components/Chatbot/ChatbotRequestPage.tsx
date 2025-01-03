@@ -27,9 +27,9 @@ const ChatbotRequestPage: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
-  const handleFileUploadComplete = (fileUrls: string[]) => {
-    setUploadedFileUrls(fileUrls);
-  };
+  const handleFileUploadComplete = (newFileUrls: string[]) => {
+    setUploadedFileUrls((prevUrls) => [...prevUrls, ...newFileUrls]); // Append new URLs to existing state
+  };  
 
   const handleSubmit = async () => {
     if (!title || !courseId || uploadedFileUrls.length === 0) {

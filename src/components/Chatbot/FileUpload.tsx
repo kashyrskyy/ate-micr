@@ -5,7 +5,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface FileUploadProps {
   folderPath: string; // Path in Firebase Storage to save files
-  onUploadComplete: (fileUrls: string[]) => void; // Callback when upload is complete
+  onUploadComplete: (newFileUrls: string[]) => void; // Callback when upload is complete
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ folderPath, onUploadComplete }) => {
@@ -18,26 +18,31 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderPath, onUploadComplete })
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     const storage = getStorage();
-    const fileUrls: string[] = [];
+    const newFileUrls: string[] = []; // New file URLs from the upload process
 
     setUploading(true);
     setUploadError(null);
 
     try {
       for (const file of files) {
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+          setUploadError(`File ${file.name} is not a valid PDF.`);
+          continue;
+        }
+
         if (file.size > maxSizeMB) {
           setUploadError(`File ${file.name} exceeds the 5 MB limit and cannot be uploaded.`);
-          continue; // Skip files larger than 5 MB
+          continue;
         }
 
         const storageRef = ref(storage, `${folderPath}/pdf/${file.name}`);
         await uploadBytes(storageRef, file);
         const downloadUrl = await getDownloadURL(storageRef);
-        fileUrls.push(downloadUrl);
+        newFileUrls.push(downloadUrl); // Store the new file URLs
       }
 
-      onUploadComplete(fileUrls);
-      setSelectedFiles(files.filter((file) => file.size <= maxSizeMB)); // Show only valid files
+      setSelectedFiles((prevFiles) => [...prevFiles, ...files]); // Append to selected files for UI feedback
+      onUploadComplete(newFileUrls); // Pass only new URLs to the parent
     } catch (error) {
       console.error('Error uploading files:', error);
       setUploadError('Failed to upload files. Please try again.');
