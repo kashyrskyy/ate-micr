@@ -16,6 +16,8 @@ import {
 import { useUser } from '../../contexts/UserContext';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 
+import FileDownload from './FileDownload'; // Import the new component
+
 const ChatbotRequestsDisplay: React.FC = () => {
   const { userDetails } = useUser();
   const [requests, setRequests] = useState<any[]>([]);
@@ -109,19 +111,11 @@ const ChatbotRequestsDisplay: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   {request.files.map((file: string, index: number) => (
-                    <Link
-                      href={file}
-                      target="_blank"
+                    <FileDownload
                       key={index}
-                      sx={{
-                        display: 'block',
-                        textDecoration: 'none',
-                        color: '#1976d2',
-                        '&:hover': { textDecoration: 'underline' },
-                      }}
-                    >
-                      File {index + 1}
-                    </Link>
+                      filePath={file}
+                      fileLabel={`File ${index + 1}`}
+                    />
                   ))}
                 </TableCell>
               </TableRow>

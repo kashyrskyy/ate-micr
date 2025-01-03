@@ -20,6 +20,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, doc } from 'firebase/firestore';
 
+import FileDownload from '../Chatbot/FileDownload'; // Import FileDownload component
+
 const SuperAdminChatbotRequestsPage: React.FC = () => {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,19 +191,11 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   {request.files.map((file: string, index: number) => (
-                    <Link
-                      href={file}
-                      target="_blank"
+                    <FileDownload
                       key={index}
-                      sx={{
-                        display: 'block',
-                        textDecoration: 'none',
-                        color: '#1976d2',
-                        '&:hover': { textDecoration: 'underline' },
-                      }}
-                    >
-                      File {index + 1}
-                    </Link>
+                      filePath={file}
+                      fileLabel={`File ${index + 1}`}
+                    />
                   ))}
                 </TableCell>
                 <TableCell>
