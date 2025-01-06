@@ -183,7 +183,7 @@ const ChatbotRequestPage: React.FC = () => {
 
       <Box sx={{ mt: 3 }}>
         <Typography variant="body1" className="profile-text" sx={{ mb: 2 }}>
-          Upload your PDF files below:
+          Upload your files below (PDF, PPT, DOC/DOCX, TXT formats only):
         </Typography>
         <FileUpload
           folderPath={`chatbotRequests/${userDetails?.uid}`}

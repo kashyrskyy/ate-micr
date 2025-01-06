@@ -14,6 +14,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderPath, onUploadComplete })
   const [uploadError, setUploadError] = useState<string | null>(null);
   const maxSizeMB = 5 * 1024 * 1024; // 5 MB
 
+  // Allowed file extensions
+  const allowedExtensions = ['.pdf', '.ppt', '.pptx', '.doc', '.docx', '.txt'];
+
   const handleFileSelectAndUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
@@ -25,17 +28,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderPath, onUploadComplete })
 
     try {
       for (const file of files) {
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
-          setUploadError(`File ${file.name} is not a valid PDF.`);
+        // Validate file extension
+        const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+        if (!allowedExtensions.includes(extension)) {
+          setUploadError(`File ${file.name} is not a supported format.`);
           continue;
         }
 
+        // Validate file size
         if (file.size > maxSizeMB) {
           setUploadError(`File ${file.name} exceeds the 5 MB limit and cannot be uploaded.`);
           continue;
         }
 
-        const storageRef = ref(storage, `${folderPath}/pdf/${file.name}`);
+        // Upload file to Firebase Storage
+        const storageRef = ref(storage, `${folderPath}/files/${file.name}`);
         await uploadBytes(storageRef, file);
         const downloadUrl = await getDownloadURL(storageRef);
         newFileUrls.push(downloadUrl); // Store the new file URLs
@@ -55,7 +62,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderPath, onUploadComplete })
     <Box>
       <input
         type="file"
-        accept=".pdf"
+        accept=".pdf,.ppt,.pptx,.doc,.docx,.txt"
         multiple
         onChange={handleFileSelectAndUpload}
         style={{ display: 'none' }}
@@ -68,7 +75,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderPath, onUploadComplete })
           disabled={uploading}
           startIcon={uploading ? <CircularProgress size={20} /> : null}
         >
-          {uploading ? 'Uploading...' : 'Select and Upload PDF Files'}
+          {uploading ? 'Uploading...' : 'Select and Upload Files'}
         </Button>
       </label>
       {uploadError && (
