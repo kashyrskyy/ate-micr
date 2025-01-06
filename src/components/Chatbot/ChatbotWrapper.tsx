@@ -18,6 +18,7 @@ const ChatbotWrapper: React.FC<ChatbotWrapperProps> = ({ chatbotId }) => {
   //Chatbot interface will call handleConversationStart when a new conversation is started. 
   //Provides current Conversation ID which can be saved within NexLAB
   const handleConversationStart = async (newConversationId: string) => {
+    console.log("Chatbot started with ID:", chatbotId);
     console.log("Conversation started with ID:", newConversationId);
     setConversationId(newConversationId);
 
