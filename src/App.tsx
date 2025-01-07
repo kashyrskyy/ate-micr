@@ -29,6 +29,8 @@ import SuperAdminCourseManagement from './components/SA_CourseManagement/SuperAd
 import ChatbotWrapper from './components/Chatbot/ChatbotWrapper';
 import ChatbotManagementPage from './components/Chatbot/ChatbotManagementPage';
 import ChatbotRequestPage from './components/Chatbot/ChatbotRequestPage';
+import ChatbotConversationsPage from './components/Chatbot/ChatbotConversationsPage';
+
 import SuperAdminChatbotRequestsPage from './components/SA_Chatbot/SuperAdminChatbotRequestsPage';
 
 // Lazy loading components
@@ -92,6 +94,7 @@ const App = () => {
               <Route path="/course-requests" element={<CourseRequestsAdminPage />} />
               <Route path="/super-admin-course-management" element={<SuperAdminCourseManagement />} />
               <Route path="/super-admin-chatbot-requests" element={<PrivateRoute element={SuperAdminChatbotRequestsPage} />} />
+              {isSuperAdmin && <Route path="/chatbot-conversations" element={<PrivateRoute element={ChatbotConversationsPage} />} />}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>

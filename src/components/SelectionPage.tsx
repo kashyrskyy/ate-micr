@@ -192,6 +192,17 @@ const SelectionPage: React.FC = () => {
                       </CardActionArea>
                     </Card>
                   </Grid>
+                  <Grid item xs={12}>
+                    <Card className="menu-item">
+                      <CardActionArea onClick={() => navigate('/chatbot-conversations')}>
+                        <CardContent>
+                          <Typography className="menu-item-typography" variant="h6" component="div">
+                            Chatbot Conversations
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
                 </>
               )}
             </Grid>
