@@ -29,7 +29,7 @@ import SuperAdminCourseManagement from './components/SA_CourseManagement/SuperAd
 import ChatbotWrapper from './components/Chatbot/ChatbotWrapper';
 import ChatbotManagementPage from './components/Chatbot/ChatbotManagementPage';
 import ChatbotRequestPage from './components/Chatbot/ChatbotRequestPage';
-import ChatbotConversationsPage from './components/Chatbot/ChatbotConversationsPage';
+import ChatbotConversationsPage from './components/ChatbotConversations/ChatbotConversationsPage';
 
 import SuperAdminChatbotRequestsPage from './components/SA_Chatbot/SuperAdminChatbotRequestsPage';
 
