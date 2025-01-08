@@ -2,11 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
-import { Box, Typography, CircularProgress, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material'; // Import SelectChangeEvent
 import { useNavigate } from 'react-router-dom';
+
 import ConversationsTable from './ConversationsTable';
 import axios from 'axios';
 import ConversationHistoryModal from './ConversationHistoryModal';
+
+import Pagination from './Pagination';
+import ChatbotDetails from './ChatbotDetails';
 
 interface Conversation {
     id: string;
@@ -19,10 +24,14 @@ const ChatbotConversationsPage: React.FC = () => {
     const db = getFirestore();
     const navigate = useNavigate();
     const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+    const [chatbotIds, setChatbotIds] = useState<string[]>([]);
+    const [selectedChatbotId, setSelectedChatbotId] = useState<string>('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [conversationsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // API Data
     const [conversationHistory, setConversationHistory] = useState<any[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
     const [openModal, setOpenModal] = useState(false);
@@ -30,9 +39,9 @@ const ChatbotConversationsPage: React.FC = () => {
         chatbotId: string;
         conversationId: string;
     } | null>(null);
+    const [loadingMap, setLoadingMap] = useState<{ [key: string]: boolean }>({});
 
     const apiURL = 'https://rag-flask-api.onrender.com';
-    const [loadingMap, setLoadingMap] = useState<{ [key: string]: boolean }>({});
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -43,6 +52,11 @@ const ChatbotConversationsPage: React.FC = () => {
                     ...doc.data(),
                 })) as Conversation[];
                 setConversations(data);
+
+                const uniqueChatbotIds = Array.from(new Set(data.map((item) => item.chatbotId)));
+                setChatbotIds(['All', ...uniqueChatbotIds]);
+
+                setFilteredConversations(data);
             } catch (error) {
                 console.error('Error fetching chatbot conversations:', error);
                 setError('Failed to load conversations. Please try again later.');
@@ -53,6 +67,19 @@ const ChatbotConversationsPage: React.FC = () => {
 
         fetchConversations();
     }, [db]);
+
+    const handleFilterChange = (event: SelectChangeEvent<string>) => {
+      const selected = event.target.value as string;
+      setSelectedChatbotId(selected);
+  
+      if (selected === 'All') {
+          setFilteredConversations(conversations);
+      } else {
+          setFilteredConversations(conversations.filter((conv) => conv.chatbotId === selected));
+      }
+  
+      setCurrentPage(1); // Reset to the first page
+    };
 
     const fetchConversationHistory = async (chatbotId: string, conversationId: string) => {
         setLoadingMap((prev) => ({ ...prev, [conversationId]: true }));
@@ -70,6 +97,11 @@ const ChatbotConversationsPage: React.FC = () => {
             setLoadingMap((prev) => ({ ...prev, [conversationId]: false }));
         }
     };
+
+    // Pagination Logic
+    const indexOfLastConversation = currentPage * conversationsPerPage;
+    const indexOfFirstConversation = indexOfLastConversation - conversationsPerPage;
+    const currentConversations = filteredConversations.slice(indexOfFirstConversation, indexOfLastConversation);
 
     if (loading) {
         return (
@@ -103,10 +135,40 @@ const ChatbotConversationsPage: React.FC = () => {
                 Chatbot Conversations
             </Typography>
 
+            {/* Filter by Chatbot ID */}
+            <FormControl sx={{ mb: 3, minWidth: 200 }}>
+                <InputLabel id="filter-chatbot-id">Filter by Chatbot ID</InputLabel>
+                <Select
+                    labelId="filter-chatbot-id"
+                    value={selectedChatbotId}
+                    onChange={handleFilterChange}
+                >
+                    {chatbotIds.map((id) => (
+                        <MenuItem key={id} value={id}>
+                            {id}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            {/* Chatbot Details */}
+            {selectedChatbotId !== 'All' && (
+                <ChatbotDetails chatbotId={selectedChatbotId} />
+            )}
+
+            {/* Conversations Table */}
             <ConversationsTable
-                conversations={conversations}
+                conversations={currentConversations}
                 onViewHistory={fetchConversationHistory}
                 loadingMap={loadingMap}
+            />
+
+            {/* Pagination */}
+            <Pagination
+                totalItems={filteredConversations.length}
+                itemsPerPage={conversationsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
             />
 
             {selectedConversation && (
