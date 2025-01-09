@@ -1,7 +1,7 @@
 // src/components/Chatbot/FileDownload.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { Box, Link, IconButton } from '@mui/material';
+import { Box, Link, IconButton, CircularProgress, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 
 interface FileDownloadProps {
@@ -10,33 +10,45 @@ interface FileDownloadProps {
 }
 
 const FileDownload: React.FC<FileDownloadProps> = ({ filePath, fileLabel }) => {
-  const handleDownload = async () => {
-    try {
-      const storage = getStorage();
-      const fileRef = ref(storage, filePath);
-      const downloadUrl = await getDownloadURL(fileRef);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-      // Trigger file download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', filePath.split('/').pop() || 'file'); // Set the download attribute with the file name
-      document.body.appendChild(link); // Append link to the body
-      link.click(); // Simulate click
-      document.body.removeChild(link); // Remove link after clicking
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      alert('Failed to download file. Please check your permissions.');
-    }
-  };
+  useEffect(() => {
+    const fetchDownloadUrl = async () => {
+      try {
+        const storage = getStorage();
+        const fileRef = ref(storage, filePath);
+        const url = await getDownloadURL(fileRef);
+        setDownloadUrl(url);
+      } catch (error) {
+        console.error('Error fetching download URL:', error);
+        alert('Failed to fetch file URL. Please check your permissions.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDownloadUrl();
+  }, [filePath]);
+
+  if (loading) {
+    return <CircularProgress size={20} />;
+  }
+
+  if (!downloadUrl) {
+    return (
+      <Box>
+        <Typography color="error">Failed to load file link</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       <Link
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          handleDownload();
-        }}
+        href={downloadUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         sx={{
           textDecoration: 'none',
           color: '#1976d2',
@@ -46,8 +58,11 @@ const FileDownload: React.FC<FileDownloadProps> = ({ filePath, fileLabel }) => {
         {fileLabel}
       </Link>
       <IconButton
-        onClick={handleDownload}
-        aria-label="Download"
+        component="a"
+        href={downloadUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open in new tab"
         size="small"
       >
         <DownloadIcon />
