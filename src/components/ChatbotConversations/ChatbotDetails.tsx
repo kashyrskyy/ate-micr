@@ -1,7 +1,7 @@
 // src/components/ChatbotConversations/ChatbotDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { Box, Typography, CircularProgress, Divider } from '@mui/material';
+import { Box, Typography, CircularProgress, Divider, Link } from '@mui/material';
 import { getFirestore } from 'firebase/firestore';
 
 interface ChatbotDetailsProps {
@@ -76,6 +76,10 @@ const ChatbotDetails: React.FC<ChatbotDetailsProps> = ({ chatbotId }) => {
 
     const courseTitle = courseId?.title || 'N/A';
     const materialTitle = material?.title || 'N/A';
+    const materialId = material?.id || 'N/A';
+
+    // Generate the GitHub link for the material
+    const materialLink = `https://kashyrskyy.github.io/ate-micr/#/view-material/${materialId}`;
 
     return (
         <Box sx={{ mt: 3, p: 2, border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
@@ -87,9 +91,16 @@ const ChatbotDetails: React.FC<ChatbotDetailsProps> = ({ chatbotId }) => {
                 <strong>Course:</strong> {courseTitle}
             </Typography>
             <Typography variant="body1">
-                <strong>Material Title:</strong> {materialTitle}
+                <strong>Material:</strong>{' '}
+                {materialId !== 'N/A' ? (
+                    <Link href={materialLink} target="_blank" rel="noopener noreferrer">
+                        {materialTitle}
+                    </Link>
+                ) : (
+                    materialTitle
+                )}
             </Typography>
-            
+
             <Divider sx={{ my: 2 }} />
 
             <Typography variant="body1">
