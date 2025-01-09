@@ -1,7 +1,7 @@
 // src/components/ChatbotConversations/ChatbotDetails.tsx
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Divider } from '@mui/material';
 import { getFirestore } from 'firebase/firestore';
 
 interface ChatbotDetailsProps {
@@ -13,9 +13,6 @@ const ChatbotDetails: React.FC<ChatbotDetailsProps> = ({ chatbotId }) => {
     const [chatbotDetails, setChatbotDetails] = useState<any | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-
-    const { title = 'N/A', courseId = {}, createdBy = 'Unknown', timestamp } = chatbotDetails || {};
-    const courseTitle = courseId?.title || 'N/A';
 
     useEffect(() => {
         const fetchChatbotDetails = async () => {
@@ -69,6 +66,17 @@ const ChatbotDetails: React.FC<ChatbotDetailsProps> = ({ chatbotId }) => {
         return null;
     }
 
+    const {
+        title = 'N/A',
+        courseId = {},
+        createdBy = 'Unknown',
+        timestamp,
+        material = {},
+    } = chatbotDetails;
+
+    const courseTitle = courseId?.title || 'N/A';
+    const materialTitle = material?.title || 'N/A';
+
     return (
         <Box sx={{ mt: 3, p: 2, border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
             <Typography variant="h6">Chatbot Details</Typography>
@@ -78,6 +86,12 @@ const ChatbotDetails: React.FC<ChatbotDetailsProps> = ({ chatbotId }) => {
             <Typography variant="body1">
                 <strong>Course:</strong> {courseTitle}
             </Typography>
+            <Typography variant="body1">
+                <strong>Material Title:</strong> {materialTitle}
+            </Typography>
+            
+            <Divider sx={{ my: 2 }} />
+
             <Typography variant="body1">
                 <strong>Created By:</strong> {createdBy}
             </Typography>
