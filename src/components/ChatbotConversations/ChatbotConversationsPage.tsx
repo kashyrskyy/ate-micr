@@ -122,16 +122,16 @@ const ChatbotConversationsPage: React.FC = () => {
     }
 
     return (
-        <Box sx={{ padding: 3 }}>
+        <Box className="profile-container" sx={{ p: 4 }}>
             <Button
                 variant="text"
                 onClick={() => navigate('/')}
-                sx={{ mb: 2 }}
+                className="profile-button"
             >
                 &larr; Home Page
             </Button>
 
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h5" className="webpage_title" sx={{ mb: 2 }}>
                 Chatbot Conversations
             </Typography>
 
