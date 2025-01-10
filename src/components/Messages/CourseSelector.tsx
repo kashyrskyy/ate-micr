@@ -16,7 +16,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ value, onChange }) => {
   useEffect(() => {
     if (userDetails?.classes) {
       const filteredCourses = Object.entries(userDetails.classes)
-        .filter(([_, course]) => course.isCourseAdmin)
+        .filter(([_, course]) => course.isCourseAdmin || userDetails.isSuperAdmin)
         .map(([id, course]) => ({
           id,
           number: course.number,
@@ -26,7 +26,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ value, onChange }) => {
     } else {
       setAdminCourses([]);
     }
-  }, [userDetails]);
+  }, [userDetails]);  
 
   return (
     <FormControl fullWidth sx={{ mb: 2 }}>
