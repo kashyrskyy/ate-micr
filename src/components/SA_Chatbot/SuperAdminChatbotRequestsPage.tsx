@@ -28,7 +28,7 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
   const [chatbotIdMap, setChatbotIdMap] = useState<{ [key: string]: string }>({});
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'warning'>('success');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,13 +80,20 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
   
       const requestData = requestSnapshot.data();
   
-      // Update the request document to approved status
+      if (requestData.status !== 'pending') {
+        setSnackbarMessage('This request has already been processed.');
+        setSnackbarSeverity('warning');
+        setSnackbarOpen(true);
+        return;
+      }
+  
+      // Update the request document with approved status and chatbotId
       await updateDoc(requestRef, {
         status: 'approved',
         chatbotId,
       });
   
-      // Add a new document to the chatbots collection
+      // Create a new chatbot document
       const chatbotData = {
         chatbotId,
         title: requestData.title,
@@ -106,23 +113,25 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
   
       await addDoc(collection(db, 'chatbots'), chatbotData);
   
-      setRequests((prev) =>
-        prev.map((req) =>
+      // Update the requests state
+      setRequests((prevRequests) =>
+        prevRequests.map((req) =>
           req.id === requestId
             ? { ...req, status: 'approved', chatbotId }
             : req
         )
       );
+  
       setSnackbarMessage('Chatbot request approved and chatbot created successfully!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
     } catch (error) {
-      console.error('Error approving request or creating chatbot:', error);
+      console.error('Error approving chatbot request or creating chatbot:', error);
       setSnackbarMessage('Failed to approve the request and create the chatbot. Please try again.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
-  };  
+  };    
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);

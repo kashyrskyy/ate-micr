@@ -61,7 +61,7 @@ const ChatbotRequestPage: React.FC = () => {
     const courseNumber = selectedCourse.number || 'N/A';
     const courseTitle = selectedCourse.title || 'Untitled Course';
 
-      // Retrieve material details
+    // Retrieve material details
     const selectedMaterial = materials.find((material) => material.id === materialId);
     if (!selectedMaterial) {
       setSnackbarMessage('Selected material details could not be found.');
@@ -73,7 +73,7 @@ const ChatbotRequestPage: React.FC = () => {
     const { title: materialTitle } = selectedMaterial;
 
     try {
-      await addDoc(collection(db, 'chatbotRequests'), {
+      const chatbotRequestRef = await addDoc(collection(db, 'chatbotRequests'), {
         educatorId: userDetails?.uid,
         courseId,
         courseNumber,
@@ -86,11 +86,30 @@ const ChatbotRequestPage: React.FC = () => {
         timestamp: new Date().toISOString(),
       });
 
+      // Create email notification
+      await addDoc(collection(db, 'mail'), {
+        to: ['andriy@intofuture.org', 'dylan@intofuture.org'],
+        message: {
+          subject: 'New Chatbot Request Submitted',
+          html: `
+            <p>A new chatbot request has been submitted:</p>
+            <p><strong>Title:</strong> ${title}</p>
+            <p><strong>Educator ID:</strong> ${userDetails?.uid}</p>
+            <p><strong>Course:</strong> ${courseNumber} - ${courseTitle}</p>
+            <p><strong>Material:</strong> ${materialTitle}</p>
+            <p><strong>Request ID:</strong> ${chatbotRequestRef.id}</p>
+            <p><a href="https://kashyrskyy.github.io/ate-micr/#/super-admin-chatbot-requests">
+            Click here to review the request.
+            </a></p>
+          `,
+        },
+      });
+
       setSnackbarMessage('Chatbot request submitted successfully!');
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
-
-      setTimeout(() => navigate('/chatbot-management'), 1500); // Navigate to Chatbot Management page
+  
+      setTimeout(() => navigate('/chatbot-management'), 1500);
     } catch (error) {
       console.error('Error submitting chatbot request:', error);
       setSnackbarMessage('Failed to submit the chatbot request. Please try again.');
