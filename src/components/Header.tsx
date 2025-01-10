@@ -3,7 +3,7 @@ import { Box, Typography, Chip, Tooltip } from '@mui/material';
 import { useUser } from '../contexts/UserContext';
 import Logout from './Logout';
 
-const Header: React.FC = () => {
+const Header: React.FC = React.memo(() => {
   const { userDetails, isSuperAdmin } = useUser();
   const [copied, setCopied] = React.useState(false);
 
@@ -76,6 +76,6 @@ const Header: React.FC = () => {
       </Box>
     </Box>
   );
-};
+});
 
 export default Header;
