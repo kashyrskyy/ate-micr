@@ -31,9 +31,9 @@ const RequestNewCourseForm: React.FC = () => {
       setDialogOpen(true);
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const requestDoc = {
         uid: userDetails?.uid,
@@ -43,22 +43,42 @@ const RequestNewCourseForm: React.FC = () => {
         status: 'pending',
         timestamp: new Date(),
       };
-      await addDoc(collection(db, 'courseRequests'), requestDoc);
-      
+  
+      // Add the course request document
+      const courseRequestRef = await addDoc(collection(db, 'courseRequests'), requestDoc);
+  
+      // Add an email document to the `mail` collection to notify super-admins
+      const emailDoc = {
+        to: ['andriy@intofuture.org', 'dylan@intofuture.org'],
+        message: {
+          subject: 'New Course Request Submitted',
+          html: `
+            <p>A new course request has been submitted:</p>
+            <p><strong>Educator ID:</strong> ${userDetails?.uid}</p>
+            <p><strong>Course:</strong> ${courseNumber} - ${courseTitle}</p>
+            <p><strong>Description:</strong> ${courseDescription}</p>
+            <p><strong>Request ID:</strong> ${courseRequestRef.id}</p>
+            <p><a href="https://kashyrskyy.github.io/ate-micr/#/course-requests">
+            Click here to review the request.
+            </a></p>
+          `,
+        },
+      };
+      await addDoc(collection(db, 'mail'), emailDoc);
+  
       setDialogTitle('Success');
       setDialogContent('Your course request has been submitted for review.');
-
+  
       // Clear form fields
       setCourseNumber('');
       setCourseTitle('');
       setCourseDescription('');
-
-      // Show success message and then navigate back to Course Management
+  
+      // Show success message and navigate back
       setDialogOpen(true);
       setTimeout(() => {
-        navigate('/course-management'); // Change to Course Management route
+        navigate('/course-management');
       }, 2000);
-
     } catch (error) {
       console.error('Error submitting course request: ', error);
       setDialogTitle('Error');
@@ -67,7 +87,7 @@ const RequestNewCourseForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleCloseDialog = () => {
     setDialogOpen(false);

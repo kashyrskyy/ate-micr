@@ -100,6 +100,23 @@ const CourseRequestsAdminPage: React.FC = () => {
         passcode: passcode,
       });
   
+      // Add an email document to the `mail` collection to notify the educator
+      const emailDoc = {
+        to: ['andriy@intofuture.org', 'dylan@intofuture.org'],
+        message: {
+          subject: 'Your Course Request Has Been Approved',
+          html: `
+            <p>Your course request has been approved:</p>
+            <p><strong>Course:</strong> ${currentRequestData.courseNumber} - ${currentRequestData.courseTitle}</p>
+            <p><strong>Passcode:</strong> ${passcode}</p>
+            <p><a href="https://kashyrskyy.github.io/ate-micr/#/courses">
+            Click here to view your course.
+            </a></p>
+          `,
+        },
+      };
+      await addDoc(collection(db, 'mail'), emailDoc);
+  
       setSnackbarMessage('Course request approved, course added.');
       setSnackbarSeverity('success');
       setRequests((prevRequests) =>
@@ -114,7 +131,7 @@ const CourseRequestsAdminPage: React.FC = () => {
     }
     setOpenSnackbar(true);
     handleCloseDialog();
-  };  
+  };   
 
   const handleDeny = async () => {
     if (!currentRequestId) return;
