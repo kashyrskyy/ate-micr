@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { getFirestore, doc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDocs, collection, writeBatch } from 'firebase/firestore';
 
 import { useUser } from '../../contexts/UserContext';
 
@@ -15,41 +15,48 @@ const DeleteCourse: React.FC<DeleteCourseProps> = ({ selectedCourse, onCourseDel
   const [open, setOpen] = useState(false);
 
   const db = getFirestore();
-  const { userDetails, refreshUserDetails } = useUser(); // Fix: Include userDetails
+  const { refreshUserDetails } = useUser();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const handleDelete = async () => {
-    if (!selectedCourse || !userDetails?.uid) return; // Ensure userDetails and UID are available
+    if (!selectedCourse) return;
   
     try {
+      const batch = writeBatch(db);
+  
+      // Step 1: Delete the course document
       const courseRef = doc(db, 'courses', selectedCourse);
+      batch.delete(courseRef);
   
-      // Delete the course document
-      await deleteDoc(courseRef);
+      // Step 2: Query all users who have this course in their `classes` field
+      const usersRef = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersRef); // Retrieve all users
   
-      // Update the user's classes field
-      const userRef = doc(db, 'users', userDetails.uid);
-      const userSnapshot = await getDoc(userRef);
+      // Step 3: Remove the course from each user's `classes`
+      usersSnapshot.forEach((userDoc) => {
+        const userRef = doc(db, 'users', userDoc.id);
+        const userClasses = userDoc.data().classes || {}; // Safeguard for missing `classes` field
   
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        if (userData.classes && userData.classes[selectedCourse]) {
-          const updatedClasses = { ...userData.classes };
-          delete updatedClasses[selectedCourse];
-  
-          await updateDoc(userRef, { classes: updatedClasses });
+        // Check if the user has the course in `classes`
+        if (userClasses && userClasses[selectedCourse]) {
+          delete userClasses[selectedCourse];
+          batch.update(userRef, { classes: userClasses });
         }
-      }
-
-      await refreshUserDetails(); // Refresh userDetails in context
+      });
+  
+      // Step 4: Commit the batch
+      await batch.commit();
+  
+      // Step 5: Refresh data and close dialog
+      await refreshUserDetails(); // Refresh the logged-in user's data
       onCourseDelete(); // Refresh parent data
       handleClose();
     } catch (error) {
       console.error('Error deleting course:', error);
     }
-  };
+  };  
 
   return (
     <Box sx={{ mt: 2 }}>
