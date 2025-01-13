@@ -14,6 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 export interface Message {
   id: string;
   postedOn: { seconds: number };
+  lastUpdatedOn?: { seconds: number }; // Add lastUpdatedOn as optional
   title: string;
   description: string;
   links: { title: string; url: string }[];
@@ -92,8 +93,13 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                           sx={{ marginRight: 1 }}
                         />
                         <Typography variant="subtitle2" className="message-posted-on">
-                          Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
+                          Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()} |
                         </Typography>
+                        {message.lastUpdatedOn && (
+                          <Typography variant="subtitle2" className="message-updated-on">
+                            | Last Updated: {new Date(message.lastUpdatedOn.seconds * 1000).toLocaleString()}
+                          </Typography>
+                        )}
                       </Box>
                       <Typography variant="h6" className="message-title">
                         Subject: {message.title}
@@ -158,6 +164,11 @@ const MessagesDisplay: React.FC<Props> = ({ messages, userDetails, navigate, han
                       <Typography variant="subtitle2" className="message-posted-on">
                         Posted On: {new Date(message.postedOn.seconds * 1000).toLocaleString()}
                       </Typography>
+                      {message.lastUpdatedOn && (
+                        <Typography variant="subtitle2" className="message-updated-on">
+                          Last Updated: {new Date(message.lastUpdatedOn.seconds * 1000).toLocaleString()}
+                        </Typography>
+                      )}
                     </Box>
                     <Typography variant="h6" className="message-title">
                       Subject: {message.title}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography, Container, TextareaAutosize } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 
 import CourseSelector from './CourseSelector';
@@ -56,6 +56,7 @@ const EditMessage: React.FC = () => {
         description,
         links,
         course: selectedCourse,
+        lastUpdatedOn: serverTimestamp(),
       });
       navigate('/');
     } catch (error) {

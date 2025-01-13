@@ -1604,6 +1604,12 @@ button.ql-equals {
   font-family: 'Gabarito', sans-serif;
 }
 
+.messages-display-container .message-updated-on {
+  color: #6482AD; /* Green color for updated-on */
+  font-family: 'Gabarito', sans-serif; /* Keep the same font for consistency */
+  font-weight: bold; /* Optional: Make it bold for emphasis */
+}
+
 .messages-display-container .message-title {
   font-weight: bold;
   font-style: italic;
