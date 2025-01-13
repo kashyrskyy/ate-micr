@@ -85,31 +85,39 @@ const ConversationsTable: React.FC<ConversationsTableProps> = ({ conversations, 
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {conversations.map((conversation) => (
-                            <StyledTableRow key={conversation.id}>
-                                <TableCell align="center">{conversation.id}</TableCell>
-                                <TableCell align="center">{conversation.userId}</TableCell>
-                                <TableCell align="center">{conversation.chatbotId}</TableCell>
-                                <TableCell align="center">
-                                    {conversation.startedAt
-                                        ? new Date(conversation.startedAt).toLocaleString()
-                                        : 'Invalid date'}
+                        {conversations.length > 0 ? (
+                            conversations.map((conversation) => (
+                                <StyledTableRow key={conversation.id}>
+                                    <TableCell align="center">{conversation.id}</TableCell>
+                                    <TableCell align="center">{conversation.userId}</TableCell>
+                                    <TableCell align="center">{conversation.chatbotId}</TableCell>
+                                    <TableCell align="center">
+                                        {conversation.startedAt
+                                            ? new Date(conversation.startedAt).toLocaleString()
+                                            : 'Invalid date'}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <ActionButton
+                                            aria-label={`View Q&A data for conversation ${conversation.id}`}
+                                            onClick={() => onViewHistory(conversation.chatbotId, conversation.id)}
+                                            disabled={loadingMap[conversation.id]}
+                                        >
+                                            {loadingMap[conversation.id] ? (
+                                                <CircularProgress size={20} color="inherit" />
+                                            ) : (
+                                                'View'
+                                            )}
+                                        </ActionButton>
+                                    </TableCell>
+                                </StyledTableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={5} align="center">
+                                    No conversations available for the selected filters.
                                 </TableCell>
-                                <TableCell align="center">
-                                    <ActionButton
-                                        aria-label={`View Q&A data for conversation ${conversation.id}`}
-                                        onClick={() => onViewHistory(conversation.chatbotId, conversation.id)}
-                                        disabled={loadingMap[conversation.id]}
-                                    >
-                                        {loadingMap[conversation.id] ? (
-                                            <CircularProgress size={20} color="inherit" />
-                                        ) : (
-                                            'View'
-                                        )}
-                                    </ActionButton>
-                                </TableCell>
-                            </StyledTableRow>
-                        ))}
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>

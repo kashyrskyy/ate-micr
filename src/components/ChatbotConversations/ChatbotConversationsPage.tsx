@@ -25,8 +25,7 @@ const ChatbotConversationsPage: React.FC = () => {
     const navigate = useNavigate();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
-    const [chatbotIds, setChatbotIds] = useState<string[]>([]);
-    const [selectedChatbotId, setSelectedChatbotId] = useState<string>('All');
+
     const [currentPage, setCurrentPage] = useState(1);
     const [conversationsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
@@ -43,6 +42,11 @@ const ChatbotConversationsPage: React.FC = () => {
 
     const apiURL = 'https://rag-flask-api.onrender.com';
 
+    const [chatbotIds, setChatbotIds] = useState<string[]>([]);
+    const [userIds, setUserIds] = useState<string[]>([]);
+    const [selectedChatbotId, setSelectedChatbotId] = useState<string>('All');
+    const [selectedUserId, setSelectedUserId] = useState<string>('All');
+
     useEffect(() => {
         const fetchConversations = async () => {
             try {
@@ -51,11 +55,15 @@ const ChatbotConversationsPage: React.FC = () => {
                     id: doc.id,
                     ...doc.data(),
                 })) as Conversation[];
+    
                 setConversations(data);
-
+    
                 const uniqueChatbotIds = Array.from(new Set(data.map((item) => item.chatbotId)));
-                setChatbotIds(['All', ...uniqueChatbotIds]);
-
+                setChatbotIds(data.length > 0 ? ['All', ...uniqueChatbotIds] : []);
+    
+                const uniqueUserIds = Array.from(new Set(data.map((item) => item.userId)));
+                setUserIds(data.length > 0 ? ['All', ...uniqueUserIds] : []);
+    
                 setFilteredConversations(data);
             } catch (error) {
                 console.error('Error fetching chatbot conversations:', error);
@@ -64,22 +72,36 @@ const ChatbotConversationsPage: React.FC = () => {
                 setLoading(false);
             }
         };
-
+    
         fetchConversations();
-    }, [db]);
+    }, [db]);        
 
-    const handleFilterChange = (event: SelectChangeEvent<string>) => {
-      const selected = event.target.value as string;
-      setSelectedChatbotId(selected);
-  
-      if (selected === 'All') {
-          setFilteredConversations(conversations);
-      } else {
-          setFilteredConversations(conversations.filter((conv) => conv.chatbotId === selected));
-      }
-  
-      setCurrentPage(1); // Reset to the first page
-    };
+    const handleFilterChange = (filterType: 'chatbot' | 'user', value: string) => {
+        if (filterType === 'chatbot') {
+            setSelectedChatbotId(value);
+        } else {
+            setSelectedUserId(value);
+        }
+    
+        const newChatbotId = filterType === 'chatbot' ? value : selectedChatbotId;
+        const newUserId = filterType === 'user' ? value : selectedUserId;
+    
+        let filtered = conversations;
+    
+        if (newChatbotId !== 'All') {
+            filtered = filtered.filter((conv) => conv.chatbotId === newChatbotId);
+        }
+    
+        if (newUserId !== 'All') {
+            filtered = filtered.filter((conv) => conv.userId === newUserId);
+        }
+    
+        setFilteredConversations(filtered);
+        if (newChatbotId === 'All' && newUserId === 'All') {
+            setFilteredConversations(conversations);
+        }
+        setCurrentPage(1); // Reset to the first page
+    };          
 
     const fetchConversationHistory = async (chatbotId: string, conversationId: string) => {
         setLoadingMap((prev) => ({ ...prev, [conversationId]: true }));
@@ -135,21 +157,39 @@ const ChatbotConversationsPage: React.FC = () => {
                 Chatbot Conversations
             </Typography>
 
-            {/* Filter by Chatbot ID */}
-            <FormControl sx={{ mb: 3, minWidth: 200 }}>
-                <InputLabel id="filter-chatbot-id">Filter by Chatbot ID</InputLabel>
-                <Select
-                    labelId="filter-chatbot-id"
-                    value={selectedChatbotId}
-                    onChange={handleFilterChange}
-                >
-                    {chatbotIds.map((id) => (
-                        <MenuItem key={id} value={id}>
-                            {id}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                {/* Filter by Chatbot ID */}
+                <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel id="filter-chatbot-id">Filter by Chatbot ID</InputLabel>
+                    <Select
+                        labelId="filter-chatbot-id"
+                        value={selectedChatbotId}
+                        onChange={(e) => handleFilterChange('chatbot', e.target.value)}
+                    >
+                        {chatbotIds.map((id) => (
+                            <MenuItem key={id} value={id}>
+                                {id}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                {/* Filter by User ID */}
+                <FormControl sx={{ minWidth: 200 }}>
+                    <InputLabel id="filter-user-id">Filter by User ID</InputLabel>
+                    <Select
+                        labelId="filter-user-id"
+                        value={selectedUserId}
+                        onChange={(e) => handleFilterChange('user', e.target.value)}
+                    >
+                        {userIds.map((id) => (
+                            <MenuItem key={id} value={id}>
+                                {id}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
 
             {/* Chatbot Details */}
             {selectedChatbotId !== 'All' && (
