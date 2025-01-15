@@ -1,14 +1,28 @@
 // src/components/ChatbotIntegration/ChatbotSelector.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Select, MenuItem, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
 import { SelectChangeEvent } from '@mui/material';
 
+import Dropdown from './Dropdown'; // Import Dropdown component
+
 interface Chatbot {
   id: string;
   chatbotId: string;
+  title: string;
+  courseId: string;
+  materialId: string;
+}
+
+interface Course {
+  id: string;
+  title: string;
+}
+
+interface Material {
+  id: string;
   title: string;
 }
 
@@ -18,13 +32,17 @@ interface ChatbotSelectorProps {
 
 const ChatbotSelector: React.FC<ChatbotSelectorProps> = ({ onChatbotChange }) => {
   const { userDetails } = useUser();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
   const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchChatbots = async () => {
+    const fetchCoursesAndChatbots = async () => {
       if (!userDetails?.classes) {
         setError('No enrolled classes found.');
         setLoading(false);
@@ -39,38 +57,83 @@ const ChatbotSelector: React.FC<ChatbotSelectorProps> = ({ onChatbotChange }) =>
         const q = query(chatbotsRef, where('courseId.id', 'in', enrolledCourseIds));
         const querySnapshot = await getDocs(q);
 
-        const fetchedChatbots: Chatbot[] = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          chatbotId: doc.data().chatbotId,
-          title: doc.data().title,
-        }));
+        const coursesMap: Record<string, string> = {};
+        const fetchedChatbots: Chatbot[] = [];
+        const fetchedMaterials: Material[] = [];
+
+        querySnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          fetchedChatbots.push({
+            id: doc.id,
+            chatbotId: data.chatbotId,
+            title: data.title, // Chatbot title
+            courseId: data.courseId.id,
+            materialId: data.material?.id || '',
+          });
+          if (data.courseId) {
+            coursesMap[data.courseId.id] = data.courseId.title; // Course title
+          }
+          if (data.material) {
+            const { id, title } = data.material;
+            if (!fetchedMaterials.some((m) => m.id === id)) {
+              fetchedMaterials.push({ id, title });
+            }
+          }
+        });
 
         setChatbots(fetchedChatbots);
+        setCourses(
+          Object.entries(coursesMap).map(([id, title]) => ({ id, title }))
+        );
+        setMaterials(fetchedMaterials);
 
-        // Set the first chatbot as default if not already selected
-        if (fetchedChatbots.length > 0 && !selectedChatbotId) {
-          const firstChatbot = fetchedChatbots[0].chatbotId;
-          setSelectedChatbotId(firstChatbot);
-          onChatbotChange(firstChatbot);
-        } else if (fetchedChatbots.length === 0) {
-          setError('No chatbots available for your enrolled courses.');
-        }
+        setLoading(false);
       } catch (err) {
-        console.error('Error fetching chatbots:', err);
-        setError('Failed to load chatbots. Please try again later.');
-      } finally {
+        console.error('Error fetching courses and chatbots:', err);
+        setError('Failed to load courses. Please try again later.');
         setLoading(false);
       }
     };
 
-    fetchChatbots();
-  }, [userDetails, onChatbotChange, selectedChatbotId]);
+    fetchCoursesAndChatbots();
+  }, [userDetails]);
+
+  const handleCourseChange = (event: SelectChangeEvent<string>) => {
+    const courseId = event.target.value;
+    setSelectedCourseId(courseId);
+    setSelectedMaterialId(null);
+    setSelectedChatbotId(null);
+    onChatbotChange(null);
+  };
+
+  const handleMaterialChange = (event: SelectChangeEvent<string>) => {
+    const materialId = event.target.value;
+    setSelectedMaterialId(materialId);
+    setSelectedChatbotId(null);
+    onChatbotChange(null);
+  };
 
   const handleChatbotChange = (event: SelectChangeEvent<string>) => {
-    const selectedId = event.target.value;
-    setSelectedChatbotId(selectedId);
-    onChatbotChange(selectedId || null);
+    const chatbotId = event.target.value;
+    setSelectedChatbotId(chatbotId);
+    onChatbotChange(chatbotId || null);
   };
+
+  const filteredMaterials = selectedCourseId
+    ? materials.filter((material) =>
+        chatbots.some(
+          (cb) => cb.courseId === selectedCourseId && cb.materialId === material.id
+        )
+      )
+    : [];
+
+  const filteredChatbots = selectedCourseId && selectedMaterialId
+    ? chatbots.filter(
+        (chatbot) =>
+          chatbot.courseId === selectedCourseId &&
+          chatbot.materialId === selectedMaterialId
+      )
+    : [];
 
   if (loading) {
     return <CircularProgress size={24} />;
@@ -84,49 +147,39 @@ const ChatbotSelector: React.FC<ChatbotSelectorProps> = ({ onChatbotChange }) =>
     );
   }
 
-  if (!loading && chatbots.length === 0) {
-    return (
-      <Box>
-        <Typography variant="body2" color="textSecondary">
-          No chatbots available for your enrolled courses.
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ minWidth: 200, backgroundColor: '#f5f5f5', borderRadius: 1, p: 1, boxShadow: 1 }}>
-      <Typography variant="body1"
-        sx={{
-            fontFamily: '"Staatliches", sans-serif',
-            fontWeight: 'bold',
-            fontSize: '1.25rem',
-            marginBottom: '8px',
-        }}
-      >
-          Select Chatbot:
-      </Typography>
-      <Select
-        value={selectedChatbotId || ''}
-        onChange={handleChatbotChange}
-        displayEmpty
-        sx={{
-            width: '100%',
-            backgroundColor: '#f5f5f5',
-            borderRadius: 1,
-            fontFamily: '"Gabarito", sans-serif',
-            fontSize: '1rem',
-        }}
-      >
-        <MenuItem value="" disabled sx={{ fontFamily: '"Gabarito", sans-serif', fontSize: '1rem' }}>
-          Select Chatbot
-        </MenuItem>
-        {chatbots.map((chatbot) => (
-          <MenuItem key={chatbot.id} value={chatbot.chatbotId} sx={{ fontFamily: '"Gabarito", sans-serif', fontSize: '1rem' }}>
-            {chatbot.title}
-          </MenuItem>
-        ))}
-      </Select>
+      <Dropdown
+        label="Filter by Course"
+        value={selectedCourseId}
+        onChange={handleCourseChange}
+        options={courses}
+        placeholder="Select Course"
+      />
+      {selectedCourseId && (
+        <Dropdown
+          label="Filter by Material"
+          value={selectedMaterialId}
+          onChange={handleMaterialChange}
+          options={filteredMaterials.map((material) => ({
+            id: material.id,
+            title: material.title,
+          }))}
+          placeholder="Select Material"
+        />
+      )}
+      {selectedMaterialId && (
+        <Dropdown
+          label="Filter by Chatbot"
+          value={selectedChatbotId}
+          onChange={handleChatbotChange}
+          options={filteredChatbots.map((cb) => ({
+            id: cb.chatbotId,
+            title: cb.title,
+          }))}
+          placeholder="Select Chatbot"
+        />
+      )}
     </Box>
   );
 };
