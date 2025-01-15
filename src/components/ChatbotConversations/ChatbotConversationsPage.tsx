@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import { Box, Typography, CircularProgress, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material'; // Import SelectChangeEvent
 import { useNavigate } from 'react-router-dom';
 
 import ConversationsTable from './ConversationsTable';
@@ -46,6 +45,23 @@ const ChatbotConversationsPage: React.FC = () => {
     const [userIds, setUserIds] = useState<string[]>([]);
     const [selectedChatbotId, setSelectedChatbotId] = useState<string>('All');
     const [selectedUserId, setSelectedUserId] = useState<string>('All');
+
+    const [chatbotDetails, setChatbotDetails] = useState<{
+        chatbotId: string;
+        chatbotTitle: string;
+        courseTitle: string;
+        courseId: string;
+        materialTitle: string;
+        materialId: string;
+        materialLink: string;
+        chatbotCreatedBy: string;
+        chatbotCreatedAt: string;
+    } | null>(null);
+    
+    const [selectedMetadata, setSelectedMetadata] = useState<{
+        userId: string;
+        startedAt: string;
+    } | null>(null);    
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -103,22 +119,63 @@ const ChatbotConversationsPage: React.FC = () => {
         setCurrentPage(1); // Reset to the first page
     };          
 
-    const fetchConversationHistory = async (chatbotId: string, conversationId: string) => {
+    const fetchConversationHistory = async (chatbotId: string, conversationId: string, userId: string, startedAt: string) => {
         setLoadingMap((prev) => ({ ...prev, [conversationId]: true }));
         setApiError(null);
-
+    
         try {
+            // Fetch conversation history
             const response = await axios.get(`${apiURL}/conversations/${chatbotId}/${conversationId}`);
             setConversationHistory(response.data);
+    
+            // Fetch chatbot details
+            const fetchChatbots = async () => {
+                try {
+                    const chatbotsMap = new Map();
+                    const snapshot = await getDocs(collection(db, 'chatbots'));
+                    snapshot.forEach(doc => {
+                        chatbotsMap.set(doc.data().chatbotId, doc.data());
+                    });
+                    return chatbotsMap;
+                } catch (error) {
+                    console.error('Error fetching chatbots:', error);
+                    return new Map(); // Return an empty map to avoid further issues
+                }
+            };                     
+    
+            const chatbotsMap = await fetchChatbots();
+            const chatbotData = chatbotsMap.get(chatbotId);
+            if (chatbotData) {
+                setChatbotDetails({
+                    chatbotId,
+                    chatbotTitle: chatbotData.title || 'N/A',
+                    courseTitle: chatbotData.courseId?.title || 'N/A',
+                    courseId: chatbotData.courseId?.id || 'N/A',
+                    materialTitle: chatbotData.material?.title || 'N/A',
+                    materialId: chatbotData.material?.id || 'N/A',
+                    materialLink: `https://kashyrskyy.github.io/ate-micr/#/view-material/${chatbotData.material?.id || ''}`,
+                    chatbotCreatedBy: chatbotData.createdBy || 'Unknown',
+                    chatbotCreatedAt: chatbotData.timestamp || 'N/A',
+                });
+            } else {
+                setChatbotDetails(null);
+            }
+    
+            // Set metadata for the selected conversation
+            setSelectedMetadata({
+                userId,
+                startedAt,
+            });
+    
             setSelectedConversation({ chatbotId, conversationId });
             setOpenModal(true);
         } catch (error) {
-            setApiError('Failed to fetch conversation history.');
-            console.error(error);
+            console.error('Error fetching conversation or chatbot details:', error);
+            setApiError('Failed to fetch conversation history or chatbot details.');
         } finally {
             setLoadingMap((prev) => ({ ...prev, [conversationId]: false }));
         }
-    };
+    };    
 
     // Pagination Logic
     const indexOfLastConversation = currentPage * conversationsPerPage;
@@ -199,7 +256,9 @@ const ChatbotConversationsPage: React.FC = () => {
             {/* Conversations Table */}
             <ConversationsTable
                 conversations={currentConversations}
-                onViewHistory={fetchConversationHistory}
+                onViewHistory={(chatbotId, conversationId, userId, startedAt) =>
+                    fetchConversationHistory(chatbotId, conversationId, userId, startedAt)
+                }
                 loadingMap={loadingMap}
             />
 
@@ -211,13 +270,16 @@ const ChatbotConversationsPage: React.FC = () => {
                 onPageChange={setCurrentPage}
             />
 
-            {selectedConversation && (
+            {selectedConversation && chatbotDetails && selectedMetadata && (
                 <ConversationHistoryModal
                     open={openModal}
                     onClose={() => setOpenModal(false)}
                     conversationHistory={conversationHistory}
                     conversationId={selectedConversation.conversationId}
                     conversationHistoryError={apiError}
+                    chatbotDetails={chatbotDetails}
+                    userId={selectedMetadata.userId}
+                    startedAt={selectedMetadata.startedAt}
                 />
             )}
         </Box>

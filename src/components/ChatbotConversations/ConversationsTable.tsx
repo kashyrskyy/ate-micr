@@ -24,7 +24,7 @@ interface Conversation {
 
 interface ConversationsTableProps {
     conversations: Conversation[];
-    onViewHistory: (chatbotId: string, conversationId: string) => void;
+    onViewHistory: (chatbotId: string, conversationId: string, userId: string, startedAt: string) => void;
     loadingMap: { [key: string]: boolean };
 }
 
@@ -98,15 +98,17 @@ const ConversationsTable: React.FC<ConversationsTableProps> = ({ conversations, 
                                     </TableCell>
                                     <TableCell align="center">
                                         <ActionButton
-                                            aria-label={`View Q&A data for conversation ${conversation.id}`}
-                                            onClick={() => onViewHistory(conversation.chatbotId, conversation.id)}
+                                            onClick={() =>
+                                                onViewHistory(
+                                                    conversation.chatbotId,
+                                                    conversation.id,
+                                                    conversation.userId,
+                                                    conversation.startedAt
+                                                )
+                                            }
                                             disabled={loadingMap[conversation.id]}
                                         >
-                                            {loadingMap[conversation.id] ? (
-                                                <CircularProgress size={20} color="inherit" />
-                                            ) : (
-                                                'View'
-                                            )}
+                                            {loadingMap[conversation.id] ? <CircularProgress size={20} color="inherit" /> : 'View'}
                                         </ActionButton>
                                     </TableCell>
                                 </StyledTableRow>

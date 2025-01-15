@@ -8,14 +8,13 @@ import {
     List,
     ListItem,
     ListItemText,
-    CircularProgress,
     IconButton,
     Tooltip,
 } from '@mui/material';
 import { styled } from '@mui/system';
 
 import DownloadIcon from '@mui/icons-material/Download'; // Import the download icon
-import { exportToCsv } from '../../utils/exportToCsv'; // Import the utility
+import { exportConversationData } from '../../utils/exportConversationData'; // Import utility
 
 const StyledModalBox = styled(Box)({
     position: 'absolute',
@@ -50,6 +49,19 @@ interface ConversationHistoryModalProps {
     conversationHistory: Message[];
     conversationId: string;
     conversationHistoryError: string | null;
+    chatbotDetails: {
+        chatbotId: string;
+        chatbotTitle: string;
+        courseTitle: string;
+        courseId: string;
+        materialTitle: string;
+        materialId: string;
+        materialLink: string;
+        chatbotCreatedBy: string;
+        chatbotCreatedAt: string;
+    };
+    userId: string;
+    startedAt: string;
 }
 
 const ConversationHistoryModal: React.FC<ConversationHistoryModalProps> = ({
@@ -58,10 +70,27 @@ const ConversationHistoryModal: React.FC<ConversationHistoryModalProps> = ({
     conversationHistory,
     conversationId,
     conversationHistoryError,
+    chatbotDetails,
+    userId,
+    startedAt,
 }) => {
-    const handleDownloadCsv = () => {
-        const filename = `${conversationId}.csv`;
-        exportToCsv(filename, conversationHistory);
+    const handleDownloadZip = async () => {
+        const metadata = {
+            conversationId,
+            userId,
+            chatbotId: chatbotDetails.chatbotId,
+            chatbotTitle: chatbotDetails.chatbotTitle,
+            startedAt: new Date(startedAt).toLocaleString(),
+            courseTitle: chatbotDetails.courseTitle,
+            courseId: chatbotDetails.courseId,
+            materialTitle: chatbotDetails.materialTitle,
+            materialId: chatbotDetails.materialId,
+            materialLink: chatbotDetails.materialLink,
+            chatbotCreatedBy: chatbotDetails.chatbotCreatedBy,
+            chatbotCreatedAt: new Date(chatbotDetails.chatbotCreatedAt).toLocaleString(),
+        };
+
+        await exportConversationData(conversationId, conversationHistory, metadata);
     };
 
     return (
@@ -71,8 +100,8 @@ const ConversationHistoryModal: React.FC<ConversationHistoryModalProps> = ({
                     <Typography variant="h6">
                         Conversation History for {conversationId}
                     </Typography>
-                    <Tooltip title="Download CSV">
-                        <IconButton onClick={handleDownloadCsv} aria-label="Download as CSV">
+                    <Tooltip title="Download ZIP">
+                        <IconButton onClick={handleDownloadZip} aria-label="Download as ZIP">
                             <DownloadIcon />
                         </IconButton>
                     </Tooltip>
