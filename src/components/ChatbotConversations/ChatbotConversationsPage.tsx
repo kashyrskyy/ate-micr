@@ -1,8 +1,8 @@
 // src/components/ChatbotConversations/ChatbotConversationsPage.tsx
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
-import { Box, Typography, CircularProgress, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Box, Typography, CircularProgress, Button, Select, MenuItem, FormControl, InputLabel, Snackbar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 import ConversationsTable from './ConversationsTable';
@@ -11,6 +11,8 @@ import ConversationHistoryModal from './ConversationHistoryModal';
 
 import Pagination from './Pagination';
 import ChatbotDetails from './ChatbotDetails';
+
+import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
 interface Conversation {
     id: string;
@@ -62,6 +64,21 @@ const ChatbotConversationsPage: React.FC = () => {
         userId: string;
         startedAt: string;
     } | null>(null);    
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+
+    const [deleting, setDeleting] = useState(false);
+
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; type: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        type: 'success',
+    });
+    
+    const handleSnackbarClose = () => {
+        setSnackbar((prev) => ({ ...prev, open: false }));
+    };
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -200,6 +217,39 @@ const ChatbotConversationsPage: React.FC = () => {
         );
     }
 
+    const handleOpenDeleteDialog = (conversationId: string) => {
+        setConversationToDelete(conversationId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setConversationToDelete(null);
+    };
+
+    const handleDeleteConversation = async () => {
+        if (!conversationToDelete) return;
+    
+        setDeleting(true);
+        try {
+            await deleteDoc(doc(db, 'conversations', conversationToDelete));
+            setConversations((prev) =>
+                prev.filter((conversation) => conversation.id !== conversationToDelete)
+            );
+            setFilteredConversations((prev) =>
+                prev.filter((conversation) => conversation.id !== conversationToDelete)
+            );
+            setSnackbar({ open: true, message: 'Conversation deleted successfully.', type: 'success' });
+            handleCloseDeleteDialog(); // Close dialog only after success
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            setSnackbar({ open: true, message: 'Failed to delete the conversation. Please try again.', type: 'error' });
+        } finally {
+            setDeleting(false);
+            handleCloseDeleteDialog();
+        }
+    };
+
     return (
         <Box className="profile-container" sx={{ p: 4 }}>
             <Button
@@ -223,11 +273,17 @@ const ChatbotConversationsPage: React.FC = () => {
                         value={selectedChatbotId}
                         onChange={(e) => handleFilterChange('chatbot', e.target.value)}
                     >
-                        {chatbotIds.map((id) => (
-                            <MenuItem key={id} value={id}>
-                                {id}
+                        {chatbotIds.length > 0 ? (
+                            chatbotIds.map((id) => (
+                                <MenuItem key={id} value={id}>
+                                    {id}
+                                </MenuItem>
+                            ))
+                        ) : (
+                            <MenuItem value="" disabled>
+                                No Chatbots Available
                             </MenuItem>
-                        ))}
+                        )}
                     </Select>
                 </FormControl>
 
@@ -253,14 +309,25 @@ const ChatbotConversationsPage: React.FC = () => {
                 <ChatbotDetails chatbotId={selectedChatbotId} />
             )}
 
-            {/* Conversations Table */}
-            <ConversationsTable
-                conversations={currentConversations}
-                onViewHistory={(chatbotId, conversationId, userId, startedAt) =>
-                    fetchConversationHistory(chatbotId, conversationId, userId, startedAt)
-                }
-                loadingMap={loadingMap}
-            />
+            <Box className="profile-container" sx={{ p: 4 }}>
+                {/* Conversations Table */}
+                <ConversationsTable
+                    conversations={currentConversations}
+                    onViewHistory={(chatbotId, conversationId, userId, startedAt) =>
+                        fetchConversationHistory(chatbotId, conversationId, userId, startedAt)
+                    }
+                    onDeleteConversation={handleOpenDeleteDialog}
+                    loadingMap={loadingMap}
+                />
+
+                <DeleteConfirmationDialog
+                    open={deleteDialogOpen}
+                    onClose={handleCloseDeleteDialog}
+                    onConfirm={handleDeleteConversation}
+                    conversationId={conversationToDelete || ''}
+                    deleting={deleting}
+                />
+            </Box>
 
             {/* Pagination */}
             <Pagination
@@ -273,7 +340,10 @@ const ChatbotConversationsPage: React.FC = () => {
             {selectedConversation && chatbotDetails && selectedMetadata && (
                 <ConversationHistoryModal
                     open={openModal}
-                    onClose={() => setOpenModal(false)}
+                    onClose={() => {
+                        setOpenModal(false);
+                        setSelectedConversation(null);
+                    }}
                     conversationHistory={conversationHistory}
                     conversationId={selectedConversation.conversationId}
                     conversationHistoryError={apiError}
@@ -282,6 +352,17 @@ const ChatbotConversationsPage: React.FC = () => {
                     startedAt={selectedMetadata.startedAt}
                 />
             )}
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+                message={snackbar.message}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                ContentProps={{
+                    style: { backgroundColor: snackbar.type === 'success' ? '#4caf50' : '#f44336' },
+                }}
+            />
         </Box>
     );
 };

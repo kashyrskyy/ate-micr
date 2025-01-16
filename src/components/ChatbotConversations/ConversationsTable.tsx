@@ -12,8 +12,13 @@ import {
     Typography,
     CircularProgress,
     Paper,
+    IconButton, 
+    Tooltip
 } from '@mui/material';
 import { styled } from '@mui/system';
+
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 interface Conversation {
     id: string;
@@ -25,6 +30,7 @@ interface Conversation {
 interface ConversationsTableProps {
     conversations: Conversation[];
     onViewHistory: (chatbotId: string, conversationId: string, userId: string, startedAt: string) => void;
+    onDeleteConversation: (conversationId: string) => void;
     loadingMap: { [key: string]: boolean };
 }
 
@@ -49,20 +55,20 @@ const StyledTableRow = styled(TableRow)({
   },
 });
 
-const ActionButton = styled(Button)({
+// Custom IconButton for consistent size
+const FixedSizeIconButton = styled(IconButton)({
+    width: 40, // Fixed width
+    height: 40, // Fixed height
+    padding: 0, // Remove default padding
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     textTransform: 'capitalize',
     borderRadius: '8px',
-    padding: '6px 12px',
-    fontSize: '0.875rem',
-    fontWeight: 'bold',
-    color: '#fff',
-    backgroundColor: '#123372', // Match dashboard button color
-    '&:hover': {
-        backgroundColor: '#0d2559', // Slightly darker hover
-    },
+    color: '#123372',
 });
 
-const ConversationsTable: React.FC<ConversationsTableProps> = ({ conversations, onViewHistory, loadingMap }) => {
+const ConversationsTable: React.FC<ConversationsTableProps> = ({ conversations, onViewHistory, onDeleteConversation, loadingMap }) => {
     if (conversations.length === 0) {
         return (
             <Typography variant="body1" sx={{ textAlign: 'center', mt: 4 }}>
@@ -81,7 +87,7 @@ const ConversationsTable: React.FC<ConversationsTableProps> = ({ conversations, 
                             <StyledTableCell>User ID</StyledTableCell>
                             <StyledTableCell>Chatbot ID</StyledTableCell>
                             <StyledTableCell>Timestamp (Started At)</StyledTableCell>
-                            <StyledTableCell>Q&A Data</StyledTableCell>
+                            <StyledTableCell>Actions</StyledTableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -97,19 +103,36 @@ const ConversationsTable: React.FC<ConversationsTableProps> = ({ conversations, 
                                             : 'Invalid date'}
                                     </TableCell>
                                     <TableCell align="center">
-                                        <ActionButton
-                                            onClick={() =>
-                                                onViewHistory(
-                                                    conversation.chatbotId,
-                                                    conversation.id,
-                                                    conversation.userId,
-                                                    conversation.startedAt
-                                                )
-                                            }
-                                            disabled={loadingMap[conversation.id]}
-                                        >
-                                            {loadingMap[conversation.id] ? <CircularProgress size={20} color="inherit" /> : 'View'}
-                                        </ActionButton>
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                            <Tooltip title="View Data">
+                                                <FixedSizeIconButton
+                                                    onClick={() =>
+                                                        onViewHistory(
+                                                            conversation.chatbotId,
+                                                            conversation.id,
+                                                            conversation.userId,
+                                                            conversation.startedAt
+                                                        )
+                                                    }
+                                                    color="primary"
+                                                    disabled={loadingMap[conversation.id]}
+                                                >
+                                                    {loadingMap[conversation.id] ? (
+                                                        <CircularProgress size={20} color="inherit" />
+                                                    ) : (
+                                                        <VisibilityIcon />
+                                                    )}
+                                                </FixedSizeIconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Delete Conversation">
+                                                <FixedSizeIconButton
+                                                    onClick={() => onDeleteConversation(conversation.id)}
+                                                    color="error"
+                                                >
+                                                    <DeleteIcon />
+                                                </FixedSizeIconButton>
+                                            </Tooltip>
+                                        </Box>
                                     </TableCell>
                                 </StyledTableRow>
                             ))
