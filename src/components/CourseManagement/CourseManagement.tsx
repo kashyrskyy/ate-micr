@@ -113,15 +113,15 @@ const CourseManagement: React.FC = () => {
   const isCourseSelected = Boolean(selectedCourse && selectedCourseDetails);
 
   return (
-    <Box sx={{ flexGrow: 1, padding: 3 }}>
+    <Box className="profile-container" sx={{ p: 4 }}>
       {/* Navigation */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Button variant="text" onClick={() => navigate('/')} sx={{ mr: 2 }}>
+        <Button variant="text" onClick={() => navigate('/')} className="profile-button">
           &larr; Home Page
         </Button>
       </Box>
 
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>
+      <Typography className="webpage_title" sx={{ mb: 2 }}>
         Course Management
       </Typography>
 
