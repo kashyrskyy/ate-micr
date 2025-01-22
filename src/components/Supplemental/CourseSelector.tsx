@@ -6,10 +6,9 @@ import { useUser } from '../../contexts/UserContext';
 interface CourseSelectorProps {
   selectedCourse: string;
   onCourseChange: (course: string) => void;
-  onCoursesLoaded?: (firstCourseId: string | null) => void; // Callback to notify the parent
 }
 
-const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange, onCoursesLoaded }) => {
+const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCourseChange }) => {
   const { userDetails } = useUser();
   const [courses, setCourses] = useState<{ id: string; number: string; title: string }[]>([]);
     
@@ -21,18 +20,10 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({ selectedCourse, onCours
         title: course.title,
       }));
       setCourses(userCourses);
-  
-      // Notify parent about the first course (only if courses exist and haven't been loaded yet)
-      if (onCoursesLoaded && userCourses.length > 0 && !selectedCourse) {
-        onCoursesLoaded(userCourses[0].id);
-      }
     } else {
       setCourses([]);
-      if (onCoursesLoaded) {
-        onCoursesLoaded(null);
-      }
     }
-  }, [userDetails, onCoursesLoaded]);  
+  }, [userDetails]);  
 
   return (
     <Box sx={{ width: '100%', mb: 2 }}>

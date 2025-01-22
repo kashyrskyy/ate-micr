@@ -13,17 +13,16 @@ import UnpublishButton from './UnpublishButton';
 import UnpublishMaterial from './UnpublishMaterial';
 import CourseSelector from './CourseSelector';
 
-const MaterialGrid: React.FC = () => {
+const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCourse }) => {
   const { userDetails } = useUser();
   const db = getFirestore();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [isCourseAdmin, setIsCourseAdmin] = useState(false);
-
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // Track whether the initial course is loaded
   
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(initialCourse ?? null);
+
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [confirmUnpublish, setConfirmUnpublish] = useState<{ open: boolean, materialId: string | null }>({ open: false, materialId: null });
   const [error, setError] = useState<string | null>(null);
@@ -49,15 +48,16 @@ const MaterialGrid: React.FC = () => {
   }, [selectedCourse, userDetails]);
 
   useEffect(() => {
+    if (initialCourse && selectedCourse !== initialCourse) {
+      setSelectedCourse(initialCourse);
+    }
+  }, [initialCourse, selectedCourse]);
+
+  useEffect(() => {
     if (!selectedCourse) {
       console.log("No course selected");
       setMaterials([]);
       setLoading(false); // Reset loading state if no course is selected
-      return;
-    }
-  
-    if (!initialLoadComplete) {
-      console.log("Initial load in progress, skipping fetch");
       return;
     }
   
@@ -84,7 +84,7 @@ const MaterialGrid: React.FC = () => {
     );
   
     return () => unsubscribe();
-  }, [db, selectedCourse, userDetails, initialLoadComplete]);  
+  }, [db, selectedCourse, userDetails]);  
 
   const handleDeleteClick = (id: string) => {
     setSelectedMaterial(id);
@@ -112,6 +112,11 @@ const MaterialGrid: React.FC = () => {
     setConfirmUnpublish({ open: false, materialId: null });
   };  
 
+  const handleCourseChange = (courseId: string) => {
+    setSelectedCourse(courseId);
+    navigate(`/supplemental-materials?course=${courseId}`); // Dynamically update the URL
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -125,17 +130,7 @@ const MaterialGrid: React.FC = () => {
     <Box sx={{ width: '100%' }}>
       <CourseSelector
         selectedCourse={selectedCourse || ''}
-        onCourseChange={(course) => {
-          setLoading(true);
-          setSelectedCourse(course);
-        }}
-        onCoursesLoaded={(firstCourseId) => {
-          if (!initialLoadComplete) {
-            console.log('Setting first course from onCoursesLoaded:', firstCourseId);
-            setSelectedCourse(firstCourseId);
-            setInitialLoadComplete(true);
-          }
-        }}
+        onCourseChange={handleCourseChange}
       />
 
       {/* Fallback for no materials */}

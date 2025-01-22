@@ -44,7 +44,7 @@
     "firebase-functions": "^5.0.1",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
-    "rag-chatbot-interface-ifi": "^1.0.2",
+    "rag-chatbot-interface-ifi": "^1.0.3",
     "react": "^18.3.1",
     "react-datepicker": "^7.0.0",
     "react-dom": "^18.2.0",
