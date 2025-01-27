@@ -16,6 +16,7 @@ import {
   TextField,
   Snackbar,
   Alert,
+  TablePagination
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, addDoc, getDoc, getDocs, updateDoc, doc } from 'firebase/firestore';
@@ -52,10 +53,6 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
 
     fetchRequests();
   }, []);
-
-  const handleChatbotIdChange = (id: string, value: string) => {
-    setChatbotIdMap((prev) => ({ ...prev, [id]: value }));
-  };
 
   const handleApproveRequest = async (requestId: string) => {
     const chatbotId = chatbotIdMap[requestId];
@@ -137,6 +134,20 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
     setSnackbarOpen(false);
   };
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (event: unknown, newPage: number) => setPage(newPage);
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleChatbotIdChange = (id: string, value: string) => {
+    setChatbotIdMap((prev) => ({ ...prev, [id]: value }));
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -168,36 +179,38 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
         Manage chatbot requests submitted by educators. Approve requests and assign Chatbot IDs.
       </Typography>
 
-      <TableContainer component={Paper} elevation={3} sx={{ maxHeight: 400 }}>
+      <TableContainer component={Paper} elevation={3} sx={{ maxHeight: '70vh', overflow: 'auto' }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Course</TableCell>
-              <TableCell>Material</TableCell>
-              <TableCell>Educator ID</TableCell>
-              <TableCell>Course ID</TableCell>
-              <TableCell>Material ID</TableCell>
-              <TableCell>Submitted On</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>File Links</TableCell>
-              <TableCell>Chatbot ID</TableCell>
-              <TableCell>Action</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Title</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Course</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Material</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Educator ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Course ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Material ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Submitted On</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>File Links</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Chatbot ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#E8E8E8', color: '#12372A' }}>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {requests.map((request) => (
-              <TableRow key={request.id}>
+            {requests.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((request, index) => (
+              <TableRow
+                key={request.id}
+                sx={{
+                  backgroundColor: index % 2 === 0 ? '#F6E9B2' : '#FBFADA',
+                  '&:hover': { backgroundColor: '#E8E8E8' },
+                }}
+              >
                 <TableCell>{request.title}</TableCell>
                 <TableCell>{`${request.courseNumber} - ${request.courseTitle}`}</TableCell>
-                <TableCell>
-                  {request.materialTitle || 'N/A'}
-                </TableCell>
+                <TableCell>{request.materialTitle || 'N/A'}</TableCell>
                 <TableCell>{request.educatorId}</TableCell>
                 <TableCell>{request.courseId}</TableCell>
-                <TableCell>
-                  {request.materialId || 'N/A'}
-                </TableCell>
+                <TableCell>{request.materialId || 'N/A'}</TableCell>
                 <TableCell>{new Date(request.timestamp).toLocaleString()}</TableCell>
                 <TableCell>
                   <Typography
@@ -211,13 +224,13 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  {request.files.map((file: string, index: number) => (
-                    <FileDownload
-                      key={index}
-                      filePath={file}
-                      fileLabel={`File ${index + 1}`}
-                    />
-                  ))}
+                  {request.files?.length ? (
+                    request.files.map((file: string, idx: number) => (
+                      <FileDownload key={idx} filePath={file} fileLabel={`File ${idx + 1}`} />
+                    ))
+                  ) : (
+                    <Typography variant="body2">No files uploaded</Typography>
+                  )}
                 </TableCell>
                 <TableCell>
                   {request.status === 'approved' ? (
@@ -240,6 +253,7 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
                     color="primary"
                     onClick={() => handleApproveRequest(request.id)}
                     disabled={request.status === 'approved'}
+                    sx={{ fontWeight: 'bold' }}
                   >
                     {request.status === 'approved' ? 'Approved' : 'Approve'}
                   </Button>
@@ -248,6 +262,17 @@ const SuperAdminChatbotRequestsPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={requests.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          aria-label="Chatbot requests pagination"
+          sx={{ mt: 2 }}
+        />
       </TableContainer>
 
       {/* Snackbar for Notifications */}
