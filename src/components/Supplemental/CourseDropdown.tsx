@@ -15,14 +15,18 @@ const CourseDropdown: React.FC<CourseDropdownProps> = ({ value, onChange }) => {
   const { userDetails } = useUser();
 
   useEffect(() => {
+    console.log("User Details in CourseDropdown:", userDetails);
+
     if (userDetails?.classes) {
       const filteredCourses = Object.entries(userDetails.classes)
-        .filter(([_, course]) => course.isCourseAdmin)
+        .filter(([_, course]) => course.isCourseAdmin || userDetails.isSuperAdmin) // Include Super-Admin access
         .map(([id, course]) => ({
           id,
           number: course.number,
           title: course.title,
         }));
+      
+      console.log("Filtered Courses for Dropdown:", filteredCourses);
       setAdminCourses(filteredCourses);
     } else {
       setAdminCourses([]);
