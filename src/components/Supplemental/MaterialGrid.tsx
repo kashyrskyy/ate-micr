@@ -11,7 +11,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteMaterialDialog from './DeleteMaterialDialog';
 import UnpublishButton from './UnpublishButton';
 import UnpublishMaterial from './UnpublishMaterial';
-import CourseSelector from './CourseSelector';
 
 const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCourse }) => {
   const { userDetails } = useUser();
@@ -44,14 +43,15 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
   };
 
   useEffect(() => {
+    if (!selectedCourse) return; // Prevents unnecessary calls
     fetchCourseAdminStatus();
-  }, [selectedCourse, userDetails]);
-
+  }, [selectedCourse]); // Only runs when `selectedCourse` actually changes
+  
   useEffect(() => {
     if (initialCourse && selectedCourse !== initialCourse) {
       setSelectedCourse(initialCourse);
     }
-  }, [initialCourse, selectedCourse]);
+  }, [initialCourse]); // Only re-runs when `initialCourse` changes  
 
   useEffect(() => {
     if (!selectedCourse) {
@@ -114,8 +114,8 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
 
   const handleCourseChange = (courseId: string) => {
     setSelectedCourse(courseId);
-    navigate(`/supplemental-materials?course=${courseId}`); // Dynamically update the URL
-  };
+    navigate(`/supplemental-materials?course=${courseId}`); // Updates URL when user switches course
+  };  
 
   if (loading) {
     return <CircularProgress />;
@@ -128,11 +128,6 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
 
   return (
     <Box sx={{ width: '100%' }}>
-      <CourseSelector
-        selectedCourse={selectedCourse || ''}
-        onCourseChange={handleCourseChange}
-      />
-
       {/* Fallback for no materials */}
       {materials.length === 0 && selectedCourse && (
         <Typography variant="body1" align="center" sx={{ width: '100%', mb: 4 }}>
@@ -155,7 +150,15 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
                 </Typography>
               ) : (
                 savedMaterials.map((material) => (
-                  <MaterialItem key={material.id} material={material} isCourseAdmin={isCourseAdmin} navigate={navigate} onDeleteClick={handleDeleteClick} onUnpublishClick={handleUnpublishClick} />
+                  <MaterialItem 
+                    key={material.id} 
+                    material={material} 
+                    isCourseAdmin={isCourseAdmin} 
+                    navigate={navigate} 
+                    selectedCourse={selectedCourse || ''}
+                    onDeleteClick={handleDeleteClick} 
+                    onUnpublishClick={handleUnpublishClick} 
+                  />
                 ))
               )}
             </Grid>
@@ -173,7 +176,15 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
                 </Typography>
               ) : (
                 publishScheduledMaterials.map((material) => (
-                  <MaterialItem key={material.id} material={material} isCourseAdmin={isCourseAdmin} navigate={navigate} onDeleteClick={handleDeleteClick} onUnpublishClick={handleUnpublishClick} />
+                  <MaterialItem 
+                    key={material.id} 
+                    material={material} 
+                    isCourseAdmin={isCourseAdmin} 
+                    navigate={navigate} 
+                    selectedCourse={selectedCourse || ''}
+                    onDeleteClick={handleDeleteClick} 
+                    onUnpublishClick={handleUnpublishClick} 
+                  />
                 ))
               )}
             </Grid>
@@ -193,7 +204,15 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
             </Typography>
           ) : (
             publishedMaterials.map((material) => (
-              <MaterialItem key={material.id} material={material} isCourseAdmin={isCourseAdmin} navigate={navigate} onDeleteClick={handleDeleteClick} onUnpublishClick={handleUnpublishClick} />
+              <MaterialItem 
+                key={material.id} 
+                material={material} 
+                isCourseAdmin={isCourseAdmin} 
+                navigate={navigate} 
+                selectedCourse={selectedCourse || ''}
+                onDeleteClick={handleDeleteClick} 
+                onUnpublishClick={handleUnpublishClick} 
+              />
             ))
           )}
         </Grid>
@@ -233,11 +252,18 @@ const MaterialGrid: React.FC<{ initialCourse?: string | null }> = ({ initialCour
 };
 
 // Reusable MaterialItem component for each material entry
-const MaterialItem: React.FC<{ material: Material, isCourseAdmin: boolean, navigate: any, onDeleteClick: (id: string) => void, onUnpublishClick: (id: string) => void }> = ({ material, isCourseAdmin, navigate, onDeleteClick, onUnpublishClick }) => {
+const MaterialItem: React.FC<{ 
+  material: Material,
+  isCourseAdmin: boolean,
+  navigate: any,
+  selectedCourse: string,
+  onDeleteClick: (id: string) => void,
+  onUnpublishClick: (id: string) => void
+}> = ({ material, isCourseAdmin, navigate, selectedCourse, onDeleteClick, onUnpublishClick }) => {
   return (
     <Grid item xs={12} sm={6} md={4}>
       <Box sx={{ border: '1px solid #ddd', borderRadius: '8px', padding: 2, position: 'relative', backgroundColor: material.published ? '#E8F5E9' : '#FFF9C4' }}>
-        <IconButton onClick={() => navigate(`/view-material/${material.id}`)} aria-label="view">
+        <IconButton onClick={() => navigate(`/view-material/${material.id}?course=${selectedCourse}`)} aria-label="view">
           <VisibilityIcon />
         </IconButton>
         <Typography variant="h6">{material.title || 'Untitled'}</Typography>
@@ -245,7 +271,7 @@ const MaterialItem: React.FC<{ material: Material, isCourseAdmin: boolean, navig
         <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 1 }}>
           {isCourseAdmin && (
             <>
-              <IconButton onClick={() => navigate(`/edit-material/${material.id}`)} aria-label="edit">
+              <IconButton onClick={() => navigate(`/edit-material/${material.id}?course=${selectedCourse}`)} aria-label="edit">
                 <EditIcon />
               </IconButton>
               <IconButton onClick={() => onDeleteClick(material.id)} aria-label="delete">

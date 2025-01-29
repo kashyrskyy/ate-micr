@@ -1,5 +1,5 @@
 // src/components/Supplemental/EditMaterialForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import AddMaterialForm from './AddMaterialForm';
@@ -12,6 +12,14 @@ const EditMaterialForm: React.FC = () => {
   const db = getFirestore();
   const { userDetails } = useUser();
   const [materialData, setMaterialData] = useState<Material | null>(null);
+
+  const validCourses = useMemo(() => {
+    return userDetails?.classes
+      ? Object.entries(userDetails.classes)
+          .filter(([_, course]) => course.isCourseAdmin)
+          .map(([id]) => id)
+      : [];
+  }, [userDetails?.classes]);
 
   useEffect(() => {
     if (id) {
@@ -35,15 +43,9 @@ const EditMaterialForm: React.FC = () => {
                   images: subSubsection.images?.map(image => ({ ...image, title: image.title || '' })) || []
                 })) || [],
               })) || [],
-            })) || [];
+            })) || [];          
 
-            // Validate the course field
-            const validCourses = userDetails?.classes
-              ? Object.entries(userDetails.classes)
-                  .filter(([_, course]) => course.isCourseAdmin)
-                  .map(([id]) => id)
-              : [];
-
+            // Validate course assignment
             material.course = validCourses.includes(material.course)
               ? material.course
               : validCourses[0] || ''; // Default to first valid course or empty string

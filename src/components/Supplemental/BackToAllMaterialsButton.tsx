@@ -1,14 +1,25 @@
 // src/components/Supplemental/BackToAllMaterialsButton.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const BackToAllMaterialsButton: React.FC = () => {
+interface BackToAllMaterialsButtonProps {
+  returnToSelection?: boolean; // New prop: true = back to selection, false = back to course materials
+}
+
+const BackToAllMaterialsButton: React.FC<BackToAllMaterialsButtonProps> = ({ returnToSelection = false }) => {
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const selectedCourse = searchParams.get('course'); // Retrieve course ID from URL
+
   const handleClick = () => {
-    navigate('/supplemental-materials');
+    if (returnToSelection || !selectedCourse) {
+      navigate('/supplemental-materials'); // Go to course selection page
+    } else {
+      navigate(`/supplemental-materials?course=${selectedCourse}`); // Go back to course materials
+    }
   };
 
   return (
@@ -17,9 +28,9 @@ const BackToAllMaterialsButton: React.FC = () => {
       color="primary"
       startIcon={<ArrowBackIcon />}
       onClick={handleClick}
-      sx={{ mb: 2, padding: '4px 8px', backgroundColor: 'transparent', borderColor: 'blue', color: 'blue' }}
+      className="supplemental-back-button"
     >
-      All Materials
+      {returnToSelection ? 'Course Selection' : 'Course Materials'}
     </Button>
   );
 };

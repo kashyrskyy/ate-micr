@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-const AddMaterialButton: React.FC = () => {
+const AddMaterialButton: React.FC<{ selectedCourse: string | null }> = ({ selectedCourse }) => {
   const navigate = useNavigate();
 
   return (
@@ -11,7 +11,8 @@ const AddMaterialButton: React.FC = () => {
       className="add-material-button"
       variant="contained"
       color="primary"
-      onClick={() => navigate('/add-material')}
+      disabled={!selectedCourse}
+      onClick={() => selectedCourse && navigate(`/add-material?course=${selectedCourse}`)}
     >
       + Add Material
     </Button>

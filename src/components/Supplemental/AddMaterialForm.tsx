@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useUser } from '../../contexts/UserContext';
 import { v4 as uuidv4 } from 'uuid';
+
+import { useSearchParams } from 'react-router-dom'; // Import this at the top
+
 import SideBar from './SideBar';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -32,7 +35,11 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   const { userDetails } = useUser();
   const db = getFirestore();
 
-  const [course, setCourse] = useState<string>(materialData?.course || '');
+  const [searchParams] = useSearchParams();
+  const urlCourse = searchParams.get('course'); // Get course ID from URL
+
+  const [course, setCourse] = useState<string>(materialData?.course || urlCourse || '');
+
   const [title, setTitle] = useState<string>(materialData?.title || '');
   const [header, setHeader] = useState(materialData?.header || { title: 'Header', content: '' });
   const [footer, setFooter] = useState(materialData?.footer || { title: 'Footer', content: '' });
@@ -109,7 +116,11 @@ const AddMaterialForm: React.FC<AddMaterialFormProps> = ({ materialData, onSubmi
   };
 
   const handleCancel = () => {
-    navigate('/supplemental-materials');
+    if (urlCourse) {
+      navigate(`/supplemental-materials?course=${urlCourse}`); // Go back to the course-specific page
+    } else {
+      navigate('/supplemental-materials'); // Default to course selection if no course is found
+    }
   };
 
   const handlePublish = (e: React.FormEvent) => {
