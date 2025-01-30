@@ -51,15 +51,17 @@ const ChatbotRequestPage: React.FC = () => {
 
     // Retrieve course details
     const selectedCourse = userDetails?.classes?.[courseId];
-    if (!selectedCourse) {
-        setSnackbarMessage('Selected course details could not be found.');
-        setSnackbarSeverity('error');
-        setOpenSnackbar(true);
-        return;
+
+    // Blocks unauthorized chatbot requests at the API level.
+    if (!selectedCourse || !selectedCourse.isCourseAdmin) {
+      setSnackbarMessage('You are not authorized to request a chatbot for this course.');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
+      return;
     }
 
-    const courseNumber = selectedCourse.number || 'N/A';
-    const courseTitle = selectedCourse.title || 'Untitled Course';
+    const courseNumber = selectedCourse?.number ?? 'N/A';
+    const courseTitle = selectedCourse?.title ?? 'Untitled Course';
 
     // Retrieve material details
     const selectedMaterial = materials.find((material) => material.id === materialId);
@@ -158,13 +160,16 @@ const ChatbotRequestPage: React.FC = () => {
         margin="normal"
         required
         select
+        helperText="Only courses where you are an admin are available for chatbot requests."
         className="form-field"
       >
-        {Object.keys(userDetails?.classes || {}).map((id) => (
-          <MenuItem key={id} value={id}>
-            {userDetails?.classes?.[id]?.title || 'Untitled Course'}
-          </MenuItem>
-        ))}
+        {Object.keys(userDetails?.classes || {})
+          .filter((id) => userDetails?.classes?.[id]?.isCourseAdmin) // Ensure only courses where the educator is an admin are selectable
+          .map((id) => (
+            <MenuItem key={id} value={id}>
+              {userDetails?.classes?.[id]?.title || 'Untitled Course'}
+            </MenuItem>
+          ))}
       </TextField>
 
       <TextField
