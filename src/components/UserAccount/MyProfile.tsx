@@ -78,8 +78,14 @@ const MyProfile: React.FC = () => {
       <Chip
         key={courseId}
         label={`${courseData.number} - ${courseData.title}${courseData.isCourseAdmin ? ' (Admin)' : ''}`}
-        variant="filled"
-        sx={{ margin: '4px'}} // Add some margin to space out the chips
+        variant="outlined"
+        sx={{
+          margin: '4px', // Add spacing between chips
+          fontSize: '14px',
+          fontWeight: 'bold',
+          bgcolor: courseData.isCourseAdmin ? '#FFCDD2' : '#E3F2FD', // Lighter red for admin courses
+          color: courseData.isCourseAdmin ? '#C62828' : '#1565C0', // Darker red for text
+        }}
       />
     ));
   };
