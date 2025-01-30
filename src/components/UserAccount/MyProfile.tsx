@@ -1,11 +1,14 @@
 // src/components/UserAccount/MyProfile.tsx
 import React, { useState } from 'react';
 import { Box, Typography, Button, Switch, FormControlLabel, Snackbar, Alert, Chip } from '@mui/material';
+
 import { UserDetails, useUser } from '../../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 import AddCourseForm from './AddCourseForm';
+
+import UserDetailsBox from './UserDetailsBox';
 
 const MyProfile: React.FC = () => {
   const { userDetails, setUserDetails } = useUser();
@@ -24,7 +27,7 @@ const MyProfile: React.FC = () => {
   };
 
   const handleNavigateToRequestPermissions = () => {
-    // If the user is an admin, make the button unclickable
+    // Navigate to request permissions only if the user is not an admin
     if (!userDetails?.isAdmin) {
       navigate('/request-educator-permissions');
     }
@@ -83,27 +86,22 @@ const MyProfile: React.FC = () => {
 
   return (
     <Box className="profile-container">
+      {/* Back to Home Button */}
       <Button variant="text" onClick={handleNavigateHome} className="profile-button">
         &larr; Home Page
       </Button>
+      {/* Page Title */}
       <Typography className="webpage_title">
         My Account
       </Typography>
+
+      {/* User Info Inside Paper Component */}
       {userDetails && (
-        <>
-          <Typography className="profile-text">
-            User ID: {userDetails.uid}
-          </Typography>
-          <Typography className="profile-text">
-            Account Status: {getAccountStatus()}
-          </Typography>
-          <Typography className="profile-text">
-            Current Courses: 
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap' }}> {/* Add a container for flex layout */}
-            {renderCourses()}
-          </Box>
-        </>
+        <UserDetailsBox
+          userDetails={userDetails}
+          getAccountStatus={getAccountStatus}
+          renderCourses={renderCourses}
+        />
       )}
 
       {/* Enroll in a Course Section - Hidden for educators */}
