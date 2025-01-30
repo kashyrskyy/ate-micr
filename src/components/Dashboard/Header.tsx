@@ -24,9 +24,14 @@ const Header: React.FC<HeaderProps> = memo(({ setIsAdding }) => {
           &larr; Home Page
         </Button>
       </Box>
-      <Typography className="webpage_title">
-        My Laboratory Notebook
-      </Typography>
+
+      {/* Page Title with left alignment fix */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Typography className="webpage_title">
+          My Laboratory Notebook
+        </Typography>
+      </Box>
+
       {/* Action buttons below */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button 

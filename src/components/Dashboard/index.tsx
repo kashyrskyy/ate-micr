@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert, TextField } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Snackbar, Alert, TextField, Box } from '@mui/material';
 
 import { collection, query, where, getDocs, doc, deleteDoc, orderBy } from "firebase/firestore";
 import { db } from '../../config/firestore';
@@ -204,10 +204,13 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container">
+    <Box className="profile-container" sx={{ p: 4 }}> {/* Ensures consistent padding and layout */}
       {!isAdding && !isEditing && (
         <>
-          <Header setIsAdding={setIsAdding} />
+          {/* Wrapping the Header in a properly formatted container */}
+          <Box sx={{ mb: 3 }}> 
+            <Header setIsAdding={setIsAdding} />
+          </Box>
           {userDetails?.isSuperAdmin && (
             <>
               <h2>Super Admin Designs</h2>
@@ -360,7 +363,7 @@ const Dashboard = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );  
 };
 
