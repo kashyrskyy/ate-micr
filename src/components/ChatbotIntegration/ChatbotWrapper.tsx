@@ -1,7 +1,6 @@
 // src/components/ChatbotIntegration/ChatbotWrapper.tsx
 
-import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useImperativeHandle, forwardRef, useRef } from 'react';
 import { ChatbotInterface } from 'rag-chatbot-interface-ifi';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../config/firestore';
@@ -12,77 +11,53 @@ interface ChatbotWrapperProps {
   chatbotId: string;
 }
 
-const ChatbotWrapper: React.FC<ChatbotWrapperProps> = ({ chatbotId }) => {
-  const { userDetails } = useUser();
-  const [conversationId, setConversationId] = useState<string | null>(null);
+const ChatbotWrapper = forwardRef<{ endConversation: () => void }, ChatbotWrapperProps>(
+  ({ chatbotId }, ref) => {
+    const { userDetails } = useUser();
+    const chatbotRef = useRef<{ endConversation: () => void } | null>(null); // Corrected ref type
 
-  //Chatbot interface will call handleConversationStart when a new conversation is started. 
-  //Provides current Conversation ID which can be saved within NexLAB
-  const handleConversationStart = async (newConversationId: string) => {
-    console.log("Chatbot started with ID:", chatbotId);
-    console.log("Conversation started with ID:", newConversationId);
-    setConversationId(newConversationId);
+    const handleConversationStart = async (newConversationId: string) => {
+      console.log("🤖 Chatbot started. Conversation ID:", newConversationId);
 
-    if (userDetails?.uid) {
-      try {
-        await setDoc(doc(db, 'conversations', newConversationId), {
-          conversationId: newConversationId,
-          chatbotId,
-          userId: userDetails.uid,
-          startedAt: new Date().toISOString(),
-        });
-        console.log('Conversation saved successfully');
-      } catch (error) {
-        console.error('Failed to save conversation:', error);
+      if (userDetails?.uid) {
+        try {
+          await setDoc(
+            doc(db, 'conversations', newConversationId),
+            {
+              conversationId: newConversationId,
+              chatbotId,
+              userId: userDetails.uid,
+              startedAt: new Date().toISOString(),
+            },
+            { merge: true } // Prevent overwriting previous data
+          );
+          console.log('Conversation saved to Firestore');
+        } catch (error) {
+          console.error('Failed to save conversation:', error);
+        }
       }
-    }
-  };
+    };
 
-  // Cleanup logic when chatbotId changes
-  useEffect(() => {
-    setConversationId(null); // Reset conversation ID on chatbot change
-  }, [chatbotId]);
+    // Expose endConversation() function
+    useImperativeHandle(ref, () => ({
+      endConversation: () => {
+        if (chatbotRef.current) {
+          console.log("Ending chatbot conversation...");
+          chatbotRef.current.endConversation(); // Built-in method
+        }
+      }
+    }));
 
-  return (
-    <Box sx={{ mt: 2 }}>
+    return (
       <ErrorBoundary>
-        <ChatbotInterface chatbotId={chatbotId} onConversationStart={handleConversationStart} />
-        {conversationId ? (
-          <Box sx={{ mt: 1 }}>
-            <Typography 
-              variant="body2"           
-              sx={{
-                fontFamily: '"Staatliches", sans-serif',
-                fontWeight: 'bold',
-                fontSize: '1.25rem',
-              }}
-            >
-              Current Conversation ID:
-            </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{
-                fontFamily: '"Gabarito", sans-serif',
-                fontSize: '1rem',
-                wordWrap: 'break-word',
-              }}
-            >
-              {conversationId}
-            </Typography>
-          </Box>
-        ) : (
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="body2" color="textSecondary" sx={{ fontFamily: '"Gabarito", sans-serif', fontSize: '1rem' }}>
-              Chatbot not initialized yet.
-            </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ fontFamily: '"Gabarito", sans-serif', fontSize: '1rem' }}>
-              Start a conversation first.
-            </Typography>
-          </Box>
-        )}
+        <ChatbotInterface
+          ref={chatbotRef} // Corrected: attach ref properly
+          chatbotId={chatbotId}
+          onConversationStart={handleConversationStart}
+        />
       </ErrorBoundary>
-    </Box>
-  );
-};
+    );
+  }
+);
 
 export default ChatbotWrapper;

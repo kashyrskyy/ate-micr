@@ -1,6 +1,6 @@
 // src/components/Supplemental/ViewMaterial.tsx
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { Box, Typography, IconButton, Tooltip, CircularProgress, Link as MuiLink } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
@@ -14,6 +14,9 @@ import ViewLinksTable from './ViewLinksTable';
 
 const ViewMaterial: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const db = getFirestore();
   const [materialData, setMaterialData] = useState<Material | null>(null);
   const [selectedSection, setSelectedSection] = useState<{ sectionIndex?: number, subsectionIndex?: number, subSubsectionIndex?: number, type?: 'header' | 'footer' }>({ sectionIndex: 0 });
@@ -30,6 +33,20 @@ const ViewMaterial: React.FC = () => {
       fetchMaterial();
     }
   }, [id, db]);
+
+  // Ensure material ID is always present in the URL as a query parameter (only when first loading the page)
+  useEffect(() => {
+    if (id && searchParams.get('material') !== id) {
+      console.log("🔹 Updating URL: Adding material ID to query parameters:", id);
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        newParams.set('material', id);
+        return newParams;
+      }, { replace: true });
+    } else {
+      console.log("Material ID already in URL:", searchParams.get('material'));
+    }
+  }, [id, searchParams, setSearchParams]);  
 
   const handleSelectSection = (sectionIndex: number | 'header' | 'footer', subsectionIndex?: number, subSubsectionIndex?: number) => {
     setSelectedSection({ sectionIndex: typeof sectionIndex === 'number' ? sectionIndex : undefined, subsectionIndex, subSubsectionIndex, type: typeof sectionIndex === 'string' ? sectionIndex : undefined });
