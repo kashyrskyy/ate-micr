@@ -6,7 +6,7 @@ import ChatbotWrapper from './ChatbotWrapper';
 import { useSearchParams } from 'react-router-dom';
 import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
 
-const DEFAULT_CHATBOT_ID = '256599ed-a0a2-496f-990d-c51faaefd71a';
+const DEFAULT_CHATBOT_ID = import.meta.env.VITE_CHATBOT_DEFAULT_ID;
 
 const ChatbotManager: React.FC = () => {
   const [selectedChatbotId, setSelectedChatbotId] = useState<string>(DEFAULT_CHATBOT_ID);

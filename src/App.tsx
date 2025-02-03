@@ -42,8 +42,6 @@ const SupplementalMaterials = lazy(() => import('./components/Supplemental/Suppl
 const App = () => {
   const { userDetails, loading, isSuperAdmin } = useUser();
 
-  // const chatbotId = import.meta.env.VITE_CHATBOT_ID; // Ensure the chatbot ID is correctly set
-
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
