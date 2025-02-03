@@ -52,7 +52,7 @@ const Login = () => {
     <Container maxWidth="lg" sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Grid container spacing={isMobile ? 2 : 4} alignItems="center" justifyContent="center">
         <Grid item xs={12} md={6} sx={{ textAlign: 'center' }}>
-          <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}nexlab-logo.png`} alt="ATE Logo" style={{ width: 600, marginBottom: 20 }} />
+          <img src={`${import.meta.env.BASE_URL}nexlab-logo.png`} alt="ATE Logo" style={{ width: 600, marginBottom: 20 }}/>
         </Grid>
         {!isMobile && <Grid item><Divider orientation="vertical" flexItem /></Grid>}
         <Grid item xs={12} md={6} sx={{ textAlign: 'center' }}>

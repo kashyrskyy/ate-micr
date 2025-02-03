@@ -14,7 +14,7 @@ function Footer() {
         <Divider />
         <Box className="footer-content">
             <img 
-                src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}FooterLogoLong.png`} 
+                src={`${import.meta.env.BASE_URL}FooterLogoLong.png`} 
                 alt="Logo" 
                 className="footer-logo"
             />

@@ -23,7 +23,7 @@ const Header: React.FC = React.memo(() => {
   return (
     <Box className="header-box" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#CDDAFF' }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <img src={`${import.meta.env.VITE_DEPLOY_ENV === 'github' ? '/ate-micr/' : '/'}nexlab-logo.png`} alt="ATE Logo" style={{ width: 300 }} />
+        <img src={`${import.meta.env.BASE_URL}nexlab-logo.png`} alt="ATE Logo" style={{ width: 300 }}/>
         <Box className="divider" sx={{ height: '40px', borderLeft: '2px solid #0B53C0', marginRight: '20px' }} />
         <Typography variant="body1" component="p" className="subtitle" sx={{ color: '#0B53C0', fontFamily: 'Gabarito', maxWidth: '300px' }}>
           Next-Generation Experiments and <br />
